@@ -1,0 +1,391 @@
+import React, { useEffect, useState } from 'react';
+import { Wifi, RefreshCw, ArrowLeft, Search, Home, UtensilsCrossed, Shirt, MapPin, Star, Users, Phone, Heart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+// import axios from 'axios';
+import { LOCALHOST_URL } from '../../../constants/constants';
+import apiClient from '../../../services/apiClient';
+import toast from 'react-hot-toast';
+
+// Type definitions
+interface Facilities {
+  wifi: boolean;
+  food: boolean;
+  laundry: boolean;
+}
+
+interface Hostel {
+  id: string;
+  name: string;
+  address: string;
+  rating?: number;
+  reviews?: number;
+  price: string;
+  occupancy: string;
+  contact: string;
+  facilities: Facilities;
+  photos: string;
+}
+
+interface HostelData {
+  _id: string;
+  hostelname: string;
+  location: string;
+  bedShareRoom: string;
+  phone: string;
+  facilities: string;
+  photos: string[];
+  beds: string;
+}
+
+interface FacilityBadgeProps {
+  icon: React.ReactNode;
+  label: string;
+  available: boolean;
+  color: 'green' | 'blue' | 'purple';
+}
+
+interface HostelCardProps {
+  hostel: Hostel;
+}
+
+// FacilityBadge Component
+const FacilityBadge: React.FC<FacilityBadgeProps> = ({ icon, label, available, color }) => {
+  const colors: Record<string, string> = {
+    green: available ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400',
+    blue: available ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400',
+    purple: available ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-400',
+  };
+
+  return (
+    <div
+      className={`flex items-center space-x-1 rounded-full px-3 py-1 ${colors[color]}`}
+      title={`${label} ${available ? 'Available' : 'Not Available'}`}
+    >
+      {icon}
+      <span className="text-xs font-medium">{label}</span>
+    </div>
+  );
+};
+
+// HostelCard Component
+const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
+  const [isLiked, setIsLiked] = useState<boolean>(false);
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/user/singlehostel/${hostel.id}`);
+  };
+
+  const checkWishlist = async ({ hostelId }: { hostelId: string }, e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    try {
+      const response = await apiClient.get(`${LOCALHOST_URL}/user/checkWishlist/${hostelId}`)
+      console.log(response.data.message)
+      if (response.data.message == 'Already Exist') {
+        setIsLiked(true)
+
+      }
+
+      handleLikeClick()
+
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(() => {
+    const checkWishlist = async () => {
+      const response = await apiClient.get(`${LOCALHOST_URL}/user/checkWishlist/${hostel.id}`)
+      console.log(response.data.message)
+      if (response.data.message == 'Already Exist') {
+        setIsLiked(true)
+      }
+    }
+    checkWishlist()
+
+  }, [])
+
+  const handleLikeClick = async () => {
+
+    setIsLiked(!isLiked);
+    console.log("Liked:", isLiked)
+    if (!isLiked) {
+      try {
+        const response = await apiClient.post(`${LOCALHOST_URL}/user/addToWishlist/${hostel.id}`);
+        console.log(response.data.message);
+    
+        if (response.data.message === 'Added to wishlist') {
+          toast.success("Added to wishlist!");
+        }
+      } catch (error) {
+        console.error("Error adding to wishlist:", error);
+        toast.error("Failed to add to wishlist.");
+      }
+    } else {
+      try {
+        const response = await apiClient.delete(`${LOCALHOST_URL}/user/removeFromWishlist/${hostel.id}`);
+        console.log(response.data.message, 'removed');
+    
+        if (response.data.message === 'Hostel Removed From Wishlist') {
+          toast.success("Removed from wishlist!");
+        }
+      } catch (error) {
+        console.error("Error removing from wishlist:", error);
+        toast.error("Failed to remove from wishlist.");
+      }
+    }
+
+  };
+
+  return (
+    <div
+      onClick={handleClick}
+      className="w-full max-w-sm bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+    >
+      <div className="relative">
+        <img
+          src={hostel.photos || "/api/placeholder/400/250"}
+          alt={hostel.name}
+          className="w-full h-48 object-cover rounded-t-lg"
+        />
+        <button
+          onClick={(e) => checkWishlist({ hostelId: hostel.id }, e)}
+          className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-md hover:bg-gray-50"
+        >
+          <Heart
+            size={20}
+            className={`${isLiked ? "fill-red-500 text-red-500" : "text-gray-500"}`}
+          />
+        </button>
+
+        <div className="absolute bottom-3 left-3 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
+          ₹{hostel.price}/month
+        </div>
+      </div>
+
+      <div className="p-4">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-lg font-semibold text-gray-800">{hostel.name}</h3>
+          <div className="flex items-center">
+            <Star size={16} className="text-yellow-400 fill-yellow-400" />
+            <span className="ml-1 text-sm font-medium text-gray-600">
+              {hostel.rating || "No Ratings"} ({hostel.reviews || "No Reviews"})
+            </span>
+          </div>
+        </div>
+
+        <div className="flex items-center text-gray-600 text-sm mb-3">
+          <MapPin size={16} className="mr-1" />
+          <span>{hostel.address}</span>
+        </div>
+
+        <div className="flex items-center space-x-4 mb-4 text-sm text-gray-600">
+          <div className="flex items-center">
+            <Users size={16} className="mr-1" />
+            <span>{hostel.occupancy || "N/A"} per room</span>
+          </div>
+          <div className="flex items-center">
+            <Phone size={16} className="mr-1" />
+            <span>{hostel.contact}</span>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <FacilityBadge
+            icon={<Wifi size={14} />}
+            label="WiFi"
+            available={hostel.facilities?.wifi}
+            color="green"
+          />
+          <FacilityBadge
+            icon={<UtensilsCrossed size={14} />}
+            label="Food"
+            available={hostel.facilities?.food}
+            color="blue"
+          />
+          <FacilityBadge
+            icon={<Shirt size={14} />}
+            label="Laundry"
+            available={hostel.facilities?.laundry}
+            color="purple"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+
+
+const EmptyState = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="col-span-full flex flex-col items-center justify-center min-h-[400px] p-8">
+      {/* Animated Illustration Container */}
+      <div className="relative mb-8">
+        <div className="absolute inset-0 bg-blue-100 rounded-full animate-pulse" />
+        <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-full">
+          <div className="relative animate-bounce">
+            <Home className="w-16 h-16 text-blue-500" />
+            <div className="absolute -top-1 -right-1">
+              <Search className="w-6 h-6 text-blue-700 animate-ping" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Text Content */}
+      <div className="text-center max-w-md mb-8">
+        <h3 className="text-2xl font-bold text-gray-900 mb-3 animate-fade-in">
+          No Hostels Found
+        </h3>
+        <p className="text-gray-600 leading-relaxed">
+          We couldn't find any hostels at the moment. Don't worry - new listings are added frequently.
+          Try refreshing or head back to explore other options.
+        </p>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <button
+          onClick={() => navigate('/user/home')}
+          className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          Back to Home
+        </button>
+        <button
+          onClick={() => window.location.reload()}
+          className="flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:-translate-y-0.5"
+        >
+          <RefreshCw className="w-5 h-5" />
+          Refresh Page
+        </button>
+      </div>
+
+      {/* Suggested Actions */}
+      <div className="mt-8 text-sm text-gray-500 space-y-2">
+        <p className="flex items-center gap-2">
+          <span className="w-2 h-2 bg-blue-500 rounded-full" />
+          Try adjusting your search criteria
+        </p>
+        <p className="flex items-center gap-2">
+          <span className="w-2 h-2 bg-blue-500 rounded-full" />
+          Check back later for new listings
+        </p>
+        <p className="flex items-center gap-2">
+          <span className="w-2 h-2 bg-blue-500 rounded-full" />
+          Contact support if you need assistance
+        </p>
+      </div>
+
+      {/* Optional: Add this style block in your CSS file */}
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.5s ease-out forwards;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+
+// Main HostelCardGrid Component
+const HostelCardGrid: React.FC = () => {
+  const [hostels, setHostels] = useState<Hostel[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+
+  useEffect(() => {
+    const fetchHostels = async () => {
+      try {
+        const response = await apiClient.get(`${LOCALHOST_URL}/user/getHostels`);
+        const hostelData = response.data.message;
+        console.log(hostelData)
+
+
+
+        const formattedHostels = hostelData.map((item: HostelData) => {
+          let facilitiesArray: string[] = [];
+          if (Array.isArray(item.facilities) && item.facilities.length === 1) {
+            facilitiesArray = item.facilities[0].split(',').map((facility: string) => facility.trim().toLowerCase());
+          } else if (typeof item.facilities === 'string') {
+            facilitiesArray = item.facilities.split(',').map((facility: string) => facility.trim().toLowerCase());
+          }
+
+          const facilitiesObj = {
+            wifi: facilitiesArray.includes('wifi'),
+            food: facilitiesArray.includes('food'),
+            laundry: facilitiesArray.includes('laundry')
+          };
+
+          return {
+            id: item._id,
+            name: item.hostelname,
+            address: item.location,
+            price: item.bedShareRoom,
+            contact: item.phone,
+            facilities: facilitiesObj,
+            photos: item.photos[0] || '',
+            occupancy: item.beds
+          };
+        });
+
+        setHostels(formattedHostels);
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to fetch hostels');
+        setLoading(false);
+        console.error('Error fetching hostels:', err);
+      }
+    };
+
+    fetchHostels();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="relative w-16 h-16">
+          {/* Outer circle */}
+          <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+          {/* Spinning arc */}
+          <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl text-red-600">{error}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gray-50 min-h-screen py-12 pt-20">
+      <div className="container mx-auto px-4 max-w-[75%]">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+          View Perfect Hostel
+        </h1>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {hostels.length > 0 ? (
+            hostels.map((hostel, index) => <HostelCard key={index} hostel={hostel} />)
+          ) : (
+            <EmptyState />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default HostelCardGrid;

@@ -1,0 +1,23 @@
+import React, { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "../redux/store";
+
+interface ProtectivePropsCheck {
+  element: React.ReactNode;
+}
+
+const AdminLoginProtector: React.FC<ProtectivePropsCheck> = ({ element }) => {
+  const isAdminLoggedIn = useSelector((state: RootState) => state.adminAuth.accessToken); 
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAdminLoggedIn) {
+      navigate('/admin/login');
+    }
+  }, [isAdminLoggedIn, navigate]);
+
+  return isAdminLoggedIn ? <>{element}</> : null;
+};
+
+export default AdminLoginProtector;

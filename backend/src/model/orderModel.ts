@@ -1,0 +1,125 @@
+import mongoose, { Document, Schema, Types } from "mongoose";
+
+export interface IOrder extends Document {
+    category: string;
+    userId: string;
+    customerEmail: string;
+    customerName: string;
+    customerPhone: string;
+    foodRate: number | null;
+    host_id: Types.ObjectId;
+    hostel_id: {
+        id?: string;
+        name: string;
+        location: string;
+        host_mobile: string;
+    };
+    selectedBeds: number;
+    selectedFacilities: {
+        wifi: boolean;
+        laundry: boolean;
+        food: boolean;
+    };
+    tenantPreferred: string;
+    totalDepositAmount: number;
+    totalRentAmount: number;
+    paymentMethod: "online" | "wallet";
+    active:boolean
+}
+
+const orderSchema: Schema = new Schema(
+    {
+        category: {
+            type: String,
+            required: true,
+        },
+        userId: {
+            type: String,
+            required: true,
+        },
+        customerEmail: {
+            type: String,
+            required: true,
+        },
+        customerName: {
+            type: String,
+            required: true,
+        },
+        customerPhone: {
+            type: String,
+            required: true,
+        },
+        foodRate: {
+            type: Number,
+            default: null,
+        },
+        host_id: {
+            type: String,
+            ref:'Host',
+            required: true,
+        },
+        hostel_id: {
+            id: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Hostel',
+                required: true,
+            },
+            name: {
+                type: String,
+                required: true,
+            },
+            location: {
+                type: String,
+                required: true,
+            },
+            host_mobile: {
+                type: String,
+                required: true,
+            },
+        },
+        selectedBeds: {
+            type: Number,
+            required: true,
+        },
+        selectedFacilities: {
+            wifi: {
+                type: Boolean,
+                required: true,
+            },
+            laundry: {
+                type: Boolean,
+                required: true,
+            },
+            food: {
+                type: Boolean,
+                required: true,
+            },
+        },
+        tenantPreferred: {
+            type: String,
+            required: true,
+        },
+        totalDepositAmount: {
+            type: Number,
+            required: true,
+        },
+        totalRentAmount: {
+            type: Number,
+            required: true,
+        },
+        paymentMethod: {
+            type: String,
+            enum: ["online", "wallet"],
+            required: true,
+        },
+        active:{
+            type:Boolean,
+            required:true
+        }
+    },
+    { timestamps: true }
+);
+
+const Order = mongoose.model<IOrder>("Order", orderSchema);
+
+export default Order;
