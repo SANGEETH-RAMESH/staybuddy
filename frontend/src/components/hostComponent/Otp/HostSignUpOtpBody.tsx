@@ -95,7 +95,7 @@ const HostSignUpOtpBody = () => {
   return (
     <div>
       <div className="h-[580px] w-[1360px] relative">
-        <div className="h-[250px] bg-[#31AFEF]"></div>
+        <div className="h-[250px] bg-emerald-500"></div>
         <div className="h-[380px] bg-[#EEEEEE]"></div>
       </div>
 
@@ -132,7 +132,7 @@ const HostSignUpOtpBody = () => {
         {/* Submit Button */}
         <button
           onClick={handleVerifyOtp}
-          className="w-full bg-[#31AFEF] text-white py-2 rounded-lg font-semibold hover:bg-[#2499ce] transition"
+          className="w-full bg-emerald-500 text-white py-2 rounded-lg font-semibold hover:bg-emerald-600 transition"
           disabled={loading}
         >
           {loading ? "Verifying..." : "VERIFY"}

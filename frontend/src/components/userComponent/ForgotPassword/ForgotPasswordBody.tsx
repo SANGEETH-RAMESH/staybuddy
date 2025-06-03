@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import exclamation_mark from '../../../assets/danger.png';
 import email from '../../../assets/email.png';
 import axios from 'axios';
@@ -10,6 +10,8 @@ import * as Yup from 'yup';
 const ForgotPasswordBody = () => {
     const navigate = useNavigate();
 
+    const [error,setError] = useState('')
+
     const formik = useFormik({
         initialValues: {
             email: '',
@@ -19,27 +21,23 @@ const ForgotPasswordBody = () => {
                 .email('Invalid email address')
                 .required('Email is required'),
         }),
-        onSubmit: (values) => {
-            sendPasswordResetLink(values.email);
+        onSubmit: async (values, { setSubmitting }) => {
+            try {
+                const response = await axios.post('http://localhost:4000/user/forgotpassword', { email: values.email });
+
+                if (response.data.message === 'User found') {
+                    navigate('/user/forgotpasswordotp', { state: { email: values.email } });
+                } else if (response.data.message === 'User not found') {
+                    // toast.error('Incorrect email');
+                    setError('Incorrect email')
+                }
+            } catch (error) {
+                toast.error('Something went wrong. Please try again later.',error);
+            } finally {
+                setSubmitting(false); 
+            }
         },
     });
-
-    const sendPasswordResetLink = async (email: string) => {
-        console.log(`Password reset link sent to: ${email}`);
-
-        try {
-            const response = await axios.post('http://localhost:4000/user/forgotpassword', { email });
-            console.log(response.data.message)
-            if (response.data.message === 'User found') {
-                navigate('/user/forgotpasswordotp', { state: { email } });
-            } else if (response.data.message === 'Not success') {
-                toast.error('Incorrect email');
-            }
-        } catch (error) {
-            console.error('Error sending password reset link:', error);
-            toast.error('Something went wrong. Please try again later.');
-        }
-    };
 
     return (
         <div className="h-screen w-full relative">
@@ -82,9 +80,12 @@ const ForgotPasswordBody = () => {
                         />
                     </div>
 
-                    {formik.touched.email && formik.errors.email ? (
+                    {/* {formik.touched.email && formik.errors.email ? (
                         <div className="text-red-500 text-sm mt-1 ml-2">{formik.errors.email}</div>
-                    ) : null}
+                    ) : null} */}
+                    {error?
+                    <div className="text-red-500 text-sm mt-1 ml-2">{error}</div>:''
+                    }
 
                     <button
                         type="submit"

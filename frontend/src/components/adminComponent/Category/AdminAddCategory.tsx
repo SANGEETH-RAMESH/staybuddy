@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Package, Upload, ArrowLeft, Save, Loader2, ToggleLeft, ToggleRight } from 'lucide-react';
 import AdminHeader from '../../commonComponents/adminHeader';
 import AdminSidebar from '../../commonComponents/adminSidebar';
+import adminApiClient from '../../../services/adminApiClient';
 
 const AdminAddCategoryPage = () => {
   const navigate = useNavigate();
@@ -114,7 +114,7 @@ const AdminAddCategoryPage = () => {
         formData.append('photos', imageFile);
       }
       console.log(formData,'formData')
-      const response = await axios.post(
+      const response = await adminApiClient.post(
         'http://localhost:4000/admin/addCategory',
         formData,
         {
@@ -135,13 +135,7 @@ const AdminAddCategoryPage = () => {
       }
     } catch (error) {
       // const err = error ; 
-      if (axios.isAxiosError(error)) {
-        toast.error(error.response?.data?.message || 'An error occurred while adding the category');
-        console.error('Axios error:', error);
-      } else {
-        toast.error('An unexpected error occurred');
-        console.error('Unknown error:', error);
-      }
+      console.log(error)
     } finally {
       setIsSubmitting(false);
     }

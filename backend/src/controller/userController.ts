@@ -132,7 +132,6 @@ class UserController {
         }
     }
 
-    // Get User Details
     async getUserDetails(req: Request, res: Response): Promise<void> {
         try {
             const user = req.user;
@@ -145,7 +144,6 @@ class UserController {
             const id = typeof user._id === "string" ? new ObjectId(user._id) : user._id;
             // console.log(id, 'iddd');
 
-            // // Assuming userService.getUserDetails() is expecting an ObjectId
             const response = await this.userService.getUserDetails(id);
             // console.log(response,'response')
 
@@ -173,7 +171,7 @@ class UserController {
             // console.log(user.email, 'eimail')
             const data = { ...req.body, email: user.email };
             const response = await this.userService.changePassword(data);
-
+            console.log("Data", data)
             if (!response) {
                 res.status(400).json({ success: false, message: "Password change failed" });
                 return;
@@ -233,8 +231,13 @@ class UserController {
     async getHostels(req: Request, res: Response): Promise<void> {
         try {
             // console.log('hello')
-            const response = await this.userService.getHostel();
-            res.status(200).json({ success: true, message: response })
+            console.log(req.query, 'sdfsf')
+            const { page, limit,search } = req.query
+            const pageStr = typeof page === 'string' ? page : '1';
+            const limitStr = typeof limit === 'string' ? limit : '10';
+            const searchStr = typeof search === 'string' ? search : '';
+            const response = await this.userService.getHostels(pageStr, limitStr,searchStr);
+            res.status(200).json({ success: true, response })
         } catch (error) {
             console.log(error)
         }
@@ -319,10 +322,14 @@ class UserController {
 
     async getSavedBookings(req: Request, res: Response): Promise<void> {
         try {
+            console.log(req.query,'Query')
             console.log(req.params, 'dsfsd')
+            const { page, limit } = req.query
+            const pageStr = typeof page === 'string' ? page : '1';
+            const limitStr = typeof limit === 'string' ? limit : '10';
             const id = req.params.id;
             const userId = new ObjectId(id)
-            const response = await this.userService.getSavedBookings(userId);
+            const response = await this.userService.getSavedBookings(userId,pageStr, limitStr);
             res.status(200).json({ success: true, message: response })
         } catch (error) {
             console.log(error)
@@ -335,12 +342,12 @@ class UserController {
             if (req.user) {
                 const userId = req.user._id
                 const response = await this.userService.addToWishlist(hostelId, userId)
-                res.status(200).json({message:response})
+                res.status(200).json({ message: response })
             }
 
         } catch (error) {
             console.log(error)
-            res.status(400).json({message:error})
+            res.status(400).json({ message: error })
         }
     }
 
@@ -349,49 +356,58 @@ class UserController {
             console.log(req.params.id, "delete")
             const hostelId = req.params.id;
             const userId = req.user?._id
-            if(userId){
-                const response = await this.userService.removeFromWishlist(hostelId,userId)
-                res.status(200).json({message:response}) 
+            if (userId) {
+                const response = await this.userService.removeFromWishlist(hostelId, userId)
+                res.status(200).json({ message: response })
             }
         } catch (error) {
-            res.status(400).json({message:error})
+            res.status(400).json({ message: error })
         }
     }
 
-    async checkWishlist(req:Request,res:Response):Promise<void>{
+    async checkWishlist(req: Request, res: Response): Promise<void> {
         try {
             const userId = req.user?._id;
             const hostelId = req.params.id;
-            if(userId){
-                const response = await this.userService.checkWishlist(userId,hostelId)
-                res.status(200).json({message:response})
+            if (userId) {
+                const response = await this.userService.checkWishlist(userId, hostelId)
+                res.status(200).json({ message: response })
             }
         } catch (error) {
-            res.status(400).json({message:error})
+            res.status(400).json({ message: error })
         }
     }
 
-    async getWishlist(req:Request,res:Response):Promise<void>{
+    async getWishlist(req: Request, res: Response): Promise<void> {
         try {
             const userId = req.user?._id
-            if(userId){
-            const response = await this.userService.getWishlist(userId)
-            res.status(200).json({message:response})
+            if (userId) {
+                const response = await this.userService.getWishlist(userId)
+                res.status(200).json({ message: response })
             }
         } catch (error) {
-            res.status(400).json({message:error})
+            res.status(400).json({ message: error })
         }
     }
 
-    async deleteWishlist(req:Request,res:Response):Promise<void>{
+    async deleteWishlist(req: Request, res: Response): Promise<void> {
         try {
             const userId = req.user?._id
-            if(userId){
+            if (userId) {
                 const response = await this.userService.deleteWishlist(userId)
-                res.status(200).json({message:response})
+                res.status(200).json({ message: response })
             }
         } catch (error) {
-            res.status(200).json({message:error})
+            res.status(200).json({ message: error })
+        }
+    }
+
+    async getHost(req: Request, res: Response): Promise<void> {
+        try {
+            const response = await this.userService.allHost();
+            res.status(200).json({ message: response })
+        } catch (error) {
+            res.status(500).json({ message: error })
         }
     }
 }

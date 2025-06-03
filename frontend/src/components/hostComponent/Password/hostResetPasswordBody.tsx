@@ -39,13 +39,15 @@ const HostResetPasswordBody = () => {
 
   return (
     <div>
-      <div className="h-[580px] w-[1360px] relative">
+      {/* <div className="h-[580px] w-[1360px] relative">
         <div className="h-[250px] bg-[#31AFEF]"></div>
         <div className="h-[380px] bg-[#EEEEEE]"></div>
-      </div>
+      </div> */}
 
-      <div className="absolute top-[50px] left-[100px] text-[35px] font-bold text-white">
-        StayBuddy - Host
+      <div className="bg-emerald-600 py-3 md:py-4 px-4 md:px-6">
+        <div className="text-sm sm:text-lg lg:text-xl font-semibold text-white">
+          StayBuddy - Host
+        </div>
       </div>
 
       <div className="absolute top-[50%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 w-[400px] bg-white shadow-lg rounded-lg p-6">
@@ -88,7 +90,7 @@ const HostResetPasswordBody = () => {
 
         <button
           onClick={handleSubmit}
-          className="w-full bg-[#31AFEF] text-white py-2 rounded-lg font-semibold hover:bg-[#2499ce] transition"
+          className="w-full bg-emerald-500 text-white py-2 rounded-lg font-semibold hover:bg-emerald-600 transition"
           disabled={loading}
         >
           {loading ? "Resetting..." : "RESET PASSWORD"}

@@ -9,7 +9,6 @@ cloudinary.config({
 });
 
 const uploadImage = (imageBuffering: Buffer): Promise<string> => {
-    console.log('hi');
     return new Promise((resolve, reject) => {
         cloudinary.uploader.upload_stream({ folder: 'profiles' }, (error, result) => {
             if (error) {

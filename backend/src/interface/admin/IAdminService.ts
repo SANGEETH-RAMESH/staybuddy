@@ -17,12 +17,14 @@ export interface IAdminService{
     hostDelete(hostId:Types.ObjectId):Promise<string>,
     approveHost(hostId: mongoose.Types.ObjectId):Promise<string>,
     rejectHost(hostId:mongoose.Types.ObjectId):Promise<string>,
-    getAllHostels():Promise<IHostel [] | null | string>,
+    getAllHostels(page: string, limit: string): Promise<{ hostels: IHostel[], totalCount: number; } | string | null>,
     addCategory(name:string,isActive:boolean,photo:string | undefined):Promise<string>,
-    getAllCategory():Promise<ICategory[] | string>,
+    getAllCategory(skip:number,limit:number):Promise<{getCategories:ICategory[],totalCount:number} | string>,
     getCategory(id:string):Promise<ICategory | string>,
     updateCategory(id: string, name: string, isActive: boolean): Promise<string>,
     getUserDetails(userId:string):Promise<string | IHost | null>,
-    getHostHostelData(hostId:string): Promise<IHostel[] | string | null>
-    
+    getHostHostelData(hostId:string): Promise<IHostel[] | string | null>,
+    deleteHostel(hostelId: string): Promise<string>,
+    deleteCategory(id: string): Promise<string | null>,
+    searchCategory(name:string):Promise<ICategory[] | string | null>
 }

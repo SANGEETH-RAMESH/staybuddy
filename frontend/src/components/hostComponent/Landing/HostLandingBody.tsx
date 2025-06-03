@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import host_landing from '../../../assets/seller1.webp';
 import hostapiClient from '../../../services/hostapiClient';
 import { LOCALHOST_URL } from '../../../constants/constants';
 import { useNavigate } from 'react-router-dom';
+import { jwtDecode } from 'jwt-decode';
+import { io } from "socket.io-client";
+const socket = io("http://localhost:4000");
 
 
 const HostLandingBody = () => {
@@ -24,6 +27,19 @@ const HostLandingBody = () => {
   const handleNavigateToProperty = () =>{
     navigate('/host/hostel')
   }
+
+  useEffect(() => {
+      const accessToken = localStorage.getItem('hostAccessToken');
+      if (accessToken) {
+        const decoded = jwtDecode(accessToken);
+        const hostId = decoded._id
+        console.log(hostId._id, 'ddaaaaa')
+        if (hostId) {
+          socket.emit('hostLoggedIn', hostId);
+        }
+      }
+  
+    }, [])
 
 
   return (

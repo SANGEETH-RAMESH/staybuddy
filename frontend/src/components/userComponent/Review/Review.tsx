@@ -25,12 +25,14 @@ interface User {
 const UserReviews = () => {
   const { id } = useParams();
   const [reviews, setReviews] = useState([]);
+  const [loading,setLoading] = useState(true)
 
   useEffect(() => {
     const fetchReviewData = async () => {
       try {
         const response = await apiClient.get(`${LOCALHOST_URL}/order/getReviewDetails/${id}`);
         const data = response.data.message;
+        setLoading(false)
         setReviews(data);
       } catch (error) {
         console.log(error);
@@ -63,6 +65,19 @@ const UserReviews = () => {
 
     return stars;
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="relative w-16 h-16">
+          {/* Outer circle */}
+          <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+          {/* Spinning arc */}
+          <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
   if (reviews.length === 0) {
     return (
@@ -116,8 +131,8 @@ const UserReviews = () => {
           <div className="flex flex-col space-y-2">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-lg">{review?.userId.name}</h3>
-                <p className="text-sm text-gray-500">{review?.userId.email}</p>
+                <h3 className="font-semibold text-lg">{review?.userId?.name}</h3>
+                <p className="text-sm text-gray-500">{review?.userId?.email}</p>
               </div>
               <span className="text-sm text-gray-500">
                 {new Date(review?.createdAt).toLocaleDateString()}

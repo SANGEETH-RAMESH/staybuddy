@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React,{ useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Package, ArrowLeft, Save, Loader2, ToggleLeft, ToggleRight, Info, AlertCircle } from 'lucide-react';
 import AdminHeader from '../../commonComponents/adminHeader';
 import AdminSidebar from '../../commonComponents/adminSidebar';
+import adminApiClient from '../../../services/adminApiClient'; 
 
 const AdminEditCategoryPage = () => {
     const navigate = useNavigate();
@@ -25,7 +25,7 @@ const AdminEditCategoryPage = () => {
         const fetchCategoryData = async () => {
             try {
                 setIsLoading(true);
-                const response = await axios.get(`http://localhost:4000/admin/getCategory/${id}`);
+                const response = await adminApiClient.get(`http://localhost:4000/admin/getCategory/${id}`);
                 console.log(response.data.message)
                 const categoryData = response.data.message;
 
@@ -69,7 +69,7 @@ const AdminEditCategoryPage = () => {
     };
 
     // Submit form
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e : React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (!validateForm()) return;
@@ -79,7 +79,7 @@ const AdminEditCategoryPage = () => {
         setIsSubmitting(true);
 
         try {
-            const response = await axios.put(
+            const response = await adminApiClient.put(
                 `http://localhost:4000/admin/updateCategory/${id}`,
                 {
                     name,
@@ -96,13 +96,7 @@ const AdminEditCategoryPage = () => {
                 toast.error(response.data.message || 'Failed to update category');
             }
         } catch (error) {
-            if (axios.isAxiosError(error)) {
-                toast.error(error.response?.data?.message || 'An error occurred while updating the category');
-                console.error('Axios error:', error);
-            } else {
-                toast.error('An unexpected error occurred');
-                console.error('Unknown error:', error);
-            }
+            console.log(error)
         } finally {
             setIsSubmitting(false);
         }

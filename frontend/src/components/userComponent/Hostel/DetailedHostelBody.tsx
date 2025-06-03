@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import apiClient from '../../../services/apiClient';
 import { LOCALHOST_URL } from '../../../constants/constants';
+import { toast } from 'react-toastify';
 
 interface Host {
     _id: string;
@@ -156,7 +157,13 @@ const HostelDetailPage = () => {
 
     const handleBooking = () => {
         console.log('Booking initiated for hostel:', id);
+        if(hostel.beds>0){
         navigate(`/user/booking/${id}`)
+
+        }else{
+            toast.error("No Room Availbale")
+        }
+        console.log(hostel.beds,'hee')
     };
 
     const handleChatWithOwner = async(ownerId:string) => {
@@ -184,13 +191,18 @@ const HostelDetailPage = () => {
         navigate(`/user/reviews/${id}`)
     }
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-pulse text-xl text-gray-600">Loading...</div>
-            </div>
-        );
-    }
+     if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="relative w-16 h-16">
+          {/* Outer circle */}
+          <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+          {/* Spinning arc */}
+          <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
 
     if (error || !hostel) {
         return (

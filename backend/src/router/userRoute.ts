@@ -35,7 +35,7 @@ user_route.delete('/removeFromWishlist/:id',userAuthMiddleware,userController.re
 user_route.get('/checkWishlist/:id',userAuthMiddleware,userController.checkWishlist.bind(userController))
 user_route.get('/getWishlist',userAuthMiddleware,userController.getWishlist.bind(userController))
 user_route.delete('/deleteWishlist',userAuthMiddleware,userController.deleteWishlist.bind(userController))
-
+user_route.get('/allHosts',userAuthMiddleware,userController.getHost.bind(userController))
 
 
 user_route.use(passport.initialize());

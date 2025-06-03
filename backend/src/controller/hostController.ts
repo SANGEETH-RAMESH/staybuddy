@@ -67,7 +67,7 @@ class hostController {
     async resetPassword(req: Request, res: Response): Promise<void> {
         try {
             const response = await this.hostService.resetPassword(req.body);
-            console.log(response,'ss')
+            console.log(response, 'ss')
             res.json({ success: true, message: response.message })
         } catch (error) {
             console.log(error)
@@ -112,14 +112,14 @@ class hostController {
     async getHostels(req: Request, res: Response): Promise<void> {
         try {
             const host = req.customHost
-            console.log(host,'hello')
+            console.log(host, 'hello')
             const email = host?.email;
-            if(!email){
-                res.status(404).json({success:true,message:"No host"})
-                return 
+            if (!email) {
+                res.status(404).json({ success: true, message: "No host" })
+                return
             }
             const response = await this.hostService.getHostels(email);
-            console.log(response,'response')
+            console.log(response, 'response')
             res.status(200).json({ success: true, message: response })
         } catch (error) {
             console.log(error)
@@ -137,8 +137,8 @@ class hostController {
             console.log(host, 'hello')
             // const hostId = new ObjectId(host._id)
             const response = await this.hostService.getHost(host._id);
-            
-            console.log(response, 'responseeeee')
+
+            // console.log(response, 'responseeeee')
             res.status(200).json({ success: true, message: response });
         } catch (error) {
             console.log(error);
@@ -168,7 +168,7 @@ class hostController {
         try {
             console.log('hey')
             console.log(req.file)
-            console.log(req.body.documentType,'Body')
+            console.log(req.body.documentType, 'Body')
             const documentType = req.body.documentType;
             let photo: string | undefined = undefined;
             //   console.log(req.file,'file')
@@ -184,7 +184,7 @@ class hostController {
             }
 
             const hostId = new ObjectId(host?._id);
-            const response = await this.hostService.approvalRequest(hostId,photo,documentType)
+            const response = await this.hostService.approvalRequest(hostId, photo, documentType)
             res.status(200).json({ success: true, message: response })
 
         } catch (error) {
@@ -194,7 +194,7 @@ class hostController {
 
     async getOneHostel(req: Request, res: Response): Promise<void> {
         try {
-            console.log(req.query.id,'hello');
+            console.log(req.query.id, 'hello');
             const id = req.query.id as string;
             if (!id) {
                 res.json({ success: false, message: "Hostel ID not provided" });
@@ -216,10 +216,10 @@ class hostController {
             // console.log(host)
             const hostData = { name: host?.displayName, email: host?.email };
             const response = await this.hostService.hostGoogleSignUp(hostData);
-            if(typeof response !== 'string' && response?.message === 'Success'){
+            if (typeof response !== 'string' && response?.message === 'Success') {
                 res.redirect(`http://localhost:5173/host/home/?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}`)
-            }else  {
-                
+            } else {
+
                 res.json({ message: response });
             }
 
@@ -229,27 +229,130 @@ class hostController {
         }
     }
 
-    async validateRefreshToken(req:Request,res:Response):Promise<void>{
+    async validateRefreshToken(req: Request, res: Response): Promise<void> {
         try {
-           
-            const {refreshToken} = req.body;
+
+            const { refreshToken } = req.body;
             // console.log(refreshToken,'controllerrr')
             const response = await this.hostService.validateRefreshToken(refreshToken)
-            res.status(200).json({success:true,message:response})
+            res.status(200).json({ success: true, message: response })
         } catch (error) {
             console.log(error)
         }
     }
 
-    async getAllCategory(req:Request,res:Response):Promise<void>{
+    async getAllCategory(req: Request, res: Response): Promise<void> {
         try {
             const response = await this.hostService.getAllCategory();
-            res.status(200).json({message:response})
+            res.status(200).json({ message: response })
         } catch (error) {
-            res.status(400).json({message:error})
+            res.status(400).json({ message: error })
         }
     }
 
+    async getWalletDetails(req: Request, res: Response): Promise<void> {
+        try {
+            console.log('heeeee')
+            const host = req.customHost;
+            if (!host?._id) {
+                res.json({ success: false, message: "Not host id" })
+                return
+            }
+            const hostId = host?._id.toString()
+            const response = await this.hostService.getWalletDetails(hostId);
+            res.status(200).json({ message: response })
+        } catch (error) {
+            res.status(400).json({ message: error })
+        }
+    }
+
+    async getBookings(req: Request, res: Response): Promise<void> {
+        try {
+            const hostId = req.params.id;
+            const response = await this.hostService.getBookings(hostId)
+            res.status(200).json({ message: response })
+        } catch (error) {
+            res.status(400).json({ message: error })
+        }
+    }
+
+    async changePassword(req: Request, res: Response): Promise<void> {
+        try {
+            const host = req.customHost
+            if (!host || !host.email) {
+                res.status(401).json({ success: false, message: "No Host" })
+                return
+            }
+            const body = req.body.formData
+            const data = { email: host.email, ...body }
+            const response = await this.hostService.changePassword(data)
+            if (!response) {
+                res.status(400).json({ success: false, message: "No Response" })
+            }
+            res.status(200).json({ success: true, message: response })
+        } catch (error) {
+            res.status(500).json({ message: error })
+        }
+    }
+
+    async editProfile(req: Request, res: Response): Promise<void> {
+        try {
+            const host = req.customHost;
+            if (!host || !host.email) {
+                res.status(400).json({ message: "No Host" })
+                return
+            }
+            // console.log(req.body,"body")
+            const data = { email: host.email, ...req.body }
+            const response = await this.hostService.editProfile(data)
+            res.status(200).json({ message: response })
+        } catch (error) {
+            res.status(500).json({ message: error })
+        }
+    }
+
+    async walletDeposit(req: Request, res: Response): Promise<void> {
+        try {
+            const { amount } = req.body;
+            const id = req.customHost?._id?.toString();
+
+            if (!id) {
+                res.status(400).json({ message: "No Host" });
+                return;
+            }
+            const data = { id, amount: String(amount) };
+            const response = await this.hostService.walletDeposit(data)
+            res.status(200).json({ success: true, message: response })
+        } catch (error) {
+            res.status(500).json({ message: error })
+        }
+    }
+
+    async walletWithDraw(req:Request,res:Response):Promise<void>{
+        try {
+            const { amount } = req.body;
+            const id = req.customHost?._id?.toString();
+
+            if (!id) {
+                res.status(400).json({ message: "No Host" });
+                return;
+            }
+            const data = { id, amount: String(amount) };
+            const response = await this.hostService.walletWithDraw(data);
+            res.status(200).json({message:response})
+        } catch (error) {
+            res.status(500).json({message:error})
+        }
+    }
+
+    async getAllUsers(req:Request,res:Response):Promise<void>{
+        try {
+            const response = await this.hostService.getAllUsers();
+            res.status(200).json({message:response})
+        } catch (error) {
+            res.status(500).json({message:error})
+        }
+    }
 }
 
 export default hostController

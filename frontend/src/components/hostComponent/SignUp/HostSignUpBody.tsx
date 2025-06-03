@@ -25,13 +25,30 @@ const HostSignUpBody = () => {
     });
 
     const signupValidationSchema = Yup.object().shape({
-        name: Yup.string().required('Name is required').min(2, 'Name must be at least 2 characters'),
-        email: Yup.string().email('Invalid email').required('Email is required'),
-        password: Yup.string().required('Password is required').min(6, 'Password must be at least 6 characters'),
-        mobile: Yup.string()
-            .matches(/^\d{10}$/, 'Mobile number must be 10 digits')
-            .required('Mobile number is required'),
-    });
+            name: Yup.string().required('Name is required').min(2, 'Name must be at least 2 characters'),
+            email: Yup.string().email('Invalid email').required('Email is required'),
+            password: Yup.string().required('Password is required').min(6, 'Password must be at least 6 characters'),
+            mobile: Yup.string()
+                .required('Mobile number is required')
+                .matches(/^\d{10}$/, 'Mobile number must be exactly 10 digits')
+                .test(
+                    'first-digit',
+                    'First digit must be greater than 5',
+                    value => {
+                        if (!value) return false;
+                        return parseInt(value[0], 10) > 5;
+                    }
+                )
+                .test(
+                    'max-zeros',
+                    'Mobile number can have at most five 0s',
+                    value => {
+                        if (!value) return false;
+                        const zeroCount = (value.match(/0/g) || []).length;
+                        return zeroCount <= 5;
+                    }
+                )
+        });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -80,14 +97,14 @@ const HostSignUpBody = () => {
                         alt="Signup"
                         className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/80 to-blue-600/80 flex flex-col items-center justify-center p-6 text-white">
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/80 to-emerald-600/80 flex flex-col items-center justify-center p-6 text-white">
                         <h2 className="text-2xl font-bold mb-2">Welcome to StayBuddy!</h2>
                         <p className="text-sm text-center mb-4 text-white/90">
                             Easily list, manage, and rent out<br />your properties
                         </p>
                         <button
                             onClick={() => navigate('/host/login')}
-                            className="px-6 py-2 border-2 border-white rounded-full text-sm font-semibold hover:bg-white hover:text-blue-600 transition-all duration-300"
+                            className="px-6 py-2 border-2 border-white rounded-full text-sm font-semibold hover:bg-white hover:text-emerald-600 transition-all duration-300"
                         >
                             Sign In
                         </button>
@@ -111,7 +128,7 @@ const HostSignUpBody = () => {
                                         value={formValues.name}
                                         onChange={handleChange}
                                         placeholder="Enter your full name"
-                                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm"
                                     />
                                 </div>
                                 {errors.name && <div className="text-red-500 text-xs">{errors.name}</div>}
@@ -123,12 +140,12 @@ const HostSignUpBody = () => {
                                 <div className="relative">
                                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                     <input
-                                        type="email"
+                                        type="text"
                                         name="email"
                                         value={formValues.email}
                                         onChange={handleChange}
                                         placeholder="Enter your email"
-                                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm"
                                     />
                                 </div>
                                 {errors.email && <div className="text-red-500 text-xs">{errors.email}</div>}
@@ -145,7 +162,7 @@ const HostSignUpBody = () => {
                                         value={formValues.password}
                                         onChange={handleChange}
                                         placeholder="Create a password"
-                                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm"
                                     />
                                 </div>
                                 {errors.password && <div className="text-red-500 text-xs">{errors.password}</div>}
@@ -162,7 +179,7 @@ const HostSignUpBody = () => {
                                         value={formValues.mobile}
                                         onChange={handleChange}
                                         placeholder="Enter your mobile number"
-                                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent outline-none transition-all text-sm"
                                     />
                                 </div>
                                 {errors.mobile && <div className="text-red-500 text-xs">{errors.mobile}</div>}
@@ -171,7 +188,7 @@ const HostSignUpBody = () => {
                             {/* Signup Button */}
                             <button
                                 type="submit"
-                                className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 group text-sm"
+                                className="w-full bg-emerald-600 text-white py-2 rounded-lg font-semibold hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2 group text-sm"
                             >
                                 Create Account
                                 <ArrowRight className="group-hover:translate-x-1 transition-transform" size={16} />

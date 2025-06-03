@@ -5,6 +5,7 @@ import { hostPayload } from "../types/commonInterfaces/tokenInterface";
 import Host from "../model/hostModel";
 
 const hostAuthMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    console.log('MAcha')
     const token = req.header('Authorization')?.split(' ')[1];
 
     if (!token) {

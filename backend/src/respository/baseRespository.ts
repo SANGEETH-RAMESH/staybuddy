@@ -10,12 +10,12 @@ class baseRepository<T> implements IBaseRepository<T> {
     }
 
     
-    async findByEmail(email: string): Promise<T | null> {
+    async findByEmail(filter: object): Promise<T | null> {
         try {
-            const data = await this.model.findOne({email:email} ).exec();
+            const data = await this.model.findOne(filter).exec();
             // const d = await this.model.find();
             // console.log(d)
-            console.log(data,email,"data")
+            // console.log(data,email,"data")
             return data;
         } catch (error) {
             console.error(error);

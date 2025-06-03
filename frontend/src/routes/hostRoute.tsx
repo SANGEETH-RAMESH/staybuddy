@@ -14,6 +14,13 @@ import HostAddHostPage from '../pages/hostPages/hostAddHostPage'
 import HostHostelListingsPage from '../pages/hostPages/hostHostelListingsPage'
 import HostApprovalPage from '../pages/hostPages/hostApprovalPage'
 import HostHostelDetailsPage from '../pages/hostPages/hostHostelDetailsPage'
+import HostProfilePage from '../pages/hostPages/hostProfilePage'
+import HostShowBookingsPage from '../pages/hostPages/hostShowBookingsPage'
+import HostChatPage from '../pages/hostPages/hostChatPage'
+import HostChangePasswordPage from '../pages/hostPages/hostChangePasswordPage'
+import HostEditProfilePage from '../pages/hostPages/hostEditProfilePage'
+import HostWalletPage from '../pages/hostPages/hostWalletPage'
+import HostWalletTransactionPage from '../pages/hostPages/hostWalletTransactionPage'
 
 
 const hostRoute = () => {
@@ -32,6 +39,13 @@ const hostRoute = () => {
         <Route path='/hostel' element={<HostLoginProtector element={<HostHostelListingsPage/>}/>}  />
         <Route path='/approval' element={<HostLoginProtector element={<HostApprovalPage/>} />} />
         <Route path='/detailhostel' element={<HostLoginProtector element={<HostHostelDetailsPage/>}/>}  />
+        <Route path='/profile' element={<HostLoginProtector element={<HostProfilePage/>}/>}  />
+        <Route path='/showbookings/:id' element={<HostLoginProtector element={<HostShowBookingsPage/>}/>}  />
+        <Route path='/chat/:id' element={<HostLoginProtector element={<HostChatPage/>}/>}  />
+        <Route path='/changepassword' element={<HostLoginProtector element={<HostChangePasswordPage/>}/>}  />
+        <Route path='/editprofile' element={<HostLoginProtector element={<HostEditProfilePage/>}/>}  />
+        <Route path='/wallet' element={<HostLoginProtector element={<HostWalletPage/>}/>}  />
+        <Route path='/wallet/transactions' element={<HostLoginProtector element={<HostWalletTransactionPage/>}/>}  />
       </Routes>
     </div>
   )

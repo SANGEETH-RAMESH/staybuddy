@@ -181,7 +181,7 @@ const BookingForm = () => {
         const hostelData = hostelResponse.data.message;
         const userData = userResponse.data.data;
         const walletData = walletResponse.data.message;
-        
+        console.log(walletData,'hee')
         setWalletBalance(walletData.balance);
         setCustomerEmail(userData.email);
         setCustomerName(userData.name);

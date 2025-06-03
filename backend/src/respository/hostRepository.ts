@@ -8,8 +8,10 @@ import HashedPassword from "../utils/hashedPassword";
 import bcrypt from 'bcrypt';
 import { hostPayload } from "../types/commonInterfaces/tokenInterface";
 import Hostel, { IHostel } from "../model/hostelModel";
-import Wallet from "../model/walletModel";
+import Wallet, { IWallet } from "../model/walletModel";
 import Category, { ICategory } from "../model/categoryModel";
+import Order, { IOrder } from "../model/orderModel";
+import User, { IUser } from "../model/userModel";
 
 
 interface HostelData {
@@ -133,7 +135,7 @@ class hostRepository implements IHostRepository {
         }
     }
 
-    async ChangePassword(hostData: { email: string, password: string }): Promise<{ message: string }> {
+    async resetPassword(hostData: { email: string, password: string }): Promise<{ message: string }> {
         try {
             console.log("hello")
             const existingHost = await Host.findOne({ email: hostData.email });
@@ -357,16 +359,21 @@ class hostRepository implements IHostRepository {
         }
     }
 
-    async createWallet(email:string):Promise<string>{
+    async createWallet(email: string): Promise<string> {
         try {
-            const findHost = await Host.findOne({email:email})
-            if(!findHost){
+            const findHost = await Host.findOne({ email: email })
+            if (!findHost) {
                 return "Host not found"
             }
             const creatingWallet = new Wallet({
-                userOrHostId:findHost._id
+                userOrHostId: findHost._id
             })
             await creatingWallet.save()
+
+            findHost.wallet_id = creatingWallet._id as mongoose.Types.ObjectId;
+            findHost.tempExpires = undefined;
+            findHost.temp = false;
+            await findHost.save();
             return 'success'
         } catch (error) {
             console.log(error)
@@ -374,7 +381,7 @@ class hostRepository implements IHostRepository {
         }
     }
 
-    async getAllCategory(): Promise<ICategory[] | string>{
+    async getAllCategory(): Promise<ICategory[] | string> {
         try {
             const getAllCategories = await Category.find();
             return getAllCategories
@@ -383,20 +390,21 @@ class hostRepository implements IHostRepository {
         }
     }
 
-    async uploadDocument(host_id:Types.ObjectId,photo:string | undefined,documentType:string):Promise<string>{
+    async uploadDocument(host_id: Types.ObjectId, photo: string | undefined, documentType: string): Promise<string> {
         try {
             const updateHost = await Host.findOneAndUpdate(
-                {_id:host_id},
-                {$set:
+                { _id: host_id },
+                {
+                    $set:
                     {
-                        photo:photo,
-                        documentType:documentType,
-                        temp:false,
-                        tempExpires:undefined
+                        photo: photo,
+                        documentType: documentType,
+                        temp: false,
+                        tempExpires: undefined
                     }
                 }
             )
-            if(updateHost){
+            if (updateHost) {
                 return "Documnent Updated"
             }
             return "Document Not Updated"
@@ -404,7 +412,152 @@ class hostRepository implements IHostRepository {
             return error as string
         }
     }
-    
+
+    async findHostWallet(id: string): Promise<IWallet | string | null> {
+        try {
+            console.log(id)
+            console.log(typeof id)
+            const hostId = new mongoose.Types.ObjectId(id)
+            const hostWallet = await Wallet.aggregate([
+                { $match: { userOrHostId: hostId } }
+            ])
+            if (!hostWallet) {
+                return "No Wallet"
+            }
+            return hostWallet[0]
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getBookings(hostId: string): Promise<IOrder[] | string | null> {
+        try {
+            const getBookings = await Order.find({ host_id: hostId })
+                .populate("host_id")
+                .populate("userId")
+                .populate("hostel_id.id");
+            console.log(getBookings)
+            return getBookings
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async changePassword(hostData: { email: string; currentPassword: string; newPassword: string }): Promise<string> {
+        try {
+            console.log("heeeee", hostData)
+            const findHost = await Host.findOne({ email: hostData.email })
+            if (!findHost) {
+                return "No Host"
+            }
+            const checkPassword = await bcrypt.compare(hostData.currentPassword, findHost.password)
+            if (checkPassword) {
+                const samePassword = await bcrypt.compare(hostData.newPassword, findHost.password)
+                if (samePassword) {
+                    return "New Password Cannot be Same as Current Password"
+                } else {
+                    const hashedPassword = await bcrypt.hash(hostData.newPassword, 10);
+                    await Host.updateOne(
+                        { email: hostData.email },
+                        {
+                            $set:
+                                { password: hashedPassword }
+                        }
+                    )
+                    return "Password Changed"
+                }
+            } else {
+                return "Current Password does not match"
+            }
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async editProfile(hostData: { email: string, name: string, mobile: string }): Promise<string> {
+        try {
+            console.log("HOstData", hostData)
+            const updatingHostDetails = await Host.updateOne(
+                { email: hostData.email },
+                {
+                    $set: {
+                        name: hostData.name,
+                        mobile: hostData.mobile
+                    }
+                }
+            )
+            if (updatingHostDetails.matchedCount == 1) {
+                return "Host details updated"
+            } else {
+                return "Not updated"
+            }
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async walletDeposit({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
+        try {
+            console.log(id,amount,'amount')
+            await Wallet.findOneAndUpdate(
+                { userOrHostId: id },
+                {
+                    $inc: { balance: parseFloat(amount) },
+                    $push: {
+                        transactionHistory: {
+                            type: "deposit",
+                            amount: parseFloat(amount),
+                            date: new Date(),
+                            description: "Wallet deposit",
+                        },
+                    },
+                }
+            );
+            const userWallet = await Wallet.findOne({ userOrHostId: id });
+            if (!userWallet) {
+                return "Wallet not found"
+            }
+            return { message: "Deposited", userWallet };
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async walletWithDraw({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
+        try {
+            console.log(id,amount,'amount')
+            await Wallet.findOneAndUpdate(
+                { userOrHostId: id },
+                {
+                    $inc: { balance: -parseFloat(amount) },
+                    $push: {
+                        transactionHistory: {
+                            type: "withdraw",
+                            amount: parseFloat(amount),
+                            date: new Date(),
+                            description: "Wallet withdrawal",
+                        },
+                    },
+                }
+            );
+            const userWallet = await Wallet.findOne({ userOrHostId: id });
+            if (!userWallet) {
+                return "Wallet not found"
+            }
+            return { message: "Withdrawn", userWallet };
+        } catch (error) {
+            return error as string
+        }
+    } 
+
+    async getAllUsers(): Promise<IUser[] | string | null>{
+        try {
+            const allUsers = await User.find({isAdmin:false});
+            return allUsers
+        } catch (error) {
+            return error as string
+        }
+    }
 }
 
 export default hostRepository

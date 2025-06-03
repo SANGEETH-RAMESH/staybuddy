@@ -46,15 +46,14 @@ export const otpValidation = Yup.object({
 });
 
 export const signInValidation = Yup.object({
-	email: Yup.string()
-		.trim()
-		.email("Please enter a valid email")
-		.required("Please enter your email"),
+  email: Yup.string()
+    .trim()
+    .email("Please enter a valid email")
+    .required("Please enter your email"),
 
-	password: Yup.string()
-		.trim()
-		.min(8, "Password must be at least 8 characters")
-		.required("Please Enter Your Password"),
+  password: Yup.string()
+    .trim()
+    .required("Please enter your password"),
 });
 
 export const forgotPasswordValidation = Yup.object({

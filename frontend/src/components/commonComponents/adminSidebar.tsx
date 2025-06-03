@@ -57,6 +57,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
     dispatch(logout(
       { isLogged: false }
     ))
+    navigate('/admin/login')
 
   };
 

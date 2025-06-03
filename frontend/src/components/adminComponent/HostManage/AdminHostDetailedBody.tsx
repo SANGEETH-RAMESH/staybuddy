@@ -1,70 +1,76 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, FileText, User, MapPin, Calendar, CheckCircle, XCircle, Clock, Shield, Building, CreditCard, File } from 'lucide-react';
-import axios from 'axios';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, User, MapPin, Calendar, CheckCircle, XCircle, Shield, Building, CreditCard, Home } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LOCALHOST_URL } from '../../../constants/constants';
+import adminApiClient from '../../../services/adminApiClient';
+
+interface Host {
+  _id: string;
+  approvalRequest: string;
+  photo: string;
+  mobile: string;
+  createdAt: string;
+  address: string;
+  documentType: string;
+  status: string;
+  name: string;
+  email: string;
+}
+
+interface Hostel {
+  _id: string;
+  hostelname: string;
+  location: string;
+  length: string;
+  status: string
+}
 
 const AdminHostDetailedBody = () => {
-  // Mock data - in a real app this would come from props or API
+ 
 
-  const [hostel, setHostel] = useState([])
-
-  const [host, setHost] = useState({
-    id: "HOST12345",
-    name: "Alex Johnson",
-    email: "alex.johnson@example.com",
-    phone: "+1 (555) 123-4567",
-    documentType: "National ID",
-    idProofImage: "/api/placeholder/150/150",
-    status: "pending",
-    address: "123 Main Street, New York, NY",
-    joinDate: "March 15, 2024",
-    totalListings: 4,
-    averageRating: 4.7,
-    verificationDocuments: [
-      { name: "ID Verification", status: "verified", date: "Mar 15, 2024" },
-      { name: "Address Proof", status: "verified", date: "Mar 16, 2024" },
-      { name: "Background Check", status: "pending", date: "Awaiting" }
-    ],
-    properties: [
-      { id: "PROP1", name: "Sunny Downtown Apartment", location: "Manhattan, NY", status: "active" },
-      { id: "PROP2", name: "Cozy Studio Near Campus", location: "Brooklyn, NY", status: "active" },
-      { id: "PROP3", name: "Spacious 2BR with View", location: "Queens, NY", status: "under_review" },
-      { id: "PROP4", name: "Modern Loft", location: "Brooklyn, NY", status: "inactive" }
-    ]
-  });
+  const [hostel, setHostel] = useState<Hostel[]>([])
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [host, setHost] = useState<Host>();
 
   const hostId = useParams()
 
-  const handleStatusChange = async(newStatus:string) => {
-    setHost({ ...host, status: newStatus });
+  const handleStatusChange = async (newStatus: string) => {
+    setHost({ ...(host as Host), status: newStatus });
     // In a real app, you would make an API call here
     try {
-      if(newStatus == 'approved'){
-        console.log("hostId",hostId)
-        const response = await axios.patch(`${LOCALHOST_URL}/admin/approvehost`,{hostId});
+      if (newStatus == 'approved') {
+        console.log("hostId", hostId)
+        const response = await adminApiClient.patch(`${LOCALHOST_URL}/admin/approvehost`, { hostId });
         console.log(response)
-        if(response.data.message == 'Approved'){
+        if (response.data.message == 'Approved') {
           toast.success("Host approved");
-          window.location.reload();
-        }else if(response.data.message == 'Not Approved'){
-          toast.error("Host Not Approved")
+          console.log(host, 'hostt')
+          const updateHost = {
+            ...host,
+            approvalRequest: "3"
+          } as Host
+          setHost(updateHost)
         }
-      }else if(newStatus == 'rejected'){
-        const response = await axios.patch(`${LOCALHOST_URL}/admin/rejecthost`,{hostId})
-        if(response.data.message == 'Reject'){
+      } else if (newStatus == 'rejected') {
+        const response = await adminApiClient.patch(`${LOCALHOST_URL}/admin/rejecthost`, { hostId })
+        if (response.data.message == 'Reject') {
           toast.success("Host Rejected")
-          window.location.reload();
-        }else if(response.data.message == 'Not Reject'){
+          const updateHost = {
+            ...host,
+            approvalRequest: "1"
+          } as Host;
+          setHost(updateHost)
+
+        } else if (response.data.message == 'Not Reject') {
           toast.error("Host Not Rejected")
         }
       }
-      
+
     } catch (error) {
       console.log(error)
     }
-   
+
   };
 
   const handleBack = () => {
@@ -72,22 +78,7 @@ const AdminHostDetailedBody = () => {
     console.log("Navigating back");
   };
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'active':
-        return <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">Active</span>;
-      case 'inactive':
-        return <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">Inactive</span>;
-      case 'under_review':
-        return <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">Under Review</span>;
-      case 'verified':
-        return <span className="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">Verified</span>;
-      case 'pending':
-        return <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">Pending</span>;
-      default:
-        return <span className="px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-800">{status}</span>;
-    }
-  };
+
 
   const { id } = useParams();
 
@@ -95,8 +86,8 @@ const AdminHostDetailedBody = () => {
     const fetchHostData = async () => {
       try {
         console.log("id", id)
-        const response = await axios.get(`${LOCALHOST_URL}/admin/getUserDetails/${id}`)
-        const hostHostelData = await axios.get(`${LOCALHOST_URL}/admin/getHostHostelData/${id}`)
+        const response = await adminApiClient.get(`${LOCALHOST_URL}/admin/getUserDetails/${id}`)
+        const hostHostelData = await adminApiClient.get(`${LOCALHOST_URL}/admin/getHostHostelData/${id}`)
         console.log(hostHostelData.data.message, 'Hostel')
         setHostel(hostHostelData.data.message)
         // console.log(response.data.message)
@@ -106,7 +97,7 @@ const AdminHostDetailedBody = () => {
       }
     }
     fetchHostData();
-  }, [])
+  }, [id])
 
   return (
     <div className="w-full bg-gray-100 min-h-screen">
@@ -134,40 +125,80 @@ const AdminHostDetailedBody = () => {
                 <CreditCard size={32} className="text-white" />
               </div>
               <h3 className="text-white font-medium">Identity Verification</h3>
-              <p className="text-white text-sm opacity-80">Document Type: {host.documentType}</p>
+              <p className="text-white text-sm opacity-80">Document Type: {host?.documentType}</p>
             </div>
 
             {/* ID Proof Display */}
             <div className="p-6 flex flex-col items-center border-b border-gray-100">
-              <div className="w-[180px] h-[100px] bg-gray-50 p-2 rounded-lg border border-gray-200">
+              <div
+                className="w-[180px] h-[100px] bg-gray-50 p-2 rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-300"
+                onClick={() => setShowImageModal(true)}
+              >
                 <img
                   src={host?.photo}
                   alt="ID Proof Document"
-                  className="w-full object-cover rounded"
+                  className="w-full h-full object-cover rounded hover:opacity-80 transition-opacity duration-300"
                 />
               </div>
+
+              {/* Status indicator */}
               <div className="mt-3 flex items-center">
                 <div className={`w-2 h-2 rounded-full mr-2 ${host?.status === 'verified' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
                 <span className="text-sm font-medium">
                   {host?.status === 'verified' ? 'Verified ID' : 'Pending Verification'}
                 </span>
               </div>
+
+              {/* Click instruction */}
+              <p className="text-xs text-gray-400 mt-1">Click to view full size</p>
             </div>
 
+            {/* Image Modal */}
+            {showImageModal && (
+              <div
+                className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+                onClick={() => setShowImageModal(false)}
+              >
+                <div className="relative max-w-4xl max-h-full">
+                  <img
+                    src={host?.photo}
+                    alt="ID Proof Document - Full Size"
+                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+
+                  {/* Close button */}
+                  <button
+                    onClick={() => setShowImageModal(false)}
+                    className="absolute top-4 right-4 bg-white bg-opacity-20 hover:bg-opacity-30 
+                   text-white p-2 rounded-full transition-all duration-200"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+
+                  {/* Document info */}
+                  <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white px-3 py-2 rounded-lg">
+                    <p className="text-sm font-medium">{host?.documentType} - {host?.name}</p>
+                  </div>
+                </div>
+              </div>
+            )}
             {/* Profile info */}
             <div className="p-6 text-center">
-              <h2 className="text-2xl font-bold text-gray-800">{host.name}</h2>
-              <p className="text-gray-500 text-sm mt-1">Host ID: {host._id}</p>
+              <h2 className="text-2xl font-bold text-gray-800">{host?.name}</h2>
+              <p className="text-gray-500 text-sm mt-1">Host ID: {host?._id}</p>
 
               {/* Status badge */}
               <div className="mt-4">
                 <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
-                ${host.status === 'approved' ? 'bg-green-100 text-green-800' :
-                    host.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                ${host?.status === 'approved' ? 'bg-green-100 text-green-800' :
+                    host?.status === 'rejected' ? 'bg-red-100 text-red-800' :
                       'bg-yellow-100 text-yellow-800'}`}>
                   <span className={`w-2 h-2 rounded-full mr-2 
-                  ${host.status === 'approved' ? 'bg-green-500' :
-                      host.status === 'rejected' ? 'bg-red-500' :
+                  ${host?.status === 'approved' ? 'bg-green-500' :
+                      host?.status === 'rejected' ? 'bg-red-500' :
                         'bg-yellow-500'}`}></span>
                   {host?.approvalRequest === '3' ? 'Approved' :
                     (host?.approvalRequest === '1' && host?.photo) ? 'Rejected' : 'Pending Approval'}
@@ -213,7 +244,7 @@ const AdminHostDetailedBody = () => {
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Email Address</p>
-                    <p className="font-medium">{host.email}</p>
+                    <p className="font-medium">{host?.email}</p>
                   </div>
                 </div>
 
@@ -233,7 +264,7 @@ const AdminHostDetailedBody = () => {
                   <MapPin className="text-[#45B8F2] mr-3 mt-1" size={18} />
                   <div>
                     <p className="text-xs text-gray-500">Address</p>
-                    <p className="font-medium">{host.address || "No address"}</p>
+                    <p className="font-medium">{host?.address || "No address"}</p>
                   </div>
                 </div>
 
@@ -241,7 +272,7 @@ const AdminHostDetailedBody = () => {
                   <Calendar className="text-[#45B8F2] mr-3 mt-1" size={18} />
                   <div>
                     <p className="text-xs text-gray-500">Joined Date</p>
-                    <p className="font-medium">{host.createdAt}</p>
+                    <p className="font-medium">{host?.createdAt}</p>
                   </div>
                 </div>
               </div>
@@ -255,7 +286,7 @@ const AdminHostDetailedBody = () => {
               </h3>
 
               {/* Action buttons */}
-              {host.approvalRequest === '2' && (
+              {host?.approvalRequest === '2' && (
                 <div className="mt-8 space-y-3">
                   <button
                     onClick={() => handleStatusChange('approved')}
@@ -275,7 +306,7 @@ const AdminHostDetailedBody = () => {
                 </div>
               )}
 
-              {(host.approvalRequest === '1' && host.photo) && (
+              {(host?.approvalRequest === '1' && host.photo) && (
                 <div className="mt-6 text-center py-4">
                   <div className="bg-red-50 rounded-full p-3 inline-flex mb-3">
                     <XCircle size={24} className="text-red-500" />
@@ -293,7 +324,7 @@ const AdminHostDetailedBody = () => {
                 </div>
               )}
 
-              {host.approvalRequest === '3' && (
+              {host?.approvalRequest === '3' && (
                 <div className="mt-6 text-center py-4">
                   <div className="bg-green-50 rounded-full p-3 inline-flex mb-3">
                     <CheckCircle size={24} className="text-green-500" />
@@ -314,26 +345,34 @@ const AdminHostDetailedBody = () => {
           <div className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
               <Building className="text-[#45B8F2] mr-2" size={20} />
-              Properties Listed ({hostel.length})
+              Properties Listed ({hostel?.length})
             </h3>
 
-            {hostel.length > 0 ? (
+            {hostel?.length > 0 ? (
               <>
-                <div className="space-y-4">
-                  {hostel.map((property, index) => (
-                    <div key={index} className="border border-gray-100 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-medium text-gray-800">{property.name}</h4>
-                          <p className="text-sm text-gray-500 flex items-center mt-1">
-                            <MapPin size={14} className="mr-1" /> {property.location}
-                          </p>
+                <div className="space-y-3">
+                  {hostel?.map((property, index) => (
+                    <div
+                      key={property._id}
+                      className="group bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:border-blue-200 transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg group-hover:from-blue-100 group-hover:to-indigo-100 transition-colors">
+                          <Home className="text-blue-600 group-hover:text-blue-700 transition-colors" size={24} />
                         </div>
-                        {getStatusBadge(property.status)}
-                      </div>
-                      <div className="mt-3 pt-2 border-t border-gray-100 flex justify-between">
-                        <span className="text-xs text-gray-500">ID: {property?._id}</span>
-                        <button className="text-sm text-[#45B8F2] hover:underline">View Details</button>
+                        <div className="flex-1">
+                          <h3 className="text-md font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">
+                            {property.hostelname}
+                          </h3>
+                          {/* <div className="flex items-center gap-2 mt-1">
+                            <span className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded-full font-medium">
+                              #{index + 1}
+                            </span>
+                          </div> */}
+                        </div>
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -357,7 +396,7 @@ const AdminHostDetailedBody = () => {
         </div>
 
         {/* Activity Timeline */}
-        <div className="mt-6 bg-white rounded-xl shadow-md p-6">
+        {/* <div className="mt-6 bg-white rounded-xl shadow-md p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
             <Clock className="text-[#45B8F2] mr-2" size={20} />
             Recent Activity
@@ -381,8 +420,8 @@ const AdminHostDetailedBody = () => {
               <p className="text-sm text-gray-700">Joined StayBuddy as host</p>
               <p className="text-xs text-gray-500 mt-1">March 15, 2024</p>
             </div>
-          </div>
-        </div>
+          </div> */}
+        {/* </div> */}
       </div>
     </div>
   );

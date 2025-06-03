@@ -23,7 +23,7 @@ import UserSavedDetailPage from '../pages/userPages/userSavedDetailHostelPage'
 import UserRatingPage from '../pages/userPages/userRatingPage'
 import UserChatPage from '../pages/userPages/userChatPage'
 import UserWishListPage from '../pages/userPages/userWishlistPage'
-
+import UserWalletTransactionsPage from '../pages/userPages/userWalletTransactionsPage'
 
 const UserRoute = () => {
   return (
@@ -49,6 +49,7 @@ const UserRoute = () => {
         <Route path='/reviews/:id' element={<UserLoginProtector element={<UserRatingPage/>} />} />
         <Route path='/chat/:id' element={<UserLoginProtector element={<UserChatPage/>} />} />
         <Route path='/wishlist/:id' element={<UserLoginProtector element={<UserWishListPage/>} />} />
+        <Route path='/wallet/transactions' element={<UserLoginProtector element={<UserWalletTransactionsPage/>} />} />
       </Routes>
     </div>
   )

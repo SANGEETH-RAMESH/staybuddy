@@ -7,19 +7,25 @@ import morgan from 'morgan';
 import session from 'express-session';
 import passport from '../src/passport/passportConfig';
 import { initializeSocket } from './socket/socket';
+import { stream  } from './utils/logger';
 
 dotenv.config();
 
 const app: Application = express();
 const server = http.createServer(app);
 
-// ✅ Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI as string)
-  .then(() => console.log("✅ Connected to MongoDB"))
-  .catch((err) => console.error("❌ MongoDB Connection Error:", err));
 
-// ✅ Middleware
-app.use(morgan('dev'));
+
+
+mongoose.connect(process.env.MONGO_URI as string)
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.log("MongoDB Connection Error:", err));
+// console.log(process.env.MONGO_URI)
+console.log("Mongoose connection readyState:", mongoose.connection.readyState);
+
+
+
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms', { stream }));
 app.use(cors({
     origin: 'http://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
@@ -37,7 +43,7 @@ app.use(passport.session());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// ✅ Routes
+
 import admin_route from './router/adminRoute';
 import user_route from './router/userRoute';
 import host_route from './router/hostRoute';
@@ -52,12 +58,12 @@ app.use('/host', host_route);
 app.use('/order', order_route);
 app.use('/chat', chat_route);
 
-// ✅ Start Socket.IO Server
+
 const ChatRepository = new chatRepository
 const ChatService = new chatService(ChatRepository);
 initializeSocket(server,ChatService);
 
-// ✅ Start the server
+
 server.listen(4000, () => {
-    console.log("✅ Server is listening on port 4000");
+    console.log("Server is listening on port 4000");
 });

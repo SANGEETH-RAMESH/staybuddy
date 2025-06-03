@@ -128,6 +128,7 @@ const HostelDetailPage = () => {
   useEffect(() => {
     const fetchHostelData = async () => {
       try {
+        console.log('heyy')
         const response = await axios.get('http://localhost:4000/host/detailhostel', {
           params: { id },
         });

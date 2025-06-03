@@ -6,6 +6,9 @@ import { useNavigate } from 'react-router-dom';
 import apiClient from '../../services/apiClient';
 import { LOCALHOST_URL } from '../../constants/constants';
 
+import { io } from "socket.io-client";
+const socket = io("http://localhost:4000");
+
 export const UserHeader: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -13,8 +16,15 @@ export const UserHeader: React.FC = () => {
 
   const handleLogout = () => {
     dispatch(logout({ isLoggedIn: false }));
+    handleSocket()
     navigate('/user/login');
   };
+
+  const handleSocket = ()=>{
+    socket.emit('userLogout',userId)
+  }
+
+ 
 
   const [name,setName] = useState('');
   const [userId,setUserId] = useState('')
@@ -55,7 +65,9 @@ export const UserHeader: React.FC = () => {
                 <Heart className="w-6 h-6 text-gray-600" />
               </button>
               
-              <button className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
+              <button
+              onClick={()=>navigate(`/user/chat/${userId}`)}
+              className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
                 <MessageCircle className="w-6 h-6 text-gray-600" />
               </button>
 
@@ -103,7 +115,11 @@ export const UserHeader: React.FC = () => {
               <span className="text-sm font-medium">Wishlist</span>
             </button>
 
-            <button className="flex items-center w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200">
+            <button
+            onClick={()=> {
+              console.log(userId,'Userid')
+              navigate(`/user/chat/${userId}`)}}
+            className="flex items-center w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200">
               <MessageCircle className="w-5 h-5 mr-3" />
               <span className="text-sm font-medium">Chat</span>
             </button>

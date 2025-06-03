@@ -53,12 +53,13 @@ class adminController {
 
     async userDelete(req: Request, res: Response): Promise<void> {
         try {
-            const { userId } = req.body;
+            let { userId } = req.body;
+            userId = new Types.ObjectId(userId);
             const response = await this.adminService.userDelete(userId);
             res.status(200).json({ success: true, message: response })
         } catch (error) {
             console.log(error)
-        }
+        }      
     }
 
     async getHost(req: Request, res: Response): Promise<void> {
@@ -150,7 +151,15 @@ class adminController {
     async getAllHostels(req: Request, res: Response): Promise<void> {
         try {
             // console.log('hello')
-            const response = await this.adminService.getAllHostels();
+            console.log(req.query, "body")
+            let { page, limit } = req.query
+            if (!page || !limit) {
+                res.status(200).json({ message: "Page or limit is not" })
+            }
+
+            page = page as string
+            limit = limit as string
+            const response = await this.adminService.getAllHostels(page, limit);
             // console.log(response,'resposne')
             res.status(200).json({ success: true, message: response })
         } catch (error) {
@@ -180,7 +189,10 @@ class adminController {
 
     async getAllCategory(req: Request, res: Response): Promise<void> {
         try {
-            const response = await this.adminService.getAllCategory();
+            console.log(req.query, 'query')
+            const skip = parseInt(req.query.skip as string);
+            const limit = parseInt(req.query.limit as string);
+            const response = await this.adminService.getAllCategory(skip, limit);
             res.status(200).json({ message: response });
         } catch (error) {
             console.log(error)
@@ -190,6 +202,7 @@ class adminController {
 
     async getCategory(req: Request, res: Response): Promise<void> {
         try {
+            console.log(req.query, 'query')
             console.log(req.params.id)
             const id = req.params.id
             const response = await this.adminService.getCategory(id)
@@ -204,35 +217,76 @@ class adminController {
         try {
             const id = req.params.id;
             const { name, isActive } = req.body;
-            console.log(name,isActive,id)
+            console.log(name, isActive, id)
             const response = await this.adminService.updateCategory(id, name, isActive)
-            console.log("Response",response)
+            console.log("Response", response)
             res.status(200).json({ message: response })
         } catch (error) {
             res.status(400).json({ message: error })
         }
     }
 
-    async getUserDetails(req:Request,res:Response):Promise<void>{
+    async getUserDetails(req: Request, res: Response): Promise<void> {
         try {
-            console.log(req.params.id,'heello');
+            console.log(req.params.id, 'heello');
             const userId = req.params.id;
             const response = await this.adminService.getUserDetails(userId)
-            res.status(200).json({success:true,message:response})
+            res.status(200).json({ success: true, message: response })
         } catch (error) {
             console.log(error)
         }
     }
 
-    async getHostHostelData(req:Request,res:Response):Promise<void>{
+    async getHostHostelData(req: Request, res: Response): Promise<void> {
         try {
             console.log(req.params.id)
             const userId = req.params.id
             const response = await this.adminService.getHostHostelData(userId)
-            res.status(200).json({message:response})
+            res.status(200).json({ message: response })
         } catch (error) {
             console.log(error)
-            res.status(400).json({message:error})
+            res.status(400).json({ message: error })
+        }
+    }
+
+    async deleteHostel(req: Request, res: Response): Promise<void> {
+        try {
+            console.log(req.query)
+            const hostelId = req.query.hostel_id;
+            if (!hostelId || typeof hostelId !== 'string') {
+                res.status(400).json({ message: "No hostel Id" })
+                return
+            }
+            const response = await this.adminService.deleteHostel(hostelId)
+            res.status(200).json({ message: response })
+        } catch (error) {
+            res.status(500).json({ message: error })
+        }
+    }
+
+    async deleteCategory(req: Request, res: Response): Promise<void> {
+        try {
+            console.log(req.body, "Sagneeth")
+            const categoryId = req.body.categoryId;
+            const response = await this.adminService.deleteCategory(categoryId);
+            res.status(200).json({ message: response })
+        } catch (error) {
+            res.status(500).json({ message: error })
+        }
+    }
+
+    async searchCategory(req: Request, res: Response): Promise<void> {
+        try {
+            console.log(req.query.name, "quer")
+            const name = req.query.name;
+            if (name) {
+                const categoryname = name.toString();
+                const response = await this.adminService.searchCategory(categoryname)
+                res.status(200).json({message:response})
+            }
+
+        } catch (error) {
+            res.status(500).json({ message: error })
         }
     }
 }

@@ -6,12 +6,14 @@ import User, { IUser } from '../model/userModel';
 // import { userPayload } from "../types/commonInterfaces/tokenInterface";
 import HashedPassword from "../utils/hashedPassword";
 import bcrypt from 'bcrypt'
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import baseRepository from "./baseRespository";
 import Hostel, { IHostel } from "../model/hostelModel";
 import Wallet, { IWallet } from "../model/walletModel";
 import Order, { IOrder } from "../model/orderModel";
 import Wishlist, { IWishlist } from "../model/wishlistModel";
+import { IUserResponse } from "../dtos/UserResponse";
+import Host, { IHost } from "../model/hostModel";
 
 type ResetPasswordData = {
     email: string;
@@ -54,23 +56,32 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
     async FindUserByEmail(email: string): Promise<IUser | null> {
         try {
             // console.log(email,'email')
-            const userData = await this.findByEmail(email)
-            // console.log(userData,'userData')
-            return userData
+            const userData = await this.findByEmail({ email })
+            if (!userData) return null;
+
+
+
+            return userData;
         } catch (error) {
             console.log(error)
             return null
         }
     }
 
-    async FindUserById(id: Types.ObjectId): Promise<IUser | null> {
+    async FindUserById(id: Types.ObjectId): Promise<IUserResponse | null> {
         try {
-            // console.log(id,'id')
-            // const userss = await User.find()
-            // console.log(userss)
             const userData = await this.findById(id)
-            // console.log(userData)
-            return userData
+            if (!userData) return null;
+            const userResponse: IUserResponse = {
+                _id: userData._id.toString(),
+                name: userData.name,
+                email: userData.email,
+                mobile: userData.mobile,
+                isAdmin: userData.isAdmin,
+                isBlock: userData.isBlock,
+                wallet_id: userData.wallet_id ? userData.wallet_id.toString() : null,
+            };
+            return userResponse;
         } catch (error) {
             console.log(error)
             return null
@@ -83,7 +94,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
             if (!user) {
                 return "User not found";
             }
-            console.log(userData.otp, user.otp, 'ssiii')
+            // console.log(userData.otp, user.otp, 'ssiii')
             if (user?.otp === userData.otp) {
                 return "User verified";
             } else {
@@ -176,15 +187,25 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async UserVerifyLogin(userData: TempUserData): Promise<{ message: string, user: IUser } | string> {
+    async UserVerifyLogin(userData: TempUserData): Promise<{ message: string, user: IUserResponse } | string> {
         try {
-            const checkuser = await User.findOne({ email: userData.email, isAdmin: false });
-            console.log(checkuser, "Check")
+            const checkuser = await User.findOne({ email: userData.email, isAdmin: false }) as IUser
+            // console.log(checkuser, "Check")
             if (checkuser && checkuser.isBlock !== true) {
                 const isMatch = await bcrypt.compare(userData.password, checkuser.password);
 
                 if (isMatch) {
-                    return { message: "Success", user: checkuser };
+                    const userResponse: IUserResponse = {
+                        _id: checkuser._id.toString(),
+                        name: checkuser.name,
+                        email: checkuser.email,
+                        mobile: checkuser.mobile,
+                        isAdmin: checkuser.isAdmin,
+                        isBlock: checkuser.isBlock,
+                        wallet_id: checkuser.wallet_id ? checkuser.wallet_id.toString() : null,
+                    };
+
+                    return { message: "Success", user: userResponse };
                 } else {
                     return 'Invalid password';
                 }
@@ -236,24 +257,20 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
             if (!findUser) {
                 return "User not found";
             }
-
-            // Compare current password with the stored one
+            // console.log("Finding", userData)
             const isMatch = await bcrypt.compare(userData.currentPassword, findUser.password);
             if (isMatch) {
-                // Check if new password is the same as the current password
                 const isPasswordSame = await bcrypt.compare(userData.newPassword, findUser.password);
                 if (isPasswordSame) {
                     return "New password cannot be the same as the current password";
                 }
 
-                // Hash the new password and update it in the database
                 const hashedPassword = await bcrypt.hash(userData.newPassword, 10);
                 const updatePassword = await User.updateOne(
                     { email: userData.email },
                     { $set: { password: hashedPassword } }
                 );
 
-                // Handle the update result
                 if (updatePassword.matchedCount === 0) {
                     return "No user found with the provided email";
                 } else if (updatePassword.modifiedCount === 0) {
@@ -284,7 +301,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
                     }
                 }
             )
-            console.log(updatingUserDetails, 'e')
+            // console.log(updatingUserDetails, 'e')
             if (updatingUserDetails.matchedCount == 1) {
                 return "User details updated"
             } else {
@@ -296,12 +313,23 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async addGoogleUser(userData: UserData): Promise<{ message: string, user?: IUser } | string> {
+    async addGoogleUser(userData: UserData): Promise<{ message: string, user?: IUserResponse } | string> {
         try {
-            console.log(userData, 'user')
-            const alreadyUser = await User.findOne({ email: userData.email });
+            // console.log(userData, 'user')
+            const alreadyUser = await User.findOne({ email: userData.email }) as IUserResponse
             if (alreadyUser) {
-                return { message: "Already", user: alreadyUser }
+                return {
+                    message: "Already",
+                    user: {
+                        _id: alreadyUser?._id.toString(),
+                        name: alreadyUser.name,
+                        email: alreadyUser.email,
+                        mobile: alreadyUser.mobile,
+                        isAdmin: alreadyUser.isAdmin,
+                        isBlock: alreadyUser.isBlock,
+                        wallet_id: alreadyUser.wallet_id ? alreadyUser.wallet_id.toString() : null,
+                    }
+                };
             }
 
             const newUser = new User({
@@ -309,16 +337,16 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
                 email: userData.email,
                 password: userData.password,
                 mobile: userData.mobile,
-                isAdmin: false,   // Assuming default value is false
-                isBlock: false,   // Assuming default value is false
-                wallet_id: null,  // Assuming default value is null
-                temp: false,      // Assuming default value is false
+                isAdmin: false,
+                isBlock: false,
+                wallet_id: null,
+                temp: false,
             });
             newUser.set('tempExpires', undefined);
             await newUser.save();
 
 
-            const userFind: IUser | null = await User.findOne({ email: newUser.email });
+            const userFind: IUserResponse | null = await User.findOne({ email: newUser.email });
             if (userFind === null) {
                 return { message: 'User not found after creation' };
             }
@@ -329,20 +357,44 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async getHostels(): Promise<IHostel[] | string> {
+    async getHostels(page: string, limit: string, search: string): Promise<{ hostels: IHostel[]; totalCount: number } | string> {
         try {
-            const getHostel = await Hostel.find();
-            return getHostel
+            const pageNumber = parseInt(page);
+            const limitNumber = parseInt(limit);
+
+            if (isNaN(pageNumber) || isNaN(limitNumber)) {
+                return 'Invalid pagination values';
+            }
+
+            let filter = {};
+            if (search && search.trim() !== '') {
+                const searchRegex = new RegExp('^' + search, 'i');
+
+                filter = {
+                    $or: [
+                        { hostelname: { $regex: searchRegex } },
+                    ]
+                };
+            }
+
+            const totalCount = await Hostel.countDocuments(filter);
+
+            const hostels = await Hostel.find(filter)
+                .skip((pageNumber - 1) * limitNumber)
+                .limit(limitNumber);
+
+            return { hostels, totalCount };
         } catch (error) {
-            return error as string
+            return error as string;
         }
     }
+
 
     async getSingleHostel(id: Types.ObjectId): Promise<IHostel | string> {
         try {
             // console.log(id,'respository')
             const getHostel = await Hostel.findOne({ _id: id }).populate('host_id')
-            console.log(getHostel, 'heeeeee')
+            // console.log(getHostel, 'heeeeee')
             if (!getHostel) {
                 return "No Hostel"
             }
@@ -355,7 +407,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
     async createWallet(email: string): Promise<string> {
         try {
 
-            const findUser = await this.findByEmail(email)
+            const findUser = await this.findByEmail({ email })
             if (!findUser) {
                 return "User not found"
             }
@@ -363,6 +415,11 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
                 userOrHostId: findUser._id
             })
             await creatingWallet.save();
+
+            findUser.wallet_id = creatingWallet._id as mongoose.Types.ObjectId;
+            findUser.tempExpires = undefined;
+            findUser.temp = false;
+            await findUser.save();
             return "success"
         } catch (error) {
             console.log(error)
@@ -372,8 +429,9 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
 
     async findUserWallet(id: string): Promise<IWallet | string | null> {
         try {
+
             const userWallet = await Wallet.aggregate([
-                { $match: { userOrHostId: id } }, // Match wallet by userOrHostId
+                { $match: { userOrHostId: new Types.ObjectId(id) } },
                 {
                     $addFields: {
                         transactionHistory: {
@@ -382,6 +440,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
                     }
                 }
             ]);
+            // console.log(userWallet,'Wallet')
             if (!userWallet) {
                 return "No Wallet"
             }
@@ -398,7 +457,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
             await Wallet.findOneAndUpdate(
                 { userOrHostId: id },
                 {
-                    $inc: { balance: parseFloat(amount) }, // Convert amount to a number
+                    $inc: { balance: parseFloat(amount) },
                     $push: {
                         transactionHistory: {
                             type: "deposit",
@@ -409,6 +468,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
                     },
                 }
             );
+            console.log("hey")
             const userWallet = await Wallet.findOne({ userOrHostId: id });
             if (!userWallet) {
                 return "Wallet not found"
@@ -444,11 +504,25 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async getSavedBookings(id: Types.ObjectId): Promise<IOrder[] | string | null> {
+    async getSavedBookings(id: Types.ObjectId, page: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null> {
         try {
-            const findBookings = await Order.find({ userId: id }).populate('hostel_id.id');
-            console.log(findBookings, 'finddd')
-            return findBookings
+            const pageNumber = parseInt(page, 10);
+            const limitNumber = parseInt(limit, 10);
+
+            if (isNaN(pageNumber) || isNaN(limitNumber)) {
+                return 'Invalid pagination values';
+            }
+
+            const skip = (pageNumber - 1) * limitNumber;
+            const totalCount = await Order.countDocuments({ userId: id });
+            const bookings = await Order.find({ userId: id })
+                .populate('hostel_id.id')
+                .populate('host_id')
+                .populate('userId')
+                .skip(skip)
+                .limit(limitNumber);
+
+            return { bookings, totalCount };
         } catch (error) {
             return error as string
         }
@@ -457,7 +531,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
     async addToWishlist(id: string, userId: string): Promise<string> {
         try {
             const hostelDetails = await Hostel.findOne({ _id: id })
-            console.log("hostel", hostelDetails)
+            // console.log("hostel", hostelDetails)
             if (hostelDetails) {
                 const newWishList = new Wishlist({
                     image: hostelDetails?.photos[0],
@@ -468,7 +542,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
                     user_id: userId,
                     hostel_id: id
                 })
-                console.log(newWishList, "Wishlist,")
+                // console.log(newWishList, "Wishlist,")
                 await newWishList.save()
                 if (newWishList) {
                     return "Added to wishlist"
@@ -519,16 +593,25 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async deleteWishlist(userId:string): Promise<string> {
+    async deleteWishlist(userId: string): Promise<string> {
         try {
             const deletingWishlist = await Wishlist.deleteMany(
-                {user_id:userId}
+                { user_id: userId }
             )
-            if(deletingWishlist){
+            if (deletingWishlist) {
                 return "Wishlist Deleted"
             }
             return "Wishlist Not Deleted"
-            
+
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async allHost(): Promise<IHost[] | string | null> {
+        try {
+            const getHost = await Host.find();
+            return getHost;
         } catch (error) {
             return error as string
         }

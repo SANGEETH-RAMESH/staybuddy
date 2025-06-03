@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Mail, Lock, ArrowRight } from 'lucide-react';
 import axios from 'axios';
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
 import { loginSuccess } from '../../../redux/hostAuthSlice';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import { signInValidation } from '../../../validations/commonValidations';
@@ -36,7 +36,7 @@ const HostLoginBody = () => {
                     refreshToken: response.data.refreshToken,
                     isLoggedIn: true
                 }));
-                toast.success("Login Successful", { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
+                toast.success("Login Successful", {position: "top-center",  style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
                 navigate('/host/home');
             }
         } catch (error) {
@@ -55,12 +55,12 @@ const HostLoginBody = () => {
                         alt="Login" 
                         className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/80 to-blue-600/80 flex flex-col items-center justify-center p-6 text-white">
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/80 to-emerald-600/80 flex flex-col items-center justify-center p-6 text-white">
                         <h2 className="text-2xl font-bold mb-2">Welcome Host!</h2>
                         <p className="text-sm text-center mb-4 text-white/90">Manage your rooms with ease<br />and grow your business</p>
                         <button
                             onClick={() => navigate('/host/signup')}
-                            className="px-6 py-2 border-2 border-white rounded-full text-sm font-semibold hover:bg-white hover:text-blue-600 transition-all duration-300"
+                            className="px-6 py-2 border-2 border-white rounded-full text-sm font-semibold hover:bg-white hover:text-emerald-800 transition-all duration-300"
                         >
                             Create Account
                         </button>
@@ -85,7 +85,7 @@ const HostLoginBody = () => {
                                         <div className="relative">
                                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                             <Field
-                                                type="email"
+                                                type="text"
                                                 name="email"
                                                 placeholder="Enter your email"
                                                 className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
@@ -110,7 +110,7 @@ const HostLoginBody = () => {
                                     </div>
 
                                     <div className="flex justify-end">
-                                        <a href="/host/forgotpassword" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                                        <a href="/host/forgotpassword" className="text-xs text-emerald-600 hover:text-emerald-800 font-medium">
                                             Forgot Password?
                                         </a>
                                     </div>
@@ -118,7 +118,7 @@ const HostLoginBody = () => {
                                     {/* Login Button */}
                                     <button
                                         type="submit"
-                                        className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 group text-sm"
+                                        className="w-full bg-emerald-600 text-white py-2 rounded-lg font-semibold hover:text-emerald-800 transition-colors flex items-center justify-center gap-2 group text-sm"
                                     >
                                         Sign In
                                         <ArrowRight className="group-hover:translate-x-1 transition-transform" size={16} />

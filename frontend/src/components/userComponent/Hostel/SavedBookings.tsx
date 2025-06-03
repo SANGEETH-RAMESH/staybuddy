@@ -1,194 +1,430 @@
-// import React from 'react';
 import {
-    Building2,
-    MapPin,
-    Clock,
-    ArrowUpRight,
-    CalendarCheck,
-    Bed,
-    UserCheck
+  Building2,
+  MapPin,
+  Clock,
+  ArrowUpRight,
+  CalendarCheck,
+  Bed,
+  UserCheck,
+  PhoneCall,
+  Mail,
+  CreditCard,
+  Filter,
+  ClipboardX,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import apiClient from '../../../services/apiClient';
 import { LOCALHOST_URL } from '../../../constants/constants';
 import { useNavigate, useParams } from 'react-router-dom';
+import apiClient from '../../../services/apiClient';
 
-
-interface HosetlNestedData {
-    advanceAmount: number;
-    bedShareRoom: number;
-    beds: number;
-    category: string;
-    facilities: string[];
-    foodRate: number;
-    host_id: string;
-    hostelName: string;
-    location: string;
-    nearbyAccess: string;
-    phone: string;
-    photos: string[];
-    policies: string;
-    _id: string
+// Interface definitions
+interface HostelData {
+  advanceAmount: number;
+  bedShareRoom: number;
+  beds: number;
+  category: string;
+  facilities: string[];
+  foodRate: number;
+  host_id: string;
+  hostelName: string;
+  location: string;
+  nearbyAccess: string;
+  phone: string;
+  photos: string[];
+  policies: string;
+  _id: string;
 }
 
-interface Hostel {
-    id: HosetlNestedData;
+interface Booking {
+  _id: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  createdAt: string;
+  selectedBeds: number;
+  tenantPreferred: string;
+  totalDepositAmount: number;
+  totalRentAmount: number;
+  foodRate: number | null;
+  paymentMethod: string;
+  hostel_id: {
+    id: HostelData;
     name: string;
     location: string;
     host_mobile: string;
+  };
+  userId: {
+    name: string;
+    mobile: string;
+    email: string;
+  };
+  status: 'Pending' | 'Confirmed' | 'Cancelled';
 }
 
-interface Facilities {
-    wifi: boolean;
-    laundry: boolean;
-    food: boolean;
+interface PaginationData {
+  bookings: Booking[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
 }
 
-interface hostelData {
-    category: string;
-    createdAt: string;
-    customerEmail: string;
-    customerName: string;
-    customerPhone: string;
-    foodRate: number | null;
-    host_id: string;
-    hostel_id: Hostel;
-    paymentMethod: string;
-    selectedBeds: number;
-    selectedFacilities: Facilities;
-    tenantPreferred: string;
-    totalDepositAmount: number;
-    totalRentAmount: number;
-    updatedAt: string;
-    userId: string;
-    _id: string
-}
+const HostBookings = () => {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [paginationData, setPaginationData] = useState<PaginationData>({
+    bookings: [],
+    totalCount: 0,
+    currentPage: 1,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPrevPage: false
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const limit = 6;
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-const SavedBookings = () => {
-    const [booking, setBooking] = useState([]);
-    const { id } = useParams();
-    const navigate = useNavigate();
+  const fetchHostBookings = async (page: number = 1, statusFilter: string = 'all') => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+        ...(statusFilter !== 'all' && { status: statusFilter })
+      });
+
+      const response = await apiClient.get(`${LOCALHOST_URL}/user/getSavedBookings/${id}?${params}`);
+      const data = response.data.message || {};
+
+      const totalCount = data.totalCount || 0;
+      const totalPages = Math.ceil(totalCount / limit);
+
+      setBookings(data.bookings || []);
+      setPaginationData({
+        bookings: data.bookings || [],
+        totalCount,
+        currentPage: page,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1
+      });
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+      setBookings([]);
+      setPaginationData({
+        bookings: [],
+        totalCount: 0,
+        currentPage: 1,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPrevPage: false
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
 
-    useEffect(() => {
-        const fetchSavedBookings = async () => {
-            try {
-                const response = await apiClient.get(`${LOCALHOST_URL}/user/getSavedBookings/${id}`);
-                const hostelData = response.data.message;
+  useEffect(() => {
+    fetchHostBookings(currentPage, filter);
+  }, [id, currentPage, filter]);
 
-                console.log(hostelData, "Fetched Data");
-                console.log(booking, 'sdfsdf')
-                setBooking(hostelData);
-            } catch (error) {
-                console.error("Error fetching bookings:", error);
-            }
-        };
-        fetchSavedBookings();
-    }, [id]);
+  const handleFilterChange = (filterValue: string) => {
+    setFilter(filterValue);
+    setCurrentPage(1); // Reset to first page when filter changes
+  };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
-    // const navigateToDetailHostel = (id: string) => {
-    //     navigate(`/user/detailbookings/${id}`)
-    // }
+  const navigateToBookingDetails = (orderId: string) => {
+    navigate(`/user/detailbookings/${orderId}`);
+  };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Confirmed':
+        return 'bg-green-100 text-green-700';
+      case 'Pending':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'Cancelled':
+        return 'bg-red-100 text-red-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
 
+  const renderPagination = () => {
+    if (paginationData.totalPages <= 1) return null;
 
+    const pages = [];
+    const maxVisiblePages = 5;
+    const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    const endPage = Math.min(paginationData.totalPages, startPage + maxVisiblePages - 1);
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
 
     return (
-        <div className="max-w-7xl mx-auto p-6 bg-gray-50">
-            <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-2">
-                    <Building2 className="w-6 h-6 text-blue-600" />
-                    <h1 className="text-2xl font-bold text-gray-800">Booked Hostels</h1>
-                </div>
-                <div className="flex items-center gap-2 text-sm bg-white px-4 py-2 rounded-lg shadow-sm">
-                    <Clock className="w-4 h-4 text-blue-600" />
-                    <span>Recent Bookings</span>
-                </div>
-            </div>
+      <div className="flex items-center justify-center gap-2 mt-8">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={!paginationData.hasPrevPage}
+          className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Previous
+        </button>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {booking.map((hostel: hostelData) => (
-                    <div
-                        key={hostel._id}
-                        className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow"
-                    >
-                        <div className="relative">
-                            <img
-                                src={hostel.hostel_id.id.photos[0] || "fallback-image-url.jpg"}
-                                alt={hostel.hostel_id.name}
-                                className="w-full h-48 object-cover"
-                            />
-                            {/* <div className="absolute top-4 right-4">
-                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${hostel.status === 'Confirmed'
-                                        ? 'bg-green-100 text-green-700'
-                                        : 'bg-blue-100 text-blue-700'
-                                    }`}>
-                                    {hostel.status}
-                                </span>
-                            </div> */}
-                        </div>
+        <div className="flex gap-1">
+          {startPage > 1 && (
+            <>
+              <button
+                onClick={() => handlePageChange(1)}
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                1
+              </button>
+              {startPage > 2 && (
+                <span className="px-3 py-2 text-sm text-gray-500">...</span>
+              )}
+            </>
+          )}
 
-                        <div className="p-4">
-                            <div className="flex justify-between items-start mb-3">
-                                <div>
-                                    <h2 className="text-lg font-bold text-gray-800 mb-1">{hostel.hostel_id.name}</h2>
-                                    <div className="flex items-center gap-1 text-gray-600">
-                                        <MapPin className="w-4 h-4" />
-                                        <span className="text-sm">{hostel.hostel_id.location}</span>
-                                    </div>
-                                </div>
-                            </div>
+          {pages.map((page) => (
+            <button
+              key={page}
+              onClick={() => handlePageChange(page)}
+              className={`px-3 py-2 text-sm font-medium rounded-md ${page === currentPage
+                ? 'text-blue-600 bg-blue-50 border border-blue-200'
+                : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                }`}
+            >
+              {page}
+            </button>
+          ))}
 
-                            <div className="space-y-2 mb-4">
-                                <div className="flex items-center justify-between text-sm">
-                                    <div className="flex items-center gap-1">
-                                        <CalendarCheck className="w-4 h-4 text-gray-500" />
-                                        <span className="text-gray-600">Booked Date</span>
-                                    </div>
-                                    <span className="font-medium">
-                                        {new Date(hostel.createdAt).toLocaleDateString('en-US', {
-                                            month: 'short',
-                                            day: 'numeric',
-                                            year: 'numeric'
-                                        })}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between text-sm">
-                                    <div className="flex items-center gap-1">
-                                        <UserCheck className="w-4 h-4 text-gray-500" />
-                                        <span className="text-gray-600">For</span>
-                                    </div>
-                                    <span className="font-medium">{hostel.tenantPreferred}</span>
-                                </div>
-                                <div className="flex items-center justify-between text-sm">
-                                    <div className="flex items-center gap-1">
-                                        <Bed className="w-4 h-4 text-gray-500" />
-                                        <span className="text-gray-600">Beds</span>
-                                    </div>
-                                    <span className="font-medium">{hostel.selectedBeds} Bed(s)</span>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between pt-4 border-t">
-                                <div>
-                                    <p className="text-xs text-gray-500">Total Amount</p>
-                                    <p className="text-lg font-bold text-gray-800">{hostel.totalDepositAmount + hostel.totalRentAmount + (hostel.foodRate ? hostel.foodRate : 0)}</p>
-                                </div>
-                                <button
-                                    onClick={() => navigate(`/user/detailbookings/${hostel._id}`)}
-                                    className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium"
-                                >
-                                    <span className="text-sm">Details</span>
-                                    <ArrowUpRight className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
+          {endPage < paginationData.totalPages && (
+            <>
+              {endPage < paginationData.totalPages - 1 && (
+                <span className="px-3 py-2 text-sm text-gray-500">...</span>
+              )}
+              <button
+                onClick={() => handlePageChange(paginationData.totalPages)}
+                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                {paginationData.totalPages}
+              </button>
+            </>
+          )}
         </div>
+
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={!paginationData.hasNextPage}
+          className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Next
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      </div>
     );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // No bookings UI
+  if (paginationData.totalCount === 0) {
+    return (
+      <div className="max-w-7xl mx-auto p-6 bg-gray-50">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+          <div className="flex items-center gap-2">
+            <Building2 className="w-6 h-6 text-blue-600" />
+            <h1 className="text-2xl font-bold text-gray-800">Booking Management</h1>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl p-12 text-center shadow-md">
+          <div className="flex flex-col items-center justify-center gap-4">
+            <ClipboardX className="w-16 h-16 text-gray-400" />
+            <h2 className="text-xl font-semibold text-gray-700">No Bookings Found</h2>
+            <p className="text-gray-500 max-w-md">
+              You don't have any bookings yet. Once customers book your hostel, their bookings will appear here.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto p-6 bg-gray-50">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div className="flex items-center gap-2">
+          <Building2 className="w-6 h-6 text-blue-600" />
+          <h1 className="text-2xl font-bold text-gray-800">Booking Management</h1>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 text-sm bg-white px-4 py-2 rounded-lg shadow-sm">
+            <Clock className="w-4 h-4 text-blue-600" />
+            <span>Total Bookings: {paginationData.totalCount}</span>
+          </div>
+
+          <div className="relative flex items-center gap-2 text-sm bg-white px-4 py-2 rounded-lg shadow-sm">
+            <Filter className="w-4 h-4 text-blue-600" />
+            <select
+              className="bg-transparent border-none focus:outline-none pr-6"
+              value={filter}
+              onChange={(e) => handleFilterChange(e.target.value)}
+            >
+              <option value="all">All Bookings</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="pending">Pending</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Pagination Info */}
+      <div className="mb-4">
+        <p className="text-sm text-gray-600">
+          Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, paginationData.totalCount)} of {paginationData.totalCount} bookings
+        </p>
+      </div>
+
+      {bookings.length === 0 ? (
+        <div className="bg-white rounded-xl p-8 text-center">
+          <p className="text-gray-500">No bookings found with the selected filter.</p>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {bookings.map((booking) => (
+              <div
+                key={booking._id}
+                className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+              >
+                <div className="relative">
+                  <img
+                    src={booking?.hostel_id.id.photos[0] || "/placeholder-hostel.jpg"}
+                    alt={booking?.hostel_id.name}
+                    className="w-full h-48 object-cover"
+                  />
+                  <div className="absolute top-4 right-4">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
+                      {booking.status}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-800 mb-1">{booking.hostel_id.name}</h2>
+                      <div className="flex items-center gap-1 text-gray-600">
+                        <MapPin className="w-4 h-4" />
+                        <span className="text-sm">{booking.hostel_id.location}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-1">
+                        <UserCheck className="w-4 h-4 text-gray-500" />
+                        <span className="text-gray-600">Customer</span>
+                      </div>
+                      <span className="font-medium">{booking.userId.name}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-1">
+                        <PhoneCall className="w-4 h-4 text-gray-500" />
+                        <span className="text-gray-600">Phone</span>
+                      </div>
+                      <span className="font-medium">{booking.userId.mobile}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-1">
+                        <Mail className="w-4 h-4 text-gray-500" />
+                        <span className="text-gray-600">Email</span>
+                      </div>
+                      <span className="font-medium truncate max-w-32">{booking.userId.email}</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-1">
+                        <CalendarCheck className="w-4 h-4 text-gray-500" />
+                        <span className="text-gray-600">Booked On</span>
+                      </div>
+                      <span className="font-medium">
+                        {new Date(booking.createdAt).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-1">
+                        <Bed className="w-4 h-4 text-gray-500" />
+                        <span className="text-gray-600">Beds</span>
+                      </div>
+                      <span className="font-medium">{booking.selectedBeds} Bed(s)</span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-1">
+                        <CreditCard className="w-4 h-4 text-gray-500" />
+                        <span className="text-gray-600">Payment</span>
+                      </div>
+                      <span className="font-medium">{booking.paymentMethod}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-4 border-t">
+                    <div>
+                      <p className="text-xs text-gray-500">Total Amount</p>
+                      <p className="text-lg font-bold text-gray-800">
+                        ₹{booking.totalDepositAmount + booking.totalRentAmount + (booking.foodRate || 0)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => navigateToBookingDetails(booking._id)}
+                      className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      <span className="text-sm">Manage</span>
+                      <ArrowUpRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination Component */}
+          {renderPagination()}
+        </>
+      )}
+    </div>
+  );
 };
 
-export default SavedBookings;
+export default HostBookings;

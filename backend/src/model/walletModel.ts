@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Document, Schema, Types } from "mongoose";
 
 export interface ITransaction {
   type: "deposit" | "withdrawal";
@@ -8,7 +8,7 @@ export interface ITransaction {
 }
 
 export interface IWallet extends Document {
-  userOrHostId: string;
+  userOrHostId:  Types.ObjectId;
   balance: number;
   currency: string;
   createdAt: Date;
@@ -42,7 +42,7 @@ const transactionSchema: Schema = new Schema(
 const walletSchema: Schema = new Schema(
   {
     userOrHostId: {
-      type: String,
+      type: Types.ObjectId,
       required: true,
     },
     balance: {
@@ -53,7 +53,7 @@ const walletSchema: Schema = new Schema(
     currency: {
       type: String,
     //   required: true,
-      default: "USD",
+      default: "INR",
     },
     createdAt: {
       type: Date,

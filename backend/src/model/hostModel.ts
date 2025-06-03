@@ -1,4 +1,4 @@
-import mongoose,{Document,Schema} from "mongoose";
+import mongoose,{Document,Schema, Types} from "mongoose";
 
 export interface IHost extends Document{
     name:string,
@@ -11,6 +11,7 @@ export interface IHost extends Document{
     approvalRequest:string;
     photo?: string | null;
     documentType?: string | null;
+    wallet_id:Types.ObjectId
 }
 
 const hostModel:Schema = new Schema(
@@ -56,6 +57,10 @@ const hostModel:Schema = new Schema(
         documentType: {
             type: String,
             default: null
+        },
+        wallet_id:{
+            type:Types.ObjectId,
+            default:null
         }
     },
     { timestamps: false }

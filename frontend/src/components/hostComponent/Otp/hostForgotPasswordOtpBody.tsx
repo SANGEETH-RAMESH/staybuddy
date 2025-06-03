@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import OTPInput from "react-otp-input";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const HostForgotPasswordOtpBody = () => {
@@ -16,7 +15,7 @@ const HostForgotPasswordOtpBody = () => {
   const email = location.state?.email;
 
   useEffect(() => {
-    let countdown:number;
+    let countdown = null;  // initialize explicitly
     if (timer > 0) {
       countdown = setTimeout(() => {
         setTimer((prev) => prev - 1);
@@ -24,7 +23,9 @@ const HostForgotPasswordOtpBody = () => {
     } else {
       setCanResend(true);
     }
-    return () => clearTimeout(countdown);
+    return () => {
+      if (countdown) clearTimeout(countdown);
+    };
   }, [timer]);
 
   const handleSubmit = async () => {
@@ -62,6 +63,7 @@ const HostForgotPasswordOtpBody = () => {
         "http://localhost:4000/host/resendOtp",
         { email }
       );
+      console.log(response)
       toast.success("OTP resent successfully!");
     } catch (error) {
       console.error("Error resending OTP:", error);
@@ -70,61 +72,62 @@ const HostForgotPasswordOtpBody = () => {
   };
 
   return (
-    <div>
-      <div className="h-[580px] w-[1360px] relative">
-        <div className="h-[250px] bg-[#31AFEF]"></div>
-        <div className="h-[380px] bg-[#EEEEEE]"></div>
+    <div className="min-h-screen flex flex-col w-full">
+      {/* Header section */}
+      <div className="bg-emerald-600 py-3 md:py-4 px-4 md:px-6">
+        <div className="text-sm sm:text-lg lg:text-xl font-semibold text-white">
+          StayBuddy - Host
+        </div>
       </div>
 
-      <div className="absolute top-[50px] left-[100px] text-[35px] font-bold text-white">
-        StayBuddy - Host
-      </div>
-
-      <div className="absolute top-[50%] left-[50%] transform -translate-x-1/2 -translate-y-1/2 w-[400px] bg-white shadow-lg rounded-lg p-6">
-        <div className="text-center mb-6">
-          <h2 className="text-xl font-bold mb-2">Forgot Password Verification</h2>
-          <p className="text-gray-500">
-            Enter the 4-digit verification code sent to your email
-          </p>
-        </div>
-
-        <div className="mb-6">
-          <OTPInput
-            value={otp}
-            onChange={setOtp}
-            numInputs={4}
-            renderSeparator={<span className="text-lg font-bold mx-2">-</span>}
-            renderInput={(props) => (
-              <input
-                {...props}
-                className="w-[70px] h-[50px] border border-gray-400 rounded-lg text-center text-2xl font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[#D9D9D9]"
-                style={{ width: "70px", height: "70px" }}
-              />
-            )}
-          />
-        </div>
-
-        <button
-          onClick={handleSubmit}
-          className="w-full bg-[#31AFEF] text-white py-2 rounded-lg font-semibold hover:bg-[#2499ce] transition"
-          disabled={loading}
-        >
-          {loading ? "Verifying..." : "SUBMIT"}
-        </button>
-
-        <div className="text-center mt-4">
-          {canResend ? (
-            <button
-              onClick={handleResendOtp}
-              className="text-blue-800 hover:underline ml-1"
-            >
-              Resend OTP
-            </button>
-          ) : (
-            <p className="text-[#ACABAB]">
-              Resend OTP in <span className="font-bold">{timer}s</span>
+      {/* Main content */}
+      <div className="flex-grow bg-[#EEEEEE] flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md bg-white shadow-lg rounded-lg p-6">
+          <div className="text-center mb-6">
+            <h2 className="text-xl font-bold mb-2">Forgot Password Verification</h2>
+            <p className="text-gray-500 text-sm md:text-base">
+              Enter the 4-digit verification code sent to your email
             </p>
-          )}
+          </div>
+
+          <div className="mb-6">
+            <OTPInput
+              value={otp}
+              onChange={setOtp}
+              numInputs={4}
+              renderSeparator={<span className="text-lg font-bold mx-2">-</span>}
+              renderInput={(props) => (
+                <input
+                  {...props}
+                  className="w-[70px] h-[50px] border border-gray-400 rounded-lg text-center text-2xl font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-[#D9D9D9]"
+                  style={{ width: "70px", height: "70px" }}
+                />
+              )}
+            />
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            className="w-full bg-emerald-500 text-white py-2 rounded-lg font-semibold hover:bg-emerald-600 transition"
+            disabled={loading}
+          >
+            {loading ? "Verifying..." : "SUBMIT"}
+          </button>
+
+          <div className="text-center mt-4">
+            {canResend ? (
+              <button
+                onClick={handleResendOtp}
+                className="text-blue-800 hover:underline ml-1 text-sm md:text-base"
+              >
+                Resend OTP
+              </button>
+            ) : (
+              <p className="text-[#ACABAB] text-sm md:text-base">
+                Resend OTP in <span className="font-bold">{timer}s</span>
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

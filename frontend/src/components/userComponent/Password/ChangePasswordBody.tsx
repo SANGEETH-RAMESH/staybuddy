@@ -64,12 +64,13 @@ const ChangePasswordBody = () => {
     if (formData.newPassword === formData.confirmPassword) {
       try {
         const response = await apiClient.patch(`${LOCALHOST_URL}/user/changepassword`, formData);
-
-        if (response.data.message === 'Current Password doesnot matched') {
+        console.log("Response",response)
+        if (response.data.message === 'Current password does not match') {
           setErrors((prev) => ({ ...prev, currentPassword: 'Current password does not match' }));
-        } else if (response.data.message === 'New password cannot be same as current password') {
+          // toast.error("Current Password Does Not match")
+        } else if (response.data.message === 'New password cannot be the same as the current password') {
           setErrors((prev) => ({ ...prev, newPassword: 'New password cannot be same as current password' }));
-        } else if (response.data.message === 'Password changed') {
+        } else if (response.data.message === 'Password changed successfully') {
           // Handle success (e.g., reset form or show success message)
           toast.success("Password changed")
           navigate('/user/profile')

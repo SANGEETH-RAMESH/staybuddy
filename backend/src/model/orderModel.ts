@@ -2,14 +2,14 @@ import mongoose, { Document, Schema, Types } from "mongoose";
 
 export interface IOrder extends Document {
     category: string;
-    userId: string;
+    userId: Types.ObjectId;
     customerEmail: string;
     customerName: string;
     customerPhone: string;
     foodRate: number | null;
     host_id: Types.ObjectId;
     hostel_id: {
-        id?: string;
+        id?: Types.ObjectId;
         name: string;
         location: string;
         host_mobile: string;
@@ -34,8 +34,9 @@ const orderSchema: Schema = new Schema(
             required: true,
         },
         userId: {
-            type: String,
+            type:  mongoose.Schema.Types.ObjectId,
             required: true,
+            ref:'User'
         },
         customerEmail: {
             type: String,
@@ -54,7 +55,7 @@ const orderSchema: Schema = new Schema(
             default: null,
         },
         host_id: {
-            type: String,
+            type:  mongoose.Schema.Types.ObjectId,
             ref:'Host',
             required: true,
         },

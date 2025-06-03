@@ -1,36 +1,45 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
-import axios from 'axios';
+// import axios from 'axios';
 // import { toast } from 'react-toastify';
 import { ObjectId } from 'bson';
-import { Pencil, Trash2, Search, RefreshCw, PlusCircle, PackageX, Package } from 'lucide-react';
+import { Pencil, Trash2, Search, RefreshCw, PlusCircle, PackageX, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { LOCALHOST_URL } from '../../../constants/constants';
+import { Category } from '../../../interface/Category';
+import adminApiClient from '../../../services/adminApiClient';
 // import CategoryEditModal from './CategoryEditModal';
 
-interface Category {
-  _id: ObjectId | string;
-  name: string;
-  description: string;
-  image: string;
-  isActive: boolean;
-  createdAt: string;
-}
+// interface Category {
+//   _id: ObjectId | string;
+//   name: string;
+//   description: string;
+//   image: string;
+//   isActive: boolean;
+//   createdAt: string;
+// }
 
 const AdminCategoryBody = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
+  const [allCategories, setAllCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  // const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  // const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+  const [pages, setPages] = useState<number>(0)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalCategories, setTotalCategories] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const categoriesPerPage = 3;
 
   const navigate = useNavigate()
-  
+
   // For edit modal
-//   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
-//   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
+  //   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+  //   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
 
   // Handle delete category
   const handleDeleteCategory = async (categoryId: ObjectId | string) => {
@@ -46,14 +55,34 @@ const AdminCategoryBody = () => {
 
     if (result.isConfirmed) {
       try {
-        const response = await axios.delete('http://localhost:4000/admin/deleteCategory', {
+        console.log(categoryId, 'heedsf')
+        const response = await adminApiClient.delete('http://localhost:4000/admin/category', {
           data: { categoryId },
         });
-        
-        if (response.data.success) {
-          setCategories(prevCategories => prevCategories.filter(category => category._id !== categoryId));
-          updateFilteredCategories();
+
+        console.log(response, 'respons')
+        if (response.data.message == 'Category Deleted') {
+          // Refresh the current page data after deletion
+          fetchCategories(currentPage);
           Swal.fire('Deleted!', 'The category has been deleted.', 'success');
+
+          const newTotal = totalCategories - 1;
+          const newTotalPages = Math.ceil(newTotal / categoriesPerPage);
+
+          let newPage = currentPage;
+
+          // If current page becomes empty after deletion, move to previous page
+          if (categories.length === 1 && currentPage > 1) {
+            newPage = currentPage - 1;
+          }
+
+          // Update states properly
+          setTotalCategories(newTotal);
+          setTotalPages(newTotalPages);
+          setCurrentPage(newPage);
+
+          // Fetch updated data
+          fetchCategories(newPage, searchTerm, filterStatus);
         } else {
           Swal.fire('Failed!', 'There was an issue deleting the category.', 'error');
         }
@@ -68,166 +97,224 @@ const AdminCategoryBody = () => {
   const handleEditCategory = (category: Category) => {
     // setCurrentCategory(category);
     console.log("hiiiiii")
-    console.log(category._id,"CAtegory")
+    console.log(category._id, "CAtegory")
     navigate(`/admin/editcategory/${category._id}`)
     // setIsEditModalOpen(true);
   };
 
   // Close edit modal
-//   const handleCloseEditModal = () => {
-//     setIsEditModalOpen(false);
-//     setCurrentCategory(null);
-//   };
+  //   const handleCloseEditModal = () => {
+  //     setIsEditModalOpen(false);
+  //     setCurrentCategory(null);
+  //   };
 
   // Handle successful edit
-//   const handleCategoryUpdated = (updatedCategory: Category) => {
-//     setCategories(prevCategories =>
-//       prevCategories.map(category =>
-//         category._id === updatedCategory._id ? updatedCategory : category
-//       )
-//     );
-//     updateFilteredCategories();
-//     setIsEditModalOpen(false);
-//     toast.success('Category updated successfully');
-//   };
+  //   const handleCategoryUpdated = (updatedCategory: Category) => {
+  //     setCategories(prevCategories =>
+  //       prevCategories.map(category =>
+  //         category._id === updatedCategory._id ? updatedCategory : category
+  //       )
+  //     );
+  //     updateFilteredCategories();
+  //     setIsEditModalOpen(false);
+  //     toast.success('Category updated successfully');
+  //   };
 
-  // Fetch categories function
-//   const fetchCategories = async () => {
-//     setIsRefreshing(true);
-//     try {
-//       const response = await axios.get('http://localhost:4000/admin/getCategories');
-//       if (response.data.success) {
-//         setCategories(response.data.categories);
-//         updateFilteredCategories(response.data.categories);
-//       }
-//       setLoading(false);
-//     } catch (err) {
-//       setError('Failed to fetch categories');
-//       setLoading(false);
-//       console.error(err);
-//     } finally {
-//       setIsRefreshing(false);
-//     }
-//   };
+  // Fetch categories function with pagination
+  const fetchCategories = async (page: number = 1, search: string = '', status: string = 'all') => {
+    setLoading(true);
+    try {
+      // const skip = (page - 1) * categoriesPerPage;
+      // const params = new URLSearchParams({
+      //   page: page.toString(),
+      //   limit: categoriesPerPage.toString(),
+      //   skip: skip.toString(),
+      //   ...(search && { search }),
+      //   ...(status !== 'all' && { status })
+      // });
+      const skip = (page - 1) * categoriesPerPage;
+      const limit = categoriesPerPage;
+      console.log(limit, skip, 'hee')
+
+
+      const response = await adminApiClient.get(`${LOCALHOST_URL}/admin/getAllCategory`, {
+        params: {
+          skip,
+          limit
+        }
+      });
+      console.log(response.data.message, 'response')
+      const data = response.data.message.getCategories;
+
+      if (data) {
+        setCategories(data || []);
+        setAllCategories(data || [])
+        const totalCount = response.data.message.totalCount || 0;
+        setTotalCategories(totalCount);
+
+        // Fix 3: Calculate total pages correctly
+        const totalPages = Math.ceil(totalCount / limit);
+        console.log(totalPages, 'hee')
+        setTotalPages(totalPages);
+      }
+    } catch (error) {
+      console.log(error);
+      setCategories([]);
+      setTotalCategories(0);
+      setTotalPages(0);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Update filtered categories based on search and filters
   const updateFilteredCategories = (categoryList = categories) => {
     let filtered = categoryList;
-    
-    // Apply status filter
-    if (filterStatus === 'active') {
-      filtered = filtered.filter(category => category.isActive);
-    } else if (filterStatus === 'inactive') {
-      filtered = filtered.filter(category => !category.isActive);
-    }
-    
-    // Apply search filter
-    if (searchTerm) {
-      const lowercaseSearch = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        category => 
-          category.name.toLowerCase().includes(lowercaseSearch) || 
-          category.description.toLowerCase().includes(lowercaseSearch)
-      );
-    }
-    
+
+    // Apply status filter (if not already applied on backend)
+    // if (filterStatus === 'active') {
+    //   filtered = filtered.filter(category => category.isActive);
+    // } else if (filterStatus === 'inactive') {
+    //   filtered = filtered.filter(category => !category.isActive);
+    // }
+
+    // Apply search filter (if not already applied on backend)
+    // if (searchTerm) {
+    //   const lowercaseSearch = searchTerm.toLowerCase();
+    //   filtered = filtered.filter(
+    //     category =>
+    //       category.name.toLowerCase().includes(lowercaseSearch) ||
+    //       category.description?.toLowerCase().includes(lowercaseSearch)
+    //   );
+    // }
+
     setFilteredCategories(filtered);
   };
 
   // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+  const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newSearchTerm = e.target.value;
+    setSearchTerm(newSearchTerm);
+    console.log(pages, 'Tpal')
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+
+    searchTimeout.current = setTimeout(async () => {
+
+
+      if (newSearchTerm.trim() === '') {
+        setCategories(allCategories);
+        console.log(pages, 'heeeeee')
+        setTotalPages(pages)
+        return;
+      }
+
+      try {
+        const response = await adminApiClient.get(`${LOCALHOST_URL}/admin/search?name=${newSearchTerm}`);
+        console.log(response.data.message, 'Search Results');
+        if (response.data.message.length > 0) {
+          setCategories(response.data.message);
+          setPages(totalPages)
+          setTotalPages(1)
+        }
+
+      } catch (error) {
+        console.error('Search API error:', error);
+      }
+    }, 500);
+    // console.log(newSearchTerm, 'Search')
+    // setSearchTerm(newSearchTerm);
+    // console.log(categories, 'Categoires')
+    // const filteredCategories = allCategories.filter(category =>
+    //   category.name.toLowerCase().includes(newSearchTerm.toLowerCase())
+    // );
+
+    // setCategories(filteredCategories)
+    // setCurrentPage(1); // Reset to first page when searching
+
+    // // Debounce search to avoid too many API calls
+    // const timeoutId = setTimeout(() => {
+    //   fetchCategories(1, newSearchTerm, filterStatus);
+    // }, 500);
+
+    // return () => clearTimeout(timeoutId);
+  };
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      fetchCategories(page, searchTerm, filterStatus);
+    }
   };
 
   // Handle filter change
   const handleFilterChange = (status: 'all' | 'active' | 'inactive') => {
     setFilterStatus(status);
+    setCurrentPage(1); // Reset to first page when filtering
+    fetchCategories(1, searchTerm, status);
   };
 
   // Apply filters whenever dependencies change
   useEffect(() => {
     updateFilteredCategories();
-  }, [searchTerm, filterStatus, categories]);
+  }, [categories]);
 
   // Fetch categories on mount
-//   useEffect(() => {
-//     fetchCategories();
-//   }, []);
+  useEffect(() => {
+    fetchCategories(currentPage, searchTerm, filterStatus);
+  }, []);
 
   // Format date string
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     });
   };
-  
-  // const dummyCategories = [
-  //   {
-  //     _id: "64fd9c3f10a62e001b15f1a1",
-  //     name: "Electronics",
-  //     description: "Devices, gadgets, and accessories",
-  //     image: "https://via.placeholder.com/150?text=Electronics",
-  //     isActive: true,
-  //     createdAt: "2023-09-01T10:00:00Z",
-  //   },
-  //   {
-  //     _id: "64fd9c3f10a62e001b15f1a2",
-  //     name: "Furniture",
-  //     description: "Home and office furniture",
-  //     image: "https://via.placeholder.com/150?text=Furniture",
-  //     isActive: false,
-  //     createdAt: "2023-09-02T11:30:00Z",
-  //   },
-  //   {
-  //     _id: "64fd9c3f10a62e001b15f1a3",
-  //     name: "Clothing",
-  //     description: "Men's and Women's apparel",
-  //     image: "https://via.placeholder.com/150?text=Clothing",
-  //     isActive: true,
-  //     createdAt: "2023-09-03T09:45:00Z",
-  //   },
-  //   {
-  //     _id: "64fd9c3f10a62e001b15f1a4",
-  //     name: "Books",
-  //     description: "Educational and recreational books",
-  //     image: "https://via.placeholder.com/150?text=Books",
-  //     isActive: true,
-  //     createdAt: "2023-09-04T14:20:00Z",
-  //   },
-  //   {
-  //     _id: "64fd9c3f10a62e001b15f1a5",
-  //     name: "Sports",
-  //     description: "Sporting goods and accessories",
-  //     image: "https://via.placeholder.com/150?text=Sports",
-  //     isActive: false,
-  //     createdAt: "2023-09-05T08:10:00Z",
-  //   },
-  // ];
-  
-  useEffect(() => {
-    // setCategories(dummyCategories);
-    const fetchCategories = async() =>{
-      try {
-        const response = await axios.get(`${LOCALHOST_URL}/admin/getAllCategory`);
-        const data = response.data.message
-        console.log(data)
-        setCategories(data)
-      } catch (error) {
-        console.log(error)
-      }finally{
-        setLoading(false);
-      }
-    }
-    fetchCategories()
-    
-  }, []);
 
-  const handleAddCategory = () =>{
+  const handleAddCategory = () => {
     navigate('/admin/addcategory')
   }
+
+  // Generate page numbers for pagination
+  const generatePageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
 
   // Loading state
   if (loading) {
@@ -241,24 +328,6 @@ const AdminCategoryBody = () => {
     );
   }
 
-  // Error state
-  if (error) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh] mt-[11vh] lg:ml-64 pt-24">
-        <div className="bg-[#212936] p-6 rounded-lg shadow-lg flex flex-col items-center">
-          <PackageX className="w-12 h-12 text-red-500 mb-4" />
-          <p className="text-white text-lg mb-4">{error}</p>
-          <button 
-            className="bg-[#45B8F2] py-2 px-4 rounded-md hover:bg-[#3ca1d8] transition-colors"
-            // onClick={fetchCategories}
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-4 md:p-6 lg:p-8 pt-24 mt-[11vh] lg:ml-64">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
@@ -266,7 +335,7 @@ const AdminCategoryBody = () => {
           <Package className="text-[#45B8F2] mr-2 h-6 w-6" />
           <h1 className="text-2xl md:text-3xl text-white font-semibold">Category Management</h1>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
           <div className="relative">
             <input
@@ -278,47 +347,36 @@ const AdminCategoryBody = () => {
             />
             <Search className="absolute left-3 top-2.5 text-gray-400 h-5 w-5" />
           </div>
-          
-          <div className="flex gap-2">
+
+          {/* <div className="flex gap-2">
             <button
               onClick={() => handleFilterChange('all')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
-                filterStatus === 'all' 
-                  ? 'bg-[#45B8F2] text-white' 
-                  : 'bg-[#1A202C] text-gray-300 hover:bg-[#2D394E]'
-              }`}
+              className={`px-3 py-1.5 rounded-md transition-colors ${filterStatus === 'all'
+                ? 'bg-[#45B8F2] text-white'
+                : 'bg-[#1A202C] text-gray-300 hover:bg-[#2D394E]'
+                }`}
             >
               All
             </button>
             <button
               onClick={() => handleFilterChange('active')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
-                filterStatus === 'active' 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-[#1A202C] text-gray-300 hover:bg-[#2D394E]'
-              }`}
+              className={`px-3 py-1.5 rounded-md transition-colors ${filterStatus === 'active'
+                ? 'bg-green-600 text-white'
+                : 'bg-[#1A202C] text-gray-300 hover:bg-[#2D394E]'
+                }`}
             >
               Active
             </button>
             <button
               onClick={() => handleFilterChange('inactive')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
-                filterStatus === 'inactive' 
-                  ? 'bg-red-600 text-white' 
-                  : 'bg-[#1A202C] text-gray-300 hover:bg-[#2D394E]'
-              }`}
+              className={`px-3 py-1.5 rounded-md transition-colors ${filterStatus === 'inactive'
+                ? 'bg-red-600 text-white'
+                : 'bg-[#1A202C] text-gray-300 hover:bg-[#2D394E]'
+                }`}
             >
               Inactive
             </button>
-            <button
-            //   onClick={fetchCategories}
-              disabled={isRefreshing}
-              className="bg-[#1A202C] text-gray-300 hover:bg-[#2D394E] px-3 py-1.5 rounded-md transition-colors"
-              aria-label="Refresh categories"
-            >
-              {/* <RefreshCw className={w-5 h-5 ${isRefreshing ? 'animate-spin text-[#45B8F2]' : ''}} /> */}
-            </button>
-          </div>
+          </div> */}
         </div>
       </div>
 
@@ -334,13 +392,13 @@ const AdminCategoryBody = () => {
       </div>
 
       {/* Empty state */}
-      {filteredCategories.length === 0 && (
+      {categories.length === 0 && !loading && (
         <div className="bg-[#212936] rounded-lg shadow-lg p-8 flex flex-col items-center justify-center">
           <PackageX className="w-16 h-16 text-gray-500 mb-4" />
           <h3 className="text-xl text-white mb-2">No categories found</h3>
           <p className="text-gray-400 text-center mb-6">
-            {searchTerm || filterStatus !== 'all' 
-              ? 'Try adjusting your search or filters' 
+            {searchTerm || filterStatus !== 'all'
+              ? 'Try adjusting your search or filters'
               : 'There are no categories to display'}
           </p>
           {(searchTerm || filterStatus !== 'all') && (
@@ -349,6 +407,8 @@ const AdminCategoryBody = () => {
                 onClick={() => {
                   setSearchTerm('');
                   setFilterStatus('all');
+                  setCurrentPage(1);
+                  fetchCategories(1, '', 'all');
                 }}
                 className="bg-[#45B8F2] text-white px-4 py-2 rounded-md hover:bg-[#3ca1d8] transition-colors"
               >
@@ -360,7 +420,7 @@ const AdminCategoryBody = () => {
       )}
 
       {/* Desktop Table View */}
-      {filteredCategories.length > 0 && (
+      {categories.length > 0 && (
         <div className="hidden sm:block overflow-x-auto rounded-lg shadow-lg">
           <table className="min-w-full bg-[#212936] text-white">
             <thead>
@@ -368,25 +428,26 @@ const AdminCategoryBody = () => {
                 <th className="py-4 px-6 text-left">ID</th>
                 <th className="py-4 px-6 text-left">Image</th>
                 <th className="py-4 px-6 text-left">Name</th>
-                {/* <th className="py-4 px-6 text-left">Description</th> */}
                 <th className="py-4 px-6 text-center">Status</th>
                 <th className="py-4 px-6 text-left">Created</th>
                 <th className="py-4 px-6 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {filteredCategories.map((category, index) => (
-                <tr 
-                  key={category._id.toString()} 
+              {categories.map((category, index) => (
+                <tr
+                  key={category._id.toString()}
                   className="border-b border-gray-700 hover:bg-[#2D394E] transition-colors"
                 >
-                  <td className="py-4 px-6 font-mono text-sm">{index + 1}</td>
+                  <td className="py-4 px-6 font-mono text-sm">
+                    {(currentPage - 1) * categoriesPerPage + index + 1}
+                  </td>
                   <td className="py-4 px-6">
                     <div className="h-12 w-12 rounded-md overflow-hidden bg-gray-700">
                       {category.image ? (
-                        <img 
-                          src={category.image} 
-                          alt={category.name} 
+                        <img
+                          src={category.image}
+                          alt={category.name}
                           className="h-full w-full object-cover"
                         />
                       ) : (
@@ -397,16 +458,12 @@ const AdminCategoryBody = () => {
                     </div>
                   </td>
                   <td className="py-4 px-6 font-medium">{category.name}</td>
-                  {/* <td className="py-4 px-6 text-gray-300 truncate max-w-xs">
-                    {category.description || 'No description'}
-                  </td> */}
                   <td className="py-4 px-6 text-center">
                     <span
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        category.isActive
-                          ? 'bg-green-900/50 text-green-200'
-                          : 'bg-red-900/50 text-red-200'
-                      }`}
+                      className={`px-3 py-1 rounded-full text-sm ${category.isActive
+                        ? 'bg-green-900/50 text-green-200'
+                        : 'bg-red-900/50 text-red-200'
+                        }`}
                     >
                       {category.isActive ? 'Active' : 'Inactive'}
                     </span>
@@ -442,19 +499,19 @@ const AdminCategoryBody = () => {
       )}
 
       {/* Mobile View */}
-      {filteredCategories.length > 0 && (
+      {categories.length > 0 && (
         <div className="sm:hidden space-y-4">
-          {filteredCategories.map((category, index) => (
-            <div 
-              key={index} 
+          {categories.map((category, index) => (
+            <div
+              key={category._id.toString()}
               className="bg-[#212936] rounded-lg p-4 space-y-3 shadow-md"
             >
               <div className="flex items-center">
                 <div className="h-12 w-12 rounded-md overflow-hidden bg-gray-700 mr-3">
                   {category.image ? (
-                    <img 
-                      src={category.image} 
-                      alt={category.name} 
+                    <img
+                      src={category.image}
+                      alt={category.name}
                       className="h-full w-full object-cover"
                     />
                   ) : (
@@ -466,11 +523,10 @@ const AdminCategoryBody = () => {
                 <div>
                   <h3 className="font-medium text-white">{category.name}</h3>
                   <span
-                    className={`px-2 py-0.5 rounded-full text-xs ${
-                      category.isActive
-                        ? 'bg-green-900/50 text-green-200'
-                        : 'bg-red-900/50 text-red-200'
-                    }`}
+                    className={`px-2 py-0.5 rounded-full text-xs ${category.isActive
+                      ? 'bg-green-900/50 text-green-200'
+                      : 'bg-red-900/50 text-red-200'
+                      }`}
                   >
                     {category.isActive ? 'Active' : 'Inactive'}
                   </span>
@@ -478,10 +534,6 @@ const AdminCategoryBody = () => {
               </div>
 
               <div className="space-y-2 text-white">
-                {/* <div className="flex flex-col">
-                  <span className="text-gray-400 text-sm">Description</span>
-                  <span className="text-sm">{category.description || 'No description'}</span>
-                </div> */}
                 <div className="flex flex-col">
                   <span className="text-gray-400 text-sm">Created</span>
                   <span className="text-sm">{formatDate(category.createdAt)}</span>
@@ -509,16 +561,60 @@ const AdminCategoryBody = () => {
         </div>
       )}
 
-      {/* Edit Modal */}
-      {/* {isEditModalOpen && currentCategory && (
-        <CategoryEditModal
-          category={currentCategory}
-          isOpen={isEditModalOpen}
-          onClose={handleCloseEditModal}
-          onUpdate={handleCategoryUpdated}
-        />
-      )} */}
-      
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="text-sm text-gray-400">
+            Showing {categories.length} of {totalCategories} categories
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Previous Button */}
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className={`p-2 rounded-lg transition-colors ${currentPage === 1
+                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                : 'bg-[#1A202C] text-white hover:bg-[#2D394E]'
+                }`}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {/* Page Numbers */}
+            {generatePageNumbers().map((page, index) => (
+              <React.Fragment key={index}>
+                {page === '...' ? (
+                  <span className="px-3 py-2 text-gray-400">...</span>
+                ) : (
+                  <button
+                    onClick={() => handlePageChange(page as number)}
+                    className={`px-3 py-2 rounded-lg transition-colors ${currentPage === page
+                      ? 'bg-[#45B8F2] text-white'
+                      : 'bg-[#1A202C] text-white hover:bg-[#2D394E]'
+                      }`}
+                  >
+                    {page}
+                  </button>
+                )}
+              </React.Fragment>
+            ))}
+
+            {/* Next Button */}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className={`p-2 rounded-lg transition-colors ${currentPage === totalPages
+                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                : 'bg-[#1A202C] text-white hover:bg-[#2D394E]'
+                }`}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         .tooltip-container {
           position: relative;

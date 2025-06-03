@@ -2,6 +2,9 @@ import { Types } from "mongoose";
 import { IHostel } from "../../model/hostelModel";
 import Host, { IHost } from "../../model/hostModel";
 import { ICategory } from "../../model/categoryModel";
+import { IWallet } from "../../model/walletModel";
+import { IOrder } from "../../model/orderModel";
+import { IUser } from "../../model/userModel";
 
 // Host data structure
 interface IHostData {
@@ -63,5 +66,12 @@ export interface IHostService {
     hostGoogleSignUp(hostData:HostData):Promise<{ message: string; accessToken: string; refreshToken: string } | string>,
     getHost(id:Types.ObjectId):Promise<IHost | string>,
     validateRefreshToken(refreshToken:string):Promise<{  accessToken: string; refreshToken: string } | string>,
-    getAllCategory(): Promise<ICategory[] | string>
+    getAllCategory(): Promise<ICategory[] | string>,
+    getWalletDetails(id:string):Promise<IWallet | string | null>,
+    getBookings(hostId: string): Promise<IOrder[] | string | null>,
+    changePassword(hostData: { email: string; currentPassword: string; newPassword: string }): Promise<string>,
+    editProfile(hostData: { email: string, name: string, mobile: string }): Promise<string>,
+    walletDeposit({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string>,
+    walletWithDraw({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string>,
+    getAllUsers(): Promise<IUser[] | string | null>,
 }

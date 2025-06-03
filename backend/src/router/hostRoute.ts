@@ -26,6 +26,14 @@ host_route.post('/approval',upload.single('file'),hostAuthMiddleware,hostControl
 host_route.get('/detailhostel',hostController.getOneHostel.bind(hostController))
 host_route.post('/refresh',hostController.validateRefreshToken.bind(hostController))
 host_route.get('/getAllCategory',hostController.getAllCategory.bind(hostController))
+host_route.get('/getWalletDetails',hostAuthMiddleware,hostController.getWalletDetails.bind(hostController))
+host_route.get('/getBookings/:id',hostAuthMiddleware,hostController.getBookings.bind(hostController))
+host_route.patch('/changepassword',hostAuthMiddleware,hostController.changePassword.bind(hostController))
+host_route.patch('/editprofile',hostAuthMiddleware,hostController.editProfile.bind(hostController))
+host_route.post('/deposit',hostAuthMiddleware,hostController.walletDeposit.bind(hostController))
+host_route.post('/withdraw',hostAuthMiddleware,hostController.walletWithDraw.bind(hostController))
+// host_route.get('/getChat/:id',hostAuthMiddleware,hostController.getChat.bind(hostController))
+host_route.get('/allUsers',hostAuthMiddleware,hostController.getAllUsers.bind(hostController))
 
 
 host_route.use(passport.initialize());

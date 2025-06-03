@@ -1,11 +1,11 @@
 // import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
 import { loginSuccess } from '../../../redux/adminAuthSlice';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
-import { signInValidation} from '../../../validations/commonValidations'; // Import validation schema
+import { signInValidation } from '../../../validations/commonValidations'; // Import validation schema
 
 const AdminLoginBody = () => {
   // const [email, setEmail] = useState('');
@@ -52,7 +52,7 @@ const AdminLoginBody = () => {
         {/* Formik Form */}
         <Formik
           initialValues={{ email: '', password: '' }}
-          validationSchema={signInValidation} // Use the validation schema
+          validationSchema={signInValidation}
           onSubmit={handleLogin}
         >
           {() => (
@@ -61,8 +61,8 @@ const AdminLoginBody = () => {
                 <label htmlFor="email" className="block text-[17px] font-medium text-[#45B8F2] mb-2">Email</label>
                 <Field
                   name="email"
-                  type="email"
-                  className="border-[1px] border-[#45B8F2] p-2 rounded-lg w-full focus:outline-none bg-[#273142]"
+                  type="text"
+                  className="border-[1px] border-[#45B8F2] p-2 rounded-lg w-full focus:outline-none bg-[#273142] focus:bg-[#273142] text-white"
                   placeholder="Enter your email"
                 />
                 <ErrorMessage name="email" component="div" className="text-red-500 text-xs mt-1" />

@@ -100,25 +100,28 @@ const SavedDetailHostel = () => {
     useEffect(() => {
         const fetchHostelDetails = async () => {
             try {
+                console.log("id", id)
                 const response = await apiClient.get(`${LOCALHOST_URL}/order/getOrderDetails/${id}`);
                 const orderData = response.data.message;
-                console.log(orderData,'heelo')
+                console.log(orderData, 'heelo')
                 setOrderId(orderData._id);
                 setBooking(orderData);
                 setBookingEnded(!orderData.active);
-
+                // setLoading(false)
                 // Fetch review data
                 const o_id = orderData._id;
-                console.log(o_id,'he')
+                console.log(o_id, 'he')
                 const reviewData = await apiClient.get(`${LOCALHOST_URL}/order/getReviewDetailsByOrderId/${o_id}`);
-                console.log(reviewData,'hee')
+                console.log(reviewData.data.message, 'hee')
+                setLoading(false)
+
                 if (reviewData.data.message) {
                     setExistingReview({
                         ratings: reviewData.data.message.rating,
                         review: reviewData.data.message.review
                     });
                 }
-            console.log(existingReview,'review')
+                console.log(existingReview, 'review')
 
             } catch (error) {
                 console.log(error);
@@ -128,43 +131,70 @@ const SavedDetailHostel = () => {
     }, []);
 
     const handleEndBooking = async () => {
-        setShowAlert(true); 
+        setShowAlert(true);
     };
 
+    const [loading, setLoading] = useState(true)
 
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="relative w-16 h-16">
+                    {/* Outer circle */}
+                    <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+                    {/* Spinning arc */}
+                    <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+                </div>
+            </div>
+        );
+    }
     const confirmEndBooking = async () => {
-        setShowAlert(false); 
+        setShowAlert(false);
         setIsEndingBooking(true);
         try {
             const response = await apiClient.post(`${LOCALHOST_URL}/order/endBooking/${orderId}`);
-            if(response.data.message == 'Updated'){
+            if (response.data.message == 'Updated') {
                 setBookingEnded(true);
                 // setShowReviewModal(true);
             }
-            console.log("Eres",response)
+            console.log("Eres", response)
+            setLoading(false)
             // alert('Booking ended successfully');
         } catch (error) {
             console.error('Error ending booking:', error);
             alert('Failed to end booking. Please try again.');
         } finally {
             setIsEndingBooking(false);
-            setShowAlert(false); 
+            setShowAlert(false);
         }
     };
 
     const cancelEndBooking = () => {
-        setShowAlert(false); 
+        setShowAlert(false);
     };
 
 
     const handleSubmitReview = async () => {
+        const invalidChars = /[*%$#@!^&+=]/;
+
         if (rating === 0) {
-            alert('Please select a rating');
+            toast.error('Please select a rating');
             return;
         }
-        console.log(rating,"rating")
-        console.log(review,'heeee')
+
+        if (!review.trim()) {
+            toast.error('Review cannot be empty');
+            return;
+        }
+
+        if (invalidChars.test(review)) {
+            toast.error('Review contains invalid characters like *, %, $, etc.');
+            return;
+        }
+
         setIsSubmittingReview(true);
+
         try {
             const response = await apiClient.post(`${LOCALHOST_URL}/order/submitReview`, {
                 orderId,
@@ -172,15 +202,22 @@ const SavedDetailHostel = () => {
                 review,
                 hostelId: booking?.hostel_id.id._id
             });
-            console.log(response.data.message.message)
-            if(response.data.message == 'Review Created'){
-                toast.success("Review Added")
+            console.log(response.data.message, 'Sangggg')
+            if (response.data.message === 'Review Created') {
+                toast.success('Review Added');
+                setExistingReview({
+                    ratings: rating,
+                    review: review
+                });
+
             }
+
             setShowReviewModal(false);
-            // alert('Thank you for your review!');
+            setLoading(false);
+
         } catch (error) {
             console.error('Error submitting review:', error);
-            alert('Failed to submit review. Please try again.');
+            toast.error('Failed to submit review. Please try again.');
         } finally {
             setIsSubmittingReview(false);
         }
@@ -189,8 +226,9 @@ const SavedDetailHostel = () => {
 
 
 
+
     const renderActionButton = () => {
-        if (existingReview?.ratings!==undefined && existingReview.review!==undefined) {
+        if (existingReview?.ratings !== undefined && existingReview.review !== undefined) {
             return (
                 <div className="flex flex-col items-end gap-2">
                     <div className="flex items-center gap-1">
@@ -206,16 +244,27 @@ const SavedDetailHostel = () => {
                 </div>
             );
         }
-
+        console.log(loading, 'hdsf')
         if (bookingEnded) {
             return (
-                <button
-                    onClick={() => setShowReviewModal(true)}
-                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
-                >
-                    <Star size={20} />
-                    Write a Review
-                </button>
+                loading ? (
+                    <div className="min-h-screen flex items-center justify-center">
+                        <div className="relative w-16 h-16">
+                            {/* Outer circle */}
+                            <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+                            {/* Spinning arc */}
+                            <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+                        </div>
+                    </div>
+                ) : (
+                    <button
+                        onClick={() => setShowReviewModal(true)}
+                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
+                    >
+                        <Star size={20} />
+                        Write a Review
+                    </button>
+                )
             );
         }
 
@@ -276,7 +325,7 @@ const SavedDetailHostel = () => {
                     <div className="fixed inset-0 flex justify-center items-center bg-gray-800 bg-opacity-50 z-50">
                         <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
                             <h3 className="font-semibold text-lg mb-4">Write a Review</h3>
-                            
+
                             {/* Star Rating */}
                             <div className="flex items-center gap-2 mb-4">
                                 {[1, 2, 3, 4, 5].map((star) => (

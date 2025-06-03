@@ -1,9 +1,12 @@
 import { Types } from "mongoose";
-import { IUser } from "../../model/userModel";
+// import { IUser } from "../../model/userModel";
 import { IHostel } from "../../model/hostelModel";
 import { IWallet } from "../../model/walletModel";
 import { IOrder } from "../../model/orderModel";
 import { IWishlist } from "../../model/wishlistModel";
+import { IUserResponse } from "../../dtos/UserResponse";
+import { IUser } from "../../model/userModel";
+import { IHost } from "../../model/hostModel";
 
 interface TempUserData {
     name: string;
@@ -37,27 +40,28 @@ interface UserData {
 
 export interface IUserRespository{
     otpVerifying(userData: { email: string; otp: number }): Promise<string>,
-    FindUserByEmail(email:string):Promise<IUser | null>,
+    FindUserByEmail(email: string):Promise<IUser | null>,
     OtpGenerating(email:string,otp:number):Promise<void>,
     tempStoreUser(userData: TempUserData): Promise<string | null>,
     CreateUser(userData: {email:string,otp:number}): Promise<string>,
-    UserVerifyLogin(userData: TempUserData): Promise<{ message: string, user: IUser } | string>,
+    UserVerifyLogin(userData: TempUserData): Promise<{ message: string, user: IUserResponse } | string>,
     resetPassword(userData: ResetPasswordData): Promise<string | { message: string }>,
-    FindUserById(id:Types.ObjectId):Promise<IUser | null>,
+    FindUserById(id:Types.ObjectId):Promise<IUserResponse | null>,
     changePassword(userData: ChangePasswordData): Promise<string>,
     editUserDetail(userData: EditUserDetailData): Promise<string>,
-    addGoogleUser(userData:UserData):Promise<{ message: string, user?: IUser }| string>,
-    getHostels():Promise<IHostel[] | string>,
+    addGoogleUser(userData:UserData):Promise<{ message: string, user?: IUserResponse }| string>,
+    getHostels(page: string, limit: string,search?:string): Promise<{ hostels: IHostel[]; totalCount: number } | string>,
     getSingleHostel(id:Types.ObjectId):Promise<IHostel | string>,
     findUserWallet(id:string):Promise<IWallet | string | null>,
     createWallet(email:string):Promise<string>,
     walletDeposit({id,amount,}: {id: string;amount: string;}): Promise<{ message: string; userWallet: IWallet } | string>,
     walletWithdraw({id,amount}:{id:string,amount:string}):Promise<string>,
-    getSavedBookings(id:Types.ObjectId):Promise<IOrder[] | string | null>,
+    getSavedBookings(id: Types.ObjectId, page: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null>,
     addToWishlist(id:string,userId:string):Promise<string>,
     removeFromWishlist(hostelId:string,userId:string):Promise<string>,
     checkWishlist(userId:string,hostelId:string):Promise<string>,
     getWishlist(userId:string):Promise<string | IWishlist[]>,
-    deleteWishlist(userId:string): Promise<string>
+    deleteWishlist(userId:string): Promise<string>,
+    allHost(): Promise<IHost[] | string | null>
     
 }

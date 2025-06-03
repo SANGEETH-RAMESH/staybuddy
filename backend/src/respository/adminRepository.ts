@@ -11,15 +11,16 @@ import { adminPayload } from "../types/commonInterfaces/tokenInterface";
 import Host, { IHost } from "../model/hostModel";
 import Hostel, { IHostel } from "../model/hostelModel";
 import Category, { ICategory } from "../model/categoryModel";
+import baseRepository from "./baseRespository";
 
-class adminRespository implements IAdminRepository {
+class adminRespository extends baseRepository<IUser> implements IAdminRepository {
     constructor() {
-
+        super(User)
     }
-
+ 
     async FindAdminByEmail(email: string): Promise<IUser | null> {
         try {
-            const user = await User.findOne({ email, isAdmin: true })
+            const user = await this.findByEmail({ email, isAdmin: true })
             return user
         } catch (error) {
             console.log(error)
@@ -88,10 +89,11 @@ class adminRespository implements IAdminRepository {
         }
     }
 
-    async userDelete(userId: object): Promise<string> {
+    async userDelete(userId: Types.ObjectId): Promise<string> {
         try {
             console.log("hey")
-            await User.findByIdAndDelete({ _id: userId })
+            // await User.findByIdAndDelete({ _id: userId })
+            await this.deleteById(userId)
             return "user deleted"
         } catch (error) {
             console.log(error)
@@ -167,7 +169,7 @@ class adminRespository implements IAdminRepository {
                 { $set: { approvalRequest: 1 } },
                 { new: true }
             )
-            if (result) { 
+            if (result) {
                 return "Reject"
             }
             return "Not Reject"
@@ -186,10 +188,28 @@ class adminRespository implements IAdminRepository {
         }
     }
 
-    async getAllHostels(): Promise<IHostel[] | string | null> {
+    async getAllHostels(page: string, limit: string): Promise<{ hostels: IHostel[], totalCount: number; } | string | null> {
         try {
+            const pageNumber = parseInt(page, 10);
+            const limitNumber = parseInt(limit, 10);
+
+            const hostels = await Hostel.find()
+                .skip(limitNumber * (pageNumber - 1))
+                .limit(limitNumber)
+                .populate('host_id');
+
+            const totalCount = await Hostel.countDocuments();
+
+            return { hostels, totalCount };
+        } catch (error) {
+            return error as string;
+        }
+    }
+
+    async getHostels(): Promise<IHostel[] | string | null> {
+        try {
+
             const findHostel = await Hostel.find().populate('host_id');
-            // console.log(findHostel,'hostel')
             if (findHostel.length == 0) {
                 return "Not hostel"
             }
@@ -214,10 +234,11 @@ class adminRespository implements IAdminRepository {
         }
     }
 
-    async getAllCategory(): Promise<ICategory[] | string> {
+    async getAllCategory(skip: number, limit: number): Promise<{ getCategories: ICategory[], totalCount: number } | string> {
         try {
-            const getCategories = await Category.find();
-            return getCategories
+            const getCategories = await Category.find().skip(skip).limit(limit);
+            const totalCount = await Category.countDocuments();
+            return { getCategories, totalCount }
         } catch (error) {
             return error as string
         }
@@ -270,21 +291,59 @@ class adminRespository implements IAdminRepository {
         }
     }
 
-    async getUserDetails(userId:string):Promise<string | IHost | null>{
+    async getUserDetails(userId: string): Promise<string | IHost | null> {
         try {
-            const getUserData = await Host.findOne({_id:userId});
+            const getUserData = await Host.findOne({ _id: userId });
             return getUserData;
         } catch (error) {
             return error as string
         }
     }
 
-    async getHostHostelData(hostId:string): Promise<IHostel[] | string | null>{
+    async getHostHostelData(hostId: string): Promise<IHostel[] | string | null> {
         try {
-            const findHostHostel = await Hostel.find({host_id:hostId});
+            const findHostHostel = await Hostel.find({ host_id: hostId });
             return findHostHostel;
         } catch (error) {
             return error as string
+        }
+    }
+
+    async deleteHostel(hostelId: string): Promise<string> {
+        try {
+            const hostRemoving = await Hostel.findOneAndDelete(
+                { _id: hostelId }
+            )
+            if (hostRemoving) {
+                return "Hostel Deleted"
+            }
+            return "Hostel Not Deleted"
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async deleteCategory(id: string): Promise<string | null> {
+        try {
+            console.log("ID", id)
+            const deleting = await Category.findOneAndDelete({ _id: id })
+            if (deleting) {
+                return "Category Deleted"
+            }
+            return "Category Not deleted"
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async searchCategory(name: string): Promise<ICategory[] | string | null> {
+        try {
+            const response = await Category.find({
+                name: { $regex: `^${name}`, $options: 'i' } 
+            });
+            return response;
+        } catch (error) {
+            return error as string;
         }
     }
 }

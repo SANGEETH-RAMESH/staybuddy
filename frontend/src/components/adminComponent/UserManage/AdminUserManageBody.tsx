@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import{ useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
-import axios from 'axios';
 import { toast } from 'react-toastify';
 import { ObjectId } from 'bson';
-import { Unlock, Lock, Trash2, Search, RefreshCw, UserX, Users } from 'lucide-react';
+import { Unlock, Lock, Trash2, RefreshCw, UserX, Users } from 'lucide-react';
+import adminApiClient from '../../../services/adminApiClient';
 
 interface User {
   _id: ObjectId | string;
@@ -25,7 +25,7 @@ const AdminUserManageBody = () => {
   // Handle block user
   const handleBlockUser = async (userId: ObjectId | string) => {
     try {
-      const response = await axios.patch('http://localhost:4000/admin/userblock', { userId });
+      const response = await adminApiClient.patch('http://localhost:4000/admin/userblock', { userId });
       if (response.data.message === 'User blocked') {
         localStorage.removeItem('userRefreshToken');
         localStorage.removeItem('userAccessToken');
@@ -46,7 +46,7 @@ const AdminUserManageBody = () => {
   // Handle unblock user
   const handleUnblockUser = async (userId: ObjectId | string) => {
     try {
-      const response = await axios.patch('http://localhost:4000/admin/userunblock', { userId });
+      const response = await adminApiClient.patch('http://localhost:4000/admin/userunblock', { userId });
       if (response.data.message.message === 'unblocked') {
         setUsers(prevUsers =>
           prevUsers.map(user =>
@@ -76,7 +76,7 @@ const AdminUserManageBody = () => {
 
     if (result.isConfirmed) {
       try {
-        const response = await axios.delete('http://localhost:4000/admin/deleteuser', {
+        const response = await adminApiClient.delete('http://localhost:4000/admin/deleteuser', {
           data: { userId },
         });
         
@@ -98,7 +98,7 @@ const AdminUserManageBody = () => {
   const fetchUsers = async () => {
     setIsRefreshing(true);
     try {
-      const response = await axios.get('http://localhost:4000/admin/getUser');
+      const response = await adminApiClient.get('http://localhost:4000/admin/getUser');
       if (response.data.success) {
         setUsers(response.data.message);
         updateFilteredUsers(response.data.message);
@@ -139,15 +139,7 @@ const AdminUserManageBody = () => {
     setFilteredUsers(filtered);
   };
 
-  // Handle search input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  // Handle filter change
-  const handleFilterChange = (status: 'all' | 'active' | 'blocked') => {
-    setFilterStatus(status);
-  };
+  
 
   // Apply filters whenever dependencies change
   useEffect(() => {
@@ -197,7 +189,7 @@ const AdminUserManageBody = () => {
           <h1 className="text-2xl md:text-3xl text-white font-semibold">User Management</h1>
         </div>
         
-        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+        {/* <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
           <div className="relative">
             <input
               type="text"
@@ -249,8 +241,8 @@ const AdminUserManageBody = () => {
               <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin text-[#45B8F2]' : ''}`} />
             </button>
           </div>
-        </div>
-      </div>
+        </div>*/}
+      </div> 
 
       {/* Empty state */}
       {filteredUsers.length === 0 && (

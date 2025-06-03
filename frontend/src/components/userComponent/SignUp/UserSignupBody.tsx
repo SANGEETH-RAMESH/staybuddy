@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Phone, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import * as Yup from 'yup';
 
 interface SignupValues {
     name: string;
@@ -21,56 +20,175 @@ const UserSignUpBody = () => {
     });
 
     const [errors, setErrors] = useState<Partial<SignupValues>>({});
+    const [validFields, setValidFields] = useState<Partial<Record<keyof SignupValues, boolean>>>({});
     const navigate = useNavigate();
 
-    const signupValidationSchema = Yup.object().shape({
-        name: Yup.string().required('Name is required').min(2, 'Name must be at least 2 characters'),
-        email: Yup.string().email('Invalid email').required('Email is required'),
-        password: Yup.string().required('Password is required').min(6, 'Password must be at least 6 characters'),
-        mobile: Yup.string()
-            .matches(/^\d{10}$/, 'Mobile number must be 10 digits')
-            .required('Mobile number is required'),
-    });
+    // JavaScript validation functions
+    const validateName = (name: string): string | null => {
+        if (!name.trim()) {
+            return 'Name is required';
+        }
+        if (name.trim().length < 2) {
+            return 'Name must be at least 2 characters';
+        }
+        return null;
+    };
+
+    const validateEmail = (email: string): string | null => {
+        if (!email.trim()) {
+            return 'Email is required';
+        }
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return 'Invalid email';
+        }
+        return null;
+    };
+
+    const validatePassword = (password: string): string | null => {
+        if (!password) {
+            return 'Password is required';
+        }
+        if (password.length < 6) {
+            return 'Password must be at least 6 characters';
+        }
+        return null;
+    };
+
+    const validateMobile = (mobile: string): string | null => {
+        if (!mobile.trim()) {
+            return 'Mobile number is required';
+        }
+        
+        // Check if mobile number is exactly 10 digits
+        const mobileRegex = /^\d{10}$/;
+        if (!mobileRegex.test(mobile)) {
+            return 'Mobile number must be exactly 10 digits';
+        }
+        
+        // Check if first digit is greater than 5
+        const firstDigit = parseInt(mobile[0], 10);
+        if (firstDigit <= 5) {
+            return 'First digit must be greater than 5';
+        }
+        
+        // Check if mobile number has at most five 0s
+        const zeroCount = (mobile.match(/0/g) || []).length;
+        if (zeroCount > 5) {
+            return 'Mobile number can have at most five 0s';
+        }
+        
+        return null;
+    };
+
+    const validateForm = (values: SignupValues): Partial<SignupValues> => {
+        const validationErrors: Partial<SignupValues> = {};
+        
+        const nameError = validateName(values.name);
+        if (nameError) validationErrors.name = nameError;
+        
+        const emailError = validateEmail(values.email);
+        if (emailError) validationErrors.email = emailError;
+        
+        const passwordError = validatePassword(values.password);
+        if (passwordError) validationErrors.password = passwordError;
+        
+        const mobileError = validateMobile(values.mobile);
+        if (mobileError) validationErrors.mobile = mobileError;
+        
+        return validationErrors;
+    };
+
+    // Helper function to get input className based on validation state
+    const getInputClassName = (fieldName: keyof SignupValues) => {
+        const baseClass = "w-full pl-9 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all text-sm";
+        
+        if (errors[fieldName]) {
+            return `${baseClass} border-red-300 focus:ring-red-500 bg-red-50`;
+        } else if (validFields[fieldName]) {
+            return `${baseClass} border-green-300 focus:ring-green-500 bg-green-50`;
+        } else {
+            return `${baseClass} border-gray-300 focus:ring-blue-500`;
+        }
+    };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormValues({ ...formValues, [name]: value });
-        setErrors({ ...errors, [name]: '' }); // Clear the error for this field
+        
+        // Clear the error for this field and validate in real-time
+        const newErrors = { ...errors };
+        const newValidFields = { ...validFields };
+        delete newErrors[name as keyof SignupValues];
+        
+        // Real-time validation for better UX
+        let fieldError: string | null = null;
+        switch (name) {
+            case 'name':
+                fieldError = validateName(value);
+                break;
+            case 'email':
+                fieldError = validateEmail(value);
+                break;
+            case 'password':
+                fieldError = validatePassword(value);
+                break;
+            case 'mobile':
+                fieldError = validateMobile(value);
+                break;
+        }
+        
+        if (fieldError) {
+            newErrors[name as keyof SignupValues] = fieldError;
+            newValidFields[name as keyof SignupValues] = false;
+        } else {
+            // Mark field as valid if there's no error and field has content
+            newValidFields[name as keyof SignupValues] = value.trim() !== '';
+        }
+        
+        setErrors(newErrors);
+        setValidFields(newValidFields);
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         try {
-            // Validate form values using Yup
-            await signupValidationSchema.validate(formValues, { abortEarly: false });
+            // Validate form values using JavaScript validation
+            const validationErrors = validateForm(formValues);
+            
+            if (Object.keys(validationErrors).length > 0) {
+                setErrors(validationErrors);
+                return;
+            }
 
             // Clear errors if validation passes
             setErrors({});
 
             // Call API
             const res = await axios.post('http://localhost:4000/user/signup', formValues);
-            console.log(res,'hello')
+            console.log(res, 'hello');
+            
             if (res.data.message === 'Otp sent successfully') {
                 navigate('/user/otp', {
-                    state: { email: formValues.email, name: formValues.name, password: formValues.password, mobile: formValues.mobile },
+                    state: { 
+                        email: formValues.email, 
+                        name: formValues.name, 
+                        password: formValues.password, 
+                        mobile: formValues.mobile 
+                    },
                 });
             } else if (res.data.message === 'User already exists') {
-                toast.error('Email already exist', { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
+                toast.error('Email already exist', { 
+                    style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } 
+                });
             }
         } catch (err) {
-            if (err instanceof Yup.ValidationError) {
-                // Handle Yup validation errors
-                const newErrors: Partial<SignupValues> = {};
-                err.inner.forEach((error) => {
-                    if (error.path) newErrors[error.path as keyof SignupValues] = error.message;
-                });
-                setErrors(newErrors);
-            } else {
-                // Handle other errors (e.g., API errors)
-                toast.error('An error occurred', { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
-                console.error(err);
-            }
+            // Handle API errors
+            toast.error('An error occurred', { 
+                style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } 
+            });
+            console.error(err);
         }
     };
 
@@ -113,7 +231,7 @@ const UserSignUpBody = () => {
                                         value={formValues.name}
                                         onChange={handleChange}
                                         placeholder="Enter your full name"
-                                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                        className={getInputClassName('name')}
                                     />
                                 </div>
                                 {errors.name && <div className="text-red-500 text-xs">{errors.name}</div>}
@@ -125,12 +243,12 @@ const UserSignUpBody = () => {
                                 <div className="relative">
                                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                     <input
-                                        type="email"
+                                        type="text"
                                         name="email"
                                         value={formValues.email}
                                         onChange={handleChange}
                                         placeholder="Enter your email"
-                                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                        className={getInputClassName('email')}
                                     />
                                 </div>
                                 {errors.email && <div className="text-red-500 text-xs">{errors.email}</div>}
@@ -147,7 +265,7 @@ const UserSignUpBody = () => {
                                         value={formValues.password}
                                         onChange={handleChange}
                                         placeholder="Create a password"
-                                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                        className={getInputClassName('password')}
                                     />
                                 </div>
                                 {errors.password && <div className="text-red-500 text-xs">{errors.password}</div>}
@@ -164,7 +282,7 @@ const UserSignUpBody = () => {
                                         value={formValues.mobile}
                                         onChange={handleChange}
                                         placeholder="Enter your mobile number"
-                                        className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
+                                        className={getInputClassName('mobile')}
                                     />
                                 </div>
                                 {errors.mobile && <div className="text-red-500 text-xs">{errors.mobile}</div>}

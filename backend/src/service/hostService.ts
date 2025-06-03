@@ -11,6 +11,9 @@ import { generateAccessToken, generateRefreshToken, verifyToken } from "../Jwt/j
 type HostType = InstanceType<typeof Host>
 import { ObjectId } from 'mongodb'
 import { ICategory } from "../model/categoryModel";
+import { IWallet } from "../model/walletModel";
+import { IOrder } from "../model/orderModel";
+import { IUser } from "../model/userModel";
 
 function otpgenerator() {
     return Math.floor(1000 + Math.random() * 9000);
@@ -153,7 +156,7 @@ class hostService implements IHostService {
 
     async resetPassword(hostData: { email: string, password: string }): Promise<{ message: string }> {
         try {
-            const changePassword = await this.hostRepository.ChangePassword(hostData);
+            const changePassword = await this.hostRepository.resetPassword(hostData);
             return changePassword;
         } catch (error) {
             console.log(error);
@@ -329,6 +332,70 @@ class hostService implements IHostService {
     async getAllCategory(): Promise<ICategory[] | string> {
         try {
             const response = await this.hostRepository.getAllCategory();
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getWalletDetails(id: string): Promise<IWallet | string | null> {
+        try {
+            const response = await this.hostRepository.findHostWallet(id)
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getBookings(hostId: string): Promise<IOrder[] | string | null> {
+        try {
+            const response = await this.hostRepository.getBookings(hostId)
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async changePassword(hostData: { email: string; currentPassword: string; newPassword: string }): Promise<string> {
+        try {
+            const response = await this.hostRepository.changePassword(hostData);
+            console.log(response, 'Res')
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async editProfile(hostData: { email: string, name: string, mobile: string }): Promise<string> {
+        try {
+            const response = await this.hostRepository.editProfile(hostData);
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async walletDeposit({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
+        try {
+            const response = await this.hostRepository.walletDeposit({ id, amount });
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async walletWithDraw({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
+        try {
+            const response = await this.hostRepository.walletWithDraw({ id, amount });
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getAllUsers(): Promise<IUser[] | string | null> {
+        try {
+            const response = await this.hostRepository.getAllUsers();
             return response
         } catch (error) {
             return error as string

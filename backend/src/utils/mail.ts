@@ -4,8 +4,8 @@ import Mailgen from 'mailgen'
 
 dotenv.config();
 
-
-
+// console.log(process.env.GOOGLE_GMAIL)
+// console.log(process.env.GOOGLE_PASSWORD)
 export const sendOtp = async (
     email: string,
     otp: number

@@ -18,11 +18,12 @@ const UserProfileBody = () => {
         console.log(LOCALHOST_URL, 'url')
         const response = await apiClient.get(`${LOCALHOST_URL}/user/getUserDetails`);
         const walletDetails = await apiClient.get(`${LOCALHOST_URL}/user/getWalletDetails`);
-        console.log("User details:", response.data.data);
+        console.log("User details:", response.data.data.name);
         console.log("walllet", walletDetails.data.message)
         setId(response.data.data._id)
-        setBalance(walletDetails.data.message.balance)
+        setBalance(walletDetails.data.message?.balance)
         setName(response.data.data.name);
+        console.log(name,'hee')
         setEmail(response.data.data.email)
         console.log(email, name)
       } catch (error) {
@@ -204,7 +205,7 @@ const UserProfileBody = () => {
                   marginTop: '5px',
                 }}
               >
-                Balance: ${balance}
+                Balance: ${balance??'0'}
               </div>
             </div>
           </div>

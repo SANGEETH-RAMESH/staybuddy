@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import axios from 'axios';
 import { ObjectId } from 'bson';
 import Swal from 'sweetalert2';
 import { Trash2, Lock, Unlock, Check, X, Loader, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import adminApiClient from '../../../services/adminApiClient';
 
 interface Host {
   _id: ObjectId;
@@ -39,7 +39,7 @@ const AdminHostManageBody = () => {
 
   const handleApprove = async (hostId: ObjectId) => {
     try {
-      const response = await axios.patch('http://localhost:4000/admin/approvehost', { hostId });
+      const response = await adminApiClient.patch('http://localhost:4000/admin/approvehost', { hostId });
       if (response.data.success) {
         setHosts(prevHosts =>
           prevHosts.map(host =>
@@ -56,7 +56,7 @@ const AdminHostManageBody = () => {
 
   const handleReject = async (hostId: ObjectId) => {
     try {
-      const response = await axios.patch('http://localhost:4000/admin/rejecthost', { hostId });
+      const response = await adminApiClient.patch('http://localhost:4000/admin/rejecthost', { hostId });
       if (response.data.success) {
         setHosts(prevHosts =>
           prevHosts.map(host =>
@@ -73,7 +73,7 @@ const AdminHostManageBody = () => {
 
   const handleBlockHost = async (hostId: ObjectId) => {
     try {
-      const response = await axios.patch('http://localhost:4000/admin/hostblock', { hostId });
+      const response = await adminApiClient.patch('http://localhost:4000/admin/hostblock', { hostId });
       if (response.data.success) {
         localStorage.removeItem('hostRefreshToken');
         localStorage.removeItem('hostAccessToken')
@@ -93,7 +93,7 @@ const AdminHostManageBody = () => {
   const handleUnblockHost = async (hostId: ObjectId) => {
     try {
       console.log(hostId)
-      const response = await axios.patch('http://localhost:4000/admin/hostunblock', { hostId });
+      const response = await adminApiClient.patch('http://localhost:4000/admin/hostunblock', { hostId });
       if (response.data.success) {
         setHosts(prevHosts =>
           prevHosts.map(host =>
@@ -121,7 +121,7 @@ const AdminHostManageBody = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await axios.delete<{ success: boolean }>(
+          const response = await adminApiClient.delete<{ success: boolean }>(
             `http://localhost:4000/admin/deletehost/${hostId}`
           );
           if (response.data.success) {
@@ -176,7 +176,7 @@ const AdminHostManageBody = () => {
   useEffect(() => {
     const fetchHosts = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/admin/getHosts');
+        const response = await adminApiClient.get('http://localhost:4000/admin/getHosts');
         console.log(response.data.message, 'message');
 
         if (response.data.success) {

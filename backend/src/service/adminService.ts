@@ -19,8 +19,6 @@ class adminService implements IAdminService {
     async adminLogin(adminData: { admin_email: string, admin_password: string }): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
         try {
             const response = await this.adminRepository.AdminVerifyLogin(adminData)
-
-
             return response
         } catch (error) {
             console.log(error)
@@ -61,7 +59,7 @@ class adminService implements IAdminService {
         }
     }
 
-    async userDelete(userId: object): Promise<string> {
+    async userDelete(userId: Types.ObjectId): Promise<string> {
         try {
             console.log("sfdfsd")
             const response = await this.adminRepository.userDelete(userId);
@@ -74,7 +72,7 @@ class adminService implements IAdminService {
 
     async getHost(): Promise<{ hosts: IHost[] | null; hostIdCounts: Record<string, number> } | null> {
         try {
-            const getHostels = await this.adminRepository.getAllHostels(); // Array of objects containing hostels
+            const getHostels = await this.adminRepository.getHostels(); // Array of objects containing hostels
             const getHost = await this.adminRepository.getHost(); // Fetching hosts
 
             if (!Array.isArray(getHostels)) {
@@ -164,9 +162,9 @@ class adminService implements IAdminService {
         }
     }
 
-    async getAllHostels(): Promise<IHostel[] | null | string> {
+    async getAllHostels(page: string, limit: string): Promise<{ hostels: IHostel[], totalCount: number; } | string | null> {
         try {
-            const response = await this.adminRepository.getAllHostels();
+            const response = await this.adminRepository.getAllHostels(page, limit);
             return response
         } catch (error) {
             console.log(error)
@@ -189,9 +187,9 @@ class adminService implements IAdminService {
         }
     }
 
-    async getAllCategory(): Promise<ICategory[] | string> {
+    async getAllCategory(skip:number,limit:number): Promise<{getCategories:ICategory[],totalCount:number} | string> {
         try {
-            const response = await this.adminRepository.getAllCategory();
+            const response = await this.adminRepository.getAllCategory(skip,limit);
             return response
         } catch (error) {
             return error as string
@@ -225,13 +223,40 @@ class adminService implements IAdminService {
         }
     }
 
-    async getHostHostelData(userId:string): Promise<IHostel[] | string | null> {
+    async getHostHostelData(userId: string): Promise<IHostel[] | string | null> {
         try {
             const response = await this.adminRepository.getHostHostelData(userId);
             return response
         } catch (error) {
             return error as string
             console.log(error)
+        }
+    }
+
+    async deleteHostel(hostelId: string): Promise<string> {
+        try {
+            const response = await this.adminRepository.deleteHostel(hostelId)
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async deleteCategory(id: string): Promise<string | null> {
+        try {
+            const response = await this.adminRepository.deleteCategory(id);
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async searchCategory(name:string):Promise<ICategory[] | string | null>{
+        try {
+            const response = await this.adminRepository.searchCategory(name);
+            return response;
+        } catch (error) {
+            return error as string;
         }
     }
 }
