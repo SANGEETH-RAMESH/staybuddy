@@ -12,6 +12,7 @@ import Wallet, { IWallet } from "../model/walletModel";
 import Category, { ICategory } from "../model/categoryModel";
 import Order, { IOrder } from "../model/orderModel";
 import User, { IUser } from "../model/userModel";
+import baseRepository from "./baseRespository";
 
 
 interface HostelData {
@@ -49,12 +50,14 @@ interface HostData {
     mobile?: string
 }
 
-class hostRepository implements IHostRepository {
-    constructor() { }
+class hostRepository extends baseRepository<IHost> implements IHostRepository {
+    constructor() {
+        super(Host)
+    }
 
     async FindHostByEmail(email: string): Promise<IHost | null> {
         try {
-            const hostData = await Host.findOne({ email })
+            const hostData = await this.findByEmail({ email })
             return hostData
         } catch (error) {
             console.log(error);
@@ -121,7 +124,8 @@ class hostRepository implements IHostRepository {
     async CreateHost(hostData: { email: string }): Promise<string> {
         try {
             const checkingOtp = await Otp.findOne({ email: hostData.email });
-            const checkingHost = await Host.findOne({ email: hostData.email });
+            const email = hostData.email
+            const checkingHost = await this.findByEmail({ email })
             if (checkingHost && checkingOtp) {
                 checkingHost.temp = false;
                 checkingHost.tempExpires = undefined;
@@ -194,8 +198,8 @@ class hostRepository implements IHostRepository {
                 return { message: "Invalid email" };
             }
         } catch (error) {
-            console.error("Error verifying login:", error); // Log the error for debugging
-            return { message: "Internal server error" }; // Return a generic error message
+            console.error("Error verifying login:", error);
+            return { message: "Internal server error" };
         }
     }
 
@@ -498,7 +502,7 @@ class hostRepository implements IHostRepository {
 
     async walletDeposit({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
         try {
-            console.log(id,amount,'amount')
+            console.log(id, amount, 'amount')
             await Wallet.findOneAndUpdate(
                 { userOrHostId: id },
                 {
@@ -525,7 +529,7 @@ class hostRepository implements IHostRepository {
 
     async walletWithDraw({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
         try {
-            console.log(id,amount,'amount')
+            console.log(id, amount, 'amount')
             await Wallet.findOneAndUpdate(
                 { userOrHostId: id },
                 {
@@ -548,12 +552,21 @@ class hostRepository implements IHostRepository {
         } catch (error) {
             return error as string
         }
-    } 
+    }
 
-    async getAllUsers(): Promise<IUser[] | string | null>{
+    async getAllUsers(): Promise<IUser[] | string | null> {
         try {
-            const allUsers = await User.find({isAdmin:false});
+            const allUsers = await User.find({ isAdmin: false });
             return allUsers
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getAdmin(): Promise<IUser | string | null> {
+        try {
+            const admin = await User.findOne({isAdmin:true})
+            return admin;
         } catch (error) {
             return error as string
         }

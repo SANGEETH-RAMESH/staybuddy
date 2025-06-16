@@ -33,6 +33,11 @@ admin_route.get('/getHostHostelData/:id',adminAuthMiddleware,adminController.get
 admin_route.delete('/hostel',adminAuthMiddleware,adminController.deleteHostel.bind(adminController))
 admin_route.delete('/category',adminAuthMiddleware,adminController.deleteCategory.bind(adminController))
 admin_route.get('/search',adminAuthMiddleware,adminController.searchCategory.bind(adminController))
+admin_route.get('/searchuser',adminAuthMiddleware,adminController.searchUser.bind(adminController));
+admin_route.get('/searchhost',adminAuthMiddleware,adminController.searchHost.bind(adminController))
+admin_route.get('/searchhostel',adminAuthMiddleware,adminController.searchHostel.bind(adminController))
+admin_route.get('/reviews/:hostelId',adminAuthMiddleware,adminController.getReviews.bind(adminController))
+admin_route.get('/sales',adminAuthMiddleware,adminController.getSales.bind(adminController))
 
 
 export default admin_route;

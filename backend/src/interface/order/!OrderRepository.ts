@@ -20,5 +20,6 @@ export interface IOrderRepository{
     createReview(data:reviewData):Promise<string>,
     getReviewDetails(orderId:Types.ObjectId):Promise<IReview[] | string | null>,
     updatingOrderStatus(orderId:Types.ObjectId):Promise<string>,
-    getReviewDetailsByOrderId(orderId:Types.ObjectId):Promise<IReview | string | null>
+    getReviewDetailsByOrderId(orderId:Types.ObjectId):Promise<IReview | string | null>,
+    updateRoom(hostelId: string, bedCount: number): Promise<string>
 }

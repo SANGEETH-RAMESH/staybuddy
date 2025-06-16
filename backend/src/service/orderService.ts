@@ -24,12 +24,16 @@ class OrderService implements IOrderService{
     async userBookings(orderData:IOrder):Promise<string>{
         try {
             // console.log(orderData)
+            const foodRate = orderData.foodRate??0;
+            const amount = orderData.totalDepositAmount + orderData.totalRentAmount + foodRate;
             const response = await this.orderRepository.orderBookings(orderData);
+            await this.orderRepository.creditUserWallet(orderData.host_id,amount)
             if(orderData.paymentMethod == 'wallet'){
-                const foodRate = orderData.foodRate?orderData.foodRate : 0;
-                const amount = orderData.totalDepositAmount + orderData.totalRentAmount + foodRate
+                // const foodRate = orderData.foodRate?orderData.foodRate : 0;
+                // const amount = orderData.totalDepositAmount + orderData.totalRentAmount + foodRate
                 const id = new ObjectId(orderData.userId)
-                await this.orderRepository.debitUserWallet(id,amount)
+                await this.orderRepository.debitUserWallet(id,amount);
+                
                 return response
             }
             return response
@@ -53,12 +57,17 @@ class OrderService implements IOrderService{
             if(!response || typeof response === "string"){
                 return "No order"
             }
-            // console.log("Response",response.host_id._id)
+            console.log("Response",response)
             const hostId = response.host_id._id
             const amount = response?.totalDepositAmount
             const updateStatusOrder = await this.orderRepository.updatingOrderStatus(data.orderId)
             const userWalletCredit = await this.orderRepository.creditUserWallet(data?.userId,amount)
             const hostWalletDebit = await this.orderRepository.debitHostWallet(hostId,amount)
+            const beds = response.selectedBeds;
+            
+            const hostelId = (response.hostel_id as any).id._id.toString();
+            console.log(hostelId,'Anuvinda',beds)
+            await this.orderRepository.updateRoom(hostelId,beds)
             if(userWalletCredit == 'Wallet updated successfully' && hostWalletDebit =='Wallet updated successfully'){
                 return "Updated"
             }

@@ -31,7 +31,8 @@
     "passport-google-oauth2": "^0.2.0",
     "razorpay": "^2.9.5",
     "socket.io-client": "^4.8.1",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "yup": "^1.6.1"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

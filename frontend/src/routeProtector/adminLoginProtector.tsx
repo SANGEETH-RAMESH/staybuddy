@@ -8,11 +8,12 @@ interface ProtectivePropsCheck {
 }
 
 const AdminLoginProtector: React.FC<ProtectivePropsCheck> = ({ element }) => {
-  const isAdminLoggedIn = useSelector((state: RootState) => state.adminAuth.accessToken); 
+  const isAdminLoggedIn = useSelector((state: RootState) => state.adminAuth.accessToken) || localStorage.getItem('adminAccessToken'); 
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAdminLoggedIn) {
+    const token = localStorage.getItem("adminRefreshToken");
+    if (!token||token == undefined) {
       navigate('/admin/login');
     }
   }, [isAdminLoggedIn, navigate]);

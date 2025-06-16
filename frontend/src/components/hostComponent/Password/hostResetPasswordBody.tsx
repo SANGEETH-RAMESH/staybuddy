@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import lock_icon from "../../../assets/lock.png";
+import { changePasswordValues } from "../../../interface/ChangePassword";
 
 const HostResetPasswordBody = () => {
   const [password, setPassword] = useState("");
@@ -11,39 +12,67 @@ const HostResetPasswordBody = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email;
+  const [errors, setErrors] = useState<Partial<changePasswordValues>>({});
+  
+  useEffect(() => {
+    if (Object.keys(errors).length > 0) {
+      const timer = setTimeout(() => {
+        setErrors({});
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [errors]);
 
   const handleSubmit = async () => {
-    if (password === confirmPassword) {
+    // if (password === confirmPassword) {
       setLoading(true);
       try {
         const response = await axios.post(
           "http://localhost:4000/host/resetPassword",
-          { email, password }
+          { email, password, confirmPassword }
         );
         if (response.data.message === "Same password") {
-          toast.error("Cannot use existing password");
+          // toast.error("Cannot use existing password");
+          setErrors((prev)=>({
+            ...prev,
+            newPassword:"Cannot use existing password"
+          }))
         } else if (response.data.message === "Password Changed") {
           toast.success("Password changed successfully");
           navigate("/host/login");
         }
       } catch (error) {
-        console.error("Error resetting password:", error);
-        toast.error("An error occurred while resetting the password.");
+        const axiosError = error as any;
+        console.log(axiosError.response.data, 'hee')
+        if (axiosError.response) {
+          const { message, errors } = axiosError.response.data;
+          console.log(errors,'erros')
+          if (errors) {
+            setErrors(errors);
+            return;
+          }
+
+          toast.error(message || "Login failed", {
+            style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+          });
+        } else {
+          toast.error("An unexpected error occurred", {
+            style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+          });
+        }
+
+        console.error("Login error:", error);
       } finally {
         setLoading(false);
       }
-    } else {
-      toast.error("Passwords do not match. Please try again!");
-    }
+    // } else {
+    //   toast.error("Passwords do not match. Please try again!");
+    // }
   };
 
   return (
     <div>
-      {/* <div className="h-[580px] w-[1360px] relative">
-        <div className="h-[250px] bg-[#31AFEF]"></div>
-        <div className="h-[380px] bg-[#EEEEEE]"></div>
-      </div> */}
-
       <div className="bg-emerald-600 py-3 md:py-4 px-4 md:px-6">
         <div className="text-sm sm:text-lg lg:text-xl font-semibold text-white">
           StayBuddy - Host
@@ -56,36 +85,54 @@ const HostResetPasswordBody = () => {
           <p className="text-gray-500">Enter your new password below</p>
         </div>
 
-        <div className="relative mb-4">
-          <img
-            src={lock_icon}
-            alt="Lock Icon"
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-          />
-          <input
-            type="password"
-            placeholder="New Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg pl-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#31AFEF]"
-            required
-          />
+        {/* Fixed height container for password input */}
+        <div className="mb-4 h-[60px]">
+          <div className="relative">
+            <img
+              src={lock_icon}
+              alt="Lock Icon"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+            />
+            <input
+              type="password"
+              placeholder="New Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg pl-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#31AFEF]"
+              required
+            />
+          </div>
+          {/* Fixed height for error message */}
+          <div className="h-5 mt-1">
+            {errors.newPassword && (
+              <div className="text-red-500 text-xs">{errors.newPassword}</div>
+            )}
+          </div>
         </div>
 
-        <div className="relative mb-6">
-          <img
-            src={lock_icon}
-            alt="Lock Icon"
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
-          />
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg pl-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#31AFEF]"
-            required
-          />
+        {/* Fixed height container for confirm password input */}
+        <div className="mb-6 h-[60px]">
+          <div className="relative">
+            <img
+              src={lock_icon}
+              alt="Lock Icon"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+            />
+            <input
+              type="password"
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg pl-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#31AFEF]"
+              required
+            />
+          </div>
+          {/* Fixed height for error message */}
+          <div className="h-5 mt-1">
+            {errors.confirmPassword && (
+              <div className="text-red-500 text-xs">{errors.confirmPassword}</div>
+            )}
+          </div>
         </div>
 
         <button

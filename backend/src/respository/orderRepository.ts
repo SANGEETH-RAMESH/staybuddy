@@ -122,6 +122,7 @@ class orderRepository implements IOrderRepository {
 
     async creditUserWallet(id: Types.ObjectId, amount: number): Promise<string> {
         try {
+            console.log('heeeeello',id,amount)
             console.log(id, 'id', amount)
             await Wallet.updateOne(
                 { userOrHostId: id },
@@ -129,7 +130,7 @@ class orderRepository implements IOrderRepository {
                     $inc: { balance: amount },
                     $push: {
                         transactionHistory: {
-                            type: "credit",
+                            type: "deposit",
                             amount: amount,
                             date: new Date(),
                             description: `Credited ${amount} to wallet`
@@ -154,7 +155,7 @@ class orderRepository implements IOrderRepository {
                     $inc: { balance: -amount },
                     $push: {
                         transactionHistory: {
-                            type: "withdrawal",
+                            type: "withdraw",
                             amount: amount,
                             date: new Date(),
                             description: `Debited ${amount} from wallet`
@@ -220,6 +221,20 @@ class orderRepository implements IOrderRepository {
             return "Updated"
         } catch (error) {
             console.log(error)
+            return error as string
+        }
+    }
+
+    async updateRoom(hostelId: string, bedCount: number): Promise<string> {
+        try {
+            console.log("Sangee")
+            console.log(hostelId,bedCount)
+            const updatingRoom = await Hostel.updateOne(
+                { _id: hostelId },
+                { $inc: { beds: bedCount } }
+            )
+            return "Room Updated"
+        } catch (error) {
             return error as string
         }
     }

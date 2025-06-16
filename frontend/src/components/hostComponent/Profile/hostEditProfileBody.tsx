@@ -1,6 +1,5 @@
 import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { User, Phone, Loader2, CheckCircle } from 'lucide-react';
-// import apiClient from '../../../services/apiClient';
 import { LOCALHOST_URL } from '../../../constants/constants';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
@@ -16,12 +15,48 @@ const HostEditProfileBody: React.FC = () => {
     name: '',
     mobile: '',
   });
+
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [mobileError, setMobileError] = useState<string | null>(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const navigate = useNavigate();
+
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
+    if (name === 'name') {
+      const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+      if (!nameRegex.test(value)) {
+        setNameError('Name should contain only alphabets and single spaces (no special characters or numbers)');
+      } else {
+        setNameError(null);
+      }
+    }
+
+    if (name === 'mobile') {
+      const digitOnly = /^[0-9]*$/;
+      const zeroCount = (value.match(/0/g) || []).length;
+      const startsWith = value[0];
+
+      if (!digitOnly.test(value)) {
+        setMobileError('Mobile number should contain only digits');
+      } else if (value.length > 10) {
+        setMobileError('Mobile number must be exactly 10 digits');
+      } else if (value.length === 10 && +startsWith <= 5) {
+        setMobileError('First digit must be greater than 5');
+      } else if (zeroCount > 5) {
+        setMobileError('Mobile number should not contain more than 5 zeros');
+      } else if (value.length !== 10) {
+        setMobileError('Mobile number must be 10 digits');
+      } else {
+        setMobileError(null);
+      }
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
     setSuccess(false);
   };
@@ -30,7 +65,6 @@ const HostEditProfileBody: React.FC = () => {
     const fetchData = async () => {
       try {
         const response = await hostapiClient.get(`${LOCALHOST_URL}/host/getHost`);
-        console.log(response.data.message,'REsponse')
         setFormData({
           name: response.data.message.name,
           mobile: response.data.message.mobile,
@@ -44,8 +78,6 @@ const HostEditProfileBody: React.FC = () => {
     fetchData();
   }, []);
 
-  const navigate = useNavigate();
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -53,11 +85,11 @@ const HostEditProfileBody: React.FC = () => {
     try {
       const response = await hostapiClient.patch(`${LOCALHOST_URL}/host/editprofile`, formData);
       if (response.data.message === "Not updated") {
-        toast.error("Host details not updated")
+        toast.error("Host details not updated");
       } else if (response.data.message === "Host details updated") {
-        setSuccess(true)
-        toast.success("Host details updated")
-        navigate("/host/profile")
+        setSuccess(true);
+        toast.success("Host details updated");
+        navigate("/host/profile");
       }
     } catch (error) {
       console.error(error);
@@ -67,7 +99,7 @@ const HostEditProfileBody: React.FC = () => {
     }
   };
 
-  const isValidMobile = formData.mobile.length > 0;
+  // const isValidMobile = formData.mobile.length === 10 && mobileError === null;
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -107,6 +139,7 @@ const HostEditProfileBody: React.FC = () => {
                 placeholder="Business or Host Name"
               />
             </div>
+            {nameError && <p className="text-red-500 text-sm mt-1">{nameError}</p>}
           </div>
 
           <div>
@@ -122,9 +155,10 @@ const HostEditProfileBody: React.FC = () => {
                 value={formData.mobile}
                 onChange={handleChange}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-indigo-200"
-                placeholder="+1 (555) 000-0000"
+                placeholder="10-digit mobile number"
               />
             </div>
+            {mobileError && <p className="text-red-500 text-sm mt-1">{mobileError}</p>}
           </div>
 
           <div className="flex items-center justify-between">
@@ -135,15 +169,15 @@ const HostEditProfileBody: React.FC = () => {
             >
               Cancel
             </button>
-            
+
             <button
               type="submit"
               className={`py-2 px-6 text-white font-bold rounded-md ${
-                isSubmitting || !formData.name || !isValidMobile
+                isSubmitting || nameError || mobileError
                   ? 'bg-blue-300 cursor-not-allowed'
                   : 'bg-emerald-500 hover:bg-emerald-600'
               }`}
-              disabled={isSubmitting || !formData.name || !isValidMobile}
+              disabled={!!nameError || !!mobileError || isSubmitting}
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center">

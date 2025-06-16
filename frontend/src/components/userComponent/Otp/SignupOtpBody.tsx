@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import OTPInput from "react-otp-input";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { OtpValues } from "../../../interface/Otp";
 
 const SignupOtpBody = () => {
   const [otp, setOtp] = useState("");
   // const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [timer, setTimer] = useState(59); // Timer starts at 59 seconds
-  const [canResend, setCanResend] = useState(false); // Initially can't resend
+  const [timer, setTimer] = useState(59); 
+  const [canResend, setCanResend] = useState(false); 
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,18 +27,21 @@ const SignupOtpBody = () => {
   //   }
   // }, []);
 
+  const [errors, setErrors] = useState<Partial<OtpValues>>({});
 
-  useEffect(() => {
-    let countdown: number;
-    if (timer > 0) {
-      countdown = setTimeout(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-    } else {
-      setCanResend(true);
-    }
-    return () => clearTimeout(countdown);
-  }, [timer]);
+ useEffect(() => {
+  let countdown: ReturnType<typeof setTimeout>;
+
+  if (timer > 0) {
+    countdown = setTimeout(() => {
+      setTimer((prev) => prev - 1);
+    }, 1000);
+  } else {
+    setCanResend(true);
+  }
+
+  return () => clearTimeout(countdown);
+}, [timer]);
 
 
   const handleResendOtp = async () => {
@@ -70,23 +74,50 @@ const SignupOtpBody = () => {
       console.log(response.data, "response");
       if (response.data.message === "success") {
         navigate("/user/login");
-      } else if (response.data.message === "Invalid otp") {
-        toast.error("Invalid OTP. Please try again!");
+      } else if (response.data.message === "Invalid OTP") {
+        setErrors((prev)=>({
+          ...prev,
+          otp:"Invalid OTP"
+        }))
+        // toast.error("Invalid OTP. Please try again!");
       } else if (response.data.message === "otp expired") {
-        toast.error("Otp expired", {
-          style: { backgroundColor: "white", color: "blue" },
-          icon: (
-            <i
-              className="fas fa-exclamation-circle"
-              style={{ color: "blue" }}
-            />
-          ),
-          progressStyle: { backgroundColor: "blue" },
-        });
+        setErrors((prev)=>({
+          ...prev,
+          otp:'Otp expired'
+        }))
+        // toast.error("Otp expired", {
+        //   style: { backgroundColor: "white", color: "blue" },
+        //   icon: (
+        //     <i
+        //       className="fas fa-exclamation-circle"
+        //       style={{ color: "blue" }}
+        //     />
+        //   ),
+        //   progressStyle: { backgroundColor: "blue" },
+        // });
       }
     } catch (error) {
-      console.error("Error verifying OTP:", error);
-      alert("An error occurred while verifying the OTP. Please try again.");
+      const axiosError = error as any;
+
+      if (axiosError.response) {
+        const { message, errors } = axiosError.response.data;
+        console.log('catch', message, errors)
+        if (errors) {
+          setErrors(errors);
+
+          return;
+        }
+
+        toast.error(message || "Otp failed", {
+          style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+        });
+      } else {
+        toast.error("An unexpected error occurred", {
+          style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+        });
+      }
+
+      console.error("Otp error:", error);
     } finally {
       setLoading(false);
     }
@@ -112,7 +143,6 @@ const SignupOtpBody = () => {
           </p>
         </div>
 
-        {/* OTP Input */}
         <div className="mb-6">
           <OTPInput
             value={otp}
@@ -127,9 +157,9 @@ const SignupOtpBody = () => {
               />
             )}
           />
+          {errors.otp && <div className="text-red-500 text-xs mt-1">{errors.otp}</div>}
         </div>
 
-        {/* Submit Button */}
         <button
           onClick={handleVerifyOtp}
           className="w-full bg-[#31AFEF] text-white py-2 rounded-lg font-semibold hover:bg-[#2499ce] transition"
@@ -138,7 +168,6 @@ const SignupOtpBody = () => {
           {loading ? "Verifying..." : "VERIFY"}
         </button>
 
-        {/* Timer or Resend OTP */}
         <div className="text-center mt-4">
           {canResend ? (
             <button

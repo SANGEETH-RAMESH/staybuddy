@@ -1,26 +1,49 @@
-import{ useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
 import { toast } from 'react-toastify';
 import { ObjectId } from 'bson';
-import { Unlock, Lock, Trash2, RefreshCw, UserX, Users } from 'lucide-react';
+import { Unlock, Lock, Trash2, RefreshCw, UserX, Users, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import adminApiClient from '../../../services/adminApiClient';
+import { LOCALHOST_URL } from '../../../constants/constants';
+import { User } from '../../../interface/User';
+import { PaginationInfo } from '../../../interface/PaginationInfo';
 
-interface User {
-  _id: ObjectId | string;
-  name: string;
-  email: string;
-  location: string | null;
-  isBlock: boolean;
-}
+// interface User {
+//   _id: ObjectId | string;
+//   name: string;
+//   email: string;
+//   location: string | null;
+//   isBlock: boolean;
+// }
+
+// interface PaginationInfo {
+//   currentPage: number;
+//   totalPages: number;
+//   totalUsers: number;
+//   hasNext: boolean;
+//   hasPrev: boolean;
+// }
 
 const AdminUserManageBody = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  // const [allUsers, setAllUsers] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'blocked'>('all');
+
+  // Pagination states - Changed default itemsPerPage to 4
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage, setItemsPerPage] = useState<number>(4);
+  const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>({
+    currentPage: 1,
+    totalPages: 1,
+    totalUsers: 0,
+    hasNext: false,
+    hasPrev: false
+  });
 
   // Handle block user
   const handleBlockUser = async (userId: ObjectId | string) => {
@@ -79,10 +102,10 @@ const AdminUserManageBody = () => {
         const response = await adminApiClient.delete('http://localhost:4000/admin/deleteuser', {
           data: { userId },
         });
-        
+
         if (response.data.success) {
-          setUsers(prevUsers => prevUsers.filter(user => user._id !== userId));
-          updateFilteredUsers();
+          // Refresh the current page after deletion
+          await fetchUsers(currentPage, itemsPerPage);
           Swal.fire('Deleted!', 'The user has been deleted.', 'success');
         } else {
           Swal.fire('Failed!', 'There was an issue deleting the user.', 'error');
@@ -94,74 +117,139 @@ const AdminUserManageBody = () => {
     }
   };
 
-  // Fetch users function
-  const fetchUsers = async () => {
+  // Fetch users function with pagination - Updated default limit to 4
+  const fetchUsers = async (page: number = 1, limit: number = 4) => {
     setIsRefreshing(true);
     try {
-      const response = await adminApiClient.get('http://localhost:4000/admin/getUser');
+      const response = await adminApiClient.get(
+        `http://localhost:4000/admin/getUser?page=${page}&limit=${limit}`
+      );
+
       if (response.data.success) {
-        setUsers(response.data.message);
-        updateFilteredUsers(response.data.message);
+        const { totalCount, users: fetchedUsers } = response.data.message;
+
+        const totalPages = Math.ceil(totalCount / limit);
+
+        // setAllUsers(allUsers);
+        setUsers(fetchedUsers);
+
+        setPaginationInfo({
+          currentPage: page,
+          totalPages,
+          totalUsers: totalCount,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        });
+
+        setCurrentPage(page);
+        updateFilteredUsers(fetchedUsers);
+      } else {
+        setError('Failed to fetch users');
       }
-      setLoading(false);
     } catch (err) {
       setError('Failed to fetch users');
-      setLoading(false);
       console.error(err);
     } finally {
       setIsRefreshing(false);
     }
   };
 
-  // Update filtered users based on search and filters
   const updateFilteredUsers = (userList = users) => {
     let filtered = userList;
-    
-    // Apply status filter
+
     if (filterStatus === 'active') {
       filtered = filtered.filter(user => !user.isBlock);
     } else if (filterStatus === 'blocked') {
       filtered = filtered.filter(user => user.isBlock);
     }
-    
-    // Apply search filter
-    if (searchTerm) {
-      const lowercaseSearch = searchTerm.toLowerCase();
-      console.log(lowercaseSearch,"LOwer")
-      filtered = filtered.filter(
-        user => 
-          user.name.toLowerCase().includes(lowercaseSearch) || 
-          user.email.toLowerCase().includes(lowercaseSearch) ||
-          (user.location && user.location.toLowerCase().includes(lowercaseSearch))
-      );
-    }
-    
+
     setFilteredUsers(filtered);
   };
 
-  
-
-  // Apply filters whenever dependencies change
   useEffect(() => {
     updateFilteredUsers();
   }, [searchTerm, filterStatus, users]);
 
   // Fetch users on mount
   useEffect(() => {
-    fetchUsers();
+    fetchUsers(currentPage, itemsPerPage);
   }, []);
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh] mt-[11vh] lg:ml-64 pt-24">
-        <div className="bg-[#212936] p-6 rounded-lg shadow-lg flex flex-col items-center">
-          <RefreshCw className="w-12 h-12 text-[#45B8F2] animate-spin mb-4" />
-          <p className="text-white text-lg">Loading users...</p>
-        </div>
-      </div>
-    );
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= paginationInfo.totalPages) {
+      fetchUsers(page, itemsPerPage);
+    }
+  };
+
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newSearchTerm = e.target.value;
+    setSearchTerm(newSearchTerm);
+
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+
+    searchTimeout.current = setTimeout(async () => {
+      if (newSearchTerm.trim() === '') {
+        fetchUsers(1, itemsPerPage); // Reset to first page when clearing search
+        return;
+      }
+
+      try {
+        const response = await adminApiClient.get(
+          `${LOCALHOST_URL}/admin/searchuser?name=${newSearchTerm}&page=1&limit=${itemsPerPage}`
+        );
+        console.log("Response", response.data.message);
+        const searchResults = response.data.message;
+        setUsers(searchResults);
+        // Reset pagination info for search results
+        setPaginationInfo({
+          currentPage: 1,
+          totalPages: 1,
+          totalUsers: searchResults.length,
+          hasNext: false,
+          hasPrev: false
+        });
+        setCurrentPage(1);
+      } catch (error) {
+        console.log("Search error", error);
+      }
+    }, 500);
+  };
+
+  const getPageNumbers = () => {
+  const pages: (number | string)[] = [];
+  const { currentPage, totalPages } = paginationInfo;
+
+  if (totalPages <= 5) {
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+  } else {
+    pages.push(1);
+
+    if (currentPage > 3) {
+      pages.push('...'); 
+    }
+
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    if (currentPage < totalPages - 2) {
+      pages.push('...'); 
+    }
+
+    pages.push(totalPages);
   }
+
+  return pages;
+};
 
   // Error state
   if (error) {
@@ -170,9 +258,9 @@ const AdminUserManageBody = () => {
         <div className="bg-[#212936] p-6 rounded-lg shadow-lg flex flex-col items-center">
           <UserX className="w-12 h-12 text-red-500 mb-4" />
           <p className="text-white text-lg mb-4">{error}</p>
-          <button 
+          <button
             className="bg-[#45B8F2] py-2 px-4 rounded-md hover:bg-[#3ca1d8] transition-colors"
-            onClick={fetchUsers}
+            onClick={() => fetchUsers(currentPage, itemsPerPage)}
           >
             Try Again
           </button>
@@ -188,8 +276,8 @@ const AdminUserManageBody = () => {
           <Users className="text-[#45B8F2] mr-2 h-6 w-6" />
           <h1 className="text-2xl md:text-3xl text-white font-semibold">User Management</h1>
         </div>
-        
-        {/* <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+
+        <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
           <div className="relative">
             <input
               type="text"
@@ -200,78 +288,41 @@ const AdminUserManageBody = () => {
             />
             <Search className="absolute left-3 top-2.5 text-gray-400 h-5 w-5" />
           </div>
+
           
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleFilterChange('all')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
-                filterStatus === 'all' 
-                  ? 'bg-[#45B8F2] text-white' 
-                  : 'bg-[#1A202C] text-gray-300 hover:bg-[#2D394E]'
-              }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => handleFilterChange('active')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
-                filterStatus === 'active' 
-                  ? 'bg-green-600 text-white' 
-                  : 'bg-[#1A202C] text-gray-300 hover:bg-[#2D394E]'
-              }`}
-            >
-              Active
-            </button>
-            <button
-              onClick={() => handleFilterChange('blocked')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${
-                filterStatus === 'blocked' 
-                  ? 'bg-red-600 text-white' 
-                  : 'bg-[#1A202C] text-gray-300 hover:bg-[#2D394E]'
-              }`}
-            >
-              Blocked
-            </button>
-            <button
-              onClick={fetchUsers}
-              disabled={isRefreshing}
-              className="bg-[#1A202C] text-gray-300 hover:bg-[#2D394E] px-3 py-1.5 rounded-md transition-colors"
-              aria-label="Refresh users"
-            >
-              <RefreshCw className={`w-5 h-5 ${isRefreshing ? 'animate-spin text-[#45B8F2]' : ''}`} />
-            </button>
+        </div>
+      </div>
+
+      {/* Pagination Info */}
+      {!isRefreshing && filteredUsers.length > 0 && (
+        <div className="mb-4 text-white text-sm">
+          Showing {((paginationInfo.currentPage - 1) * itemsPerPage) + 1} to{' '}
+          {Math.min(paginationInfo.currentPage * itemsPerPage, paginationInfo.totalUsers ?? 0 )} of{' '}
+          {paginationInfo.totalUsers} users
+        </div>
+      )}
+
+      {/* Loading State */}
+      {isRefreshing && (
+        <div className="flex justify-center items-center min-h-[40vh]">
+          <div className="bg-[#212936] p-6 rounded-lg shadow-lg flex flex-col items-center">
+            <RefreshCw className="w-12 h-12 text-[#45B8F2] animate-spin mb-4" />
+            <p className="text-white text-lg">Loading users...</p>
           </div>
-        </div>*/}
-      </div> 
+        </div>
+      )}
 
       {/* Empty state */}
-      {filteredUsers.length === 0 && (
+      {!isRefreshing && filteredUsers.length === 0 && (
         <div className="bg-[#212936] rounded-lg shadow-lg p-8 flex flex-col items-center justify-center">
           <UserX className="w-16 h-16 text-gray-500 mb-4" />
           <h3 className="text-xl text-white mb-2">No users found</h3>
-          <p className="text-gray-400 text-center mb-6">
-            {searchTerm || filterStatus !== 'all' 
-              ? 'Try adjusting your search or filters' 
-              : 'There are no users to display'}
-          </p>
-          {(searchTerm || filterStatus !== 'all') && (
-            <div className="flex gap-4">
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setFilterStatus('all');
-                }}
-                className="bg-[#45B8F2] text-white px-4 py-2 rounded-md hover:bg-[#3ca1d8] transition-colors"
-              >
-                Clear Filters
-              </button>
-            </div>
-          )}
+         
         </div>
       )}
 
       {/* Desktop Table View */}
-      {filteredUsers.length > 0 && (
+      {!isRefreshing && filteredUsers.length > 0 && (
         <div className="hidden sm:block overflow-x-auto rounded-lg shadow-lg">
           <table className="min-w-full bg-[#212936] text-white">
             <thead>
@@ -286,21 +337,22 @@ const AdminUserManageBody = () => {
             </thead>
             <tbody>
               {filteredUsers.map((user, index) => (
-                <tr 
-                  key={user._id.toString()} 
+                <tr
+                  key={user._id.toString()}
                   className="border-b border-gray-700 hover:bg-[#2D394E] transition-colors"
                 >
-                  <td className="py-4 px-6 font-mono text-sm">{index + 1}</td>
+                  <td className="py-4 px-6 font-mono text-sm">
+                    {((paginationInfo.currentPage - 1) * itemsPerPage) + index + 1}
+                  </td>
                   <td className="py-4 px-6 font-medium">{user.name}</td>
                   <td className="py-4 px-6 text-gray-300 truncate max-w-xs">{user.email}</td>
                   <td className="py-4 px-6">{user.location || 'Not specified'}</td>
                   <td className="py-4 px-6 text-center">
                     <span
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        user.isBlock
-                          ? 'bg-red-900/50 text-red-200'
-                          : 'bg-green-900/50 text-green-200'
-                      }`}
+                      className={`px-3 py-1 rounded-full text-sm ${user.isBlock
+                        ? 'bg-red-900/50 text-red-200'
+                        : 'bg-green-900/50 text-green-200'
+                        }`}
                     >
                       {user.isBlock ? 'Blocked' : 'Active'}
                     </span>
@@ -341,27 +393,26 @@ const AdminUserManageBody = () => {
       )}
 
       {/* Mobile View */}
-      {filteredUsers.length > 0 && (
+      {!isRefreshing && filteredUsers.length > 0 && (
         <div className="sm:hidden space-y-4">
           {filteredUsers.map((user, index) => (
-            <div 
-              key={user._id.toString()} 
+            <div
+              key={user._id.toString()}
               className="bg-[#212936] rounded-lg p-4 space-y-3 shadow-md"
             >
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
                   <span className="bg-[#45B8F2]/20 text-[#45B8F2] rounded-full w-8 h-8 flex items-center justify-center mr-2">
-                    {index + 1}
+                    {((paginationInfo.currentPage - 1) * itemsPerPage) + index + 1}
                   </span>
                   <span className="font-medium text-white">{user.name}</span>
                 </div>
-                
+
                 <span
-                  className={`px-3 py-1 rounded-full text-xs ${
-                    user.isBlock
-                      ? 'bg-red-900/50 text-red-200'
-                      : 'bg-green-900/50 text-green-200'
-                  }`}
+                  className={`px-3 py-1 rounded-full text-xs ${user.isBlock
+                    ? 'bg-red-900/50 text-red-200'
+                    : 'bg-green-900/50 text-green-200'
+                    }`}
                 >
                   {user.isBlock ? 'Blocked' : 'Active'}
                 </span>
@@ -408,8 +459,79 @@ const AdminUserManageBody = () => {
         </div>
       )}
 
-      {/* Pagination could be added here in the future */}
-      
+      {/* Pagination Controls */}
+      {!isRefreshing && paginationInfo.totalPages > 1 && (
+        <div className="mt-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="text-white text-sm">
+            Page {paginationInfo.currentPage} of {paginationInfo.totalPages}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* First Page
+            <button
+              onClick={() => handlePageChange(1)}
+              disabled={!paginationInfo.hasPrev}
+              className={`p-2 rounded-lg transition-colors ${!paginationInfo.hasPrev
+                  ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                  : 'bg-[#212936] text-white hover:bg-[#2D394E]'
+                }`}
+            >
+              <ChevronsLeft className="w-4 h-4" />
+            </button> */}
+
+            {/* Previous Page */}
+            <button
+              onClick={() => handlePageChange(paginationInfo.currentPage - 1)}
+              disabled={!paginationInfo.hasPrev}
+              className={`p-2 rounded-lg transition-colors ${!paginationInfo.hasPrev
+                  ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                  : 'bg-[#212936] text-white hover:bg-[#2D394E]'
+                }`}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {/* Page Numbers */}
+            {getPageNumbers().map((page) => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`px-3 py-2 rounded-lg transition-colors ${page === paginationInfo.currentPage
+                    ? 'bg-[#45B8F2] text-white'
+                    : 'bg-[#212936] text-white hover:bg-[#2D394E]'
+                  }`}
+              >
+                {page}
+              </button>
+            ))}
+
+            {/* Next Page */}
+            <button
+              onClick={() => handlePageChange(paginationInfo.currentPage + 1)}
+              disabled={!paginationInfo.hasNext}
+              className={`p-2 rounded-lg transition-colors ${!paginationInfo.hasNext
+                  ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                  : 'bg-[#212936] text-white hover:bg-[#2D394E]'
+                }`}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+
+            {/* Last Page
+            <button
+              onClick={() => handlePageChange(paginationInfo.totalPages)}
+              disabled={!paginationInfo.hasNext}
+              className={`p-2 rounded-lg transition-colors ${!paginationInfo.hasNext
+                  ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                  : 'bg-[#212936] text-white hover:bg-[#2D394E]'
+                }`}
+            >
+              <ChevronsRight className="w-4 h-4" />
+            </button> */}
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         .tooltip-container {
           position: relative;
@@ -442,4 +564,4 @@ const AdminUserManageBody = () => {
   );
 };
 
-export default AdminUserManageBody; 
+export default AdminUserManageBody;

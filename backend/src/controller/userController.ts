@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { IUserService } from "../interface/user/!UserService";
 import mongoose from "mongoose";
+import { forgotPasswordValidation, otpValidation, signInValidation, signupValidation } from "../validations/commonValidations";
+import { ValidationError } from "yup";
 const ObjectId = mongoose.Types.ObjectId;
 
 // Custom Request interface to include user
@@ -25,11 +27,33 @@ const ObjectId = mongoose.Types.ObjectId;
 class UserController {
     constructor(private userService: IUserService) { }
 
-    // User SignUp
     async userSignUp(req: Request, res: Response): Promise<void> {
         try {
             // console.log(req.body)
             // const { userData } = req.body;
+            let validationErrors:Record<string,string>  = {};
+
+            await signupValidation.validate(req.body,{abortEarly:false})
+            .catch((error:ValidationError)=>{
+                console.log('1')
+                error.inner.forEach((err:ValidationError)=>{
+                    if(err.path){
+                        validationErrors[err.path] = err.message; 
+                    }
+                })
+            })
+
+            if(Object.keys(validationErrors).length>0){
+                console.log("2")
+                res.status(400).json({
+                    success:false, 
+                    message:"Validation failed",
+                    errors:validationErrors
+                })
+                return
+            }
+            console.log('signup')
+            
             const response = await this.userService.userSignUp(req.body);
             res.status(200).json({ success: true, message: response });
         } catch (error) {
@@ -38,9 +62,31 @@ class UserController {
         }
     }
 
-    // Verify OTP
     async verifyOtp(req: Request, res: Response): Promise<void> {
         try {
+
+
+            let validationErrors:Record<string,string>  = {};
+
+            await otpValidation.validate(req.body,{abortEarly:false})
+            .catch((error:ValidationError)=>{
+                error.inner.forEach((err:ValidationError)=>{
+                    if(err.path){
+                        validationErrors[err.path] = err.message; 
+                    }
+                })
+            })
+
+            if(Object.keys(validationErrors).length>0){
+                res.status(400).json({
+                    success:false, 
+                    message:"Validation failed",
+                    errors:validationErrors
+                })
+                return
+            }
+            
+            console.log('hey')
             const response = await this.userService.verifyOtp(req.body);
             res.json({ success: true, message: response });
         } catch (error) {
@@ -49,13 +95,29 @@ class UserController {
         }
     }
 
-    // Verify Login
     async verifyLogin(req: Request, res: Response): Promise<void> {
         try {
             console.log("heee")
+            let validationErrors: Record<string, string> = {};
+            await signInValidation.validate(req.body, { abortEarly: false })
+                .catch((error: ValidationError) => {
+                    error.inner.forEach((err: ValidationError) => {
+                        if (err.path) {
+                            validationErrors[err.path] = err.message;
+                        }
+                    });
+                });
+
+            if (Object.keys(validationErrors).length > 0) {
+                res.status(400).json({
+                    success: false, 
+                    message: "Validation failed",
+                    errors: validationErrors,
+                });
+                return;
+            }
             const response = await this.userService.verifyLogin(req.body);
             console.log("REsponse", response)
-            // Check if response is an object before accessing its properties
             if (typeof response === 'object' && response !== null) {
                 if (response.message === "Success") {
                     res.status(200).json({
@@ -70,16 +132,14 @@ class UserController {
                     res.status(200).json({ success: false, data: response });
                 }
             } else {
-                // If response is a string, handle accordingly
                 res.status(200).json({ success: false, message: response });
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error in verifyLogin:", error);
             res.status(500).json({ success: false, message: "Internal server error" });
         }
     }
 
-    // Resend OTP
     async resendOtp(req: Request, res: Response): Promise<void> {
         try {
             const response = await this.userService.resendOtp(req.body);
@@ -90,9 +150,26 @@ class UserController {
         }
     }
 
-    // Forgot Password
     async forgotPassword(req: Request, res: Response): Promise<void> {
         try {
+            let validationErrors: Record<string, string> = {};
+            await forgotPasswordValidation.validate(req.body, { abortEarly: false })
+                .catch((error: ValidationError) => {
+                    error.inner.forEach((err: ValidationError) => {
+                        if (err.path) {
+                            validationErrors[err.path] = err.message;
+                        }
+                    });
+                });
+
+            if (Object.keys(validationErrors).length > 0) {
+                res.status(400).json({
+                    success: false, 
+                    message: "Validation failed",
+                    errors: validationErrors,
+                });
+                return;
+            }
             console.log('hi')
             const existingUser = await this.userService.forgotPassword(req.body);
             if (existingUser && existingUser.temp === false) {
@@ -106,7 +183,6 @@ class UserController {
         }
     }
 
-    // Verify Forgot Password OTP
     async verifyForgotPasswordOtp(req: Request, res: Response): Promise<void> {
         try {
             const response = await this.userService.verifyOtp(req.body);
@@ -118,7 +194,6 @@ class UserController {
         }
     }
 
-    // Reset Password
     async resetPassword(req: Request, res: Response): Promise<void> {
         try {
             // console.log('key',req.body)
@@ -159,7 +234,6 @@ class UserController {
         }
     }
 
-    // Change Password
     async changePassword(req: Request, res: Response): Promise<void> {
         try {
             const user = req.user;
@@ -184,7 +258,6 @@ class UserController {
         }
     }
 
-    // Edit User Details
     async editUserDetail(req: Request, res: Response): Promise<void> {
         try {
             const user = req.user;
@@ -232,11 +305,11 @@ class UserController {
         try {
             // console.log('hello')
             console.log(req.query, 'sdfsf')
-            const { page, limit,search } = req.query
+            const { page, limit, search } = req.query
             const pageStr = typeof page === 'string' ? page : '1';
             const limitStr = typeof limit === 'string' ? limit : '10';
             const searchStr = typeof search === 'string' ? search : '';
-            const response = await this.userService.getHostels(pageStr, limitStr,searchStr);
+            const response = await this.userService.getHostels(pageStr, limitStr, searchStr);
             res.status(200).json({ success: true, response })
         } catch (error) {
             console.log(error)
@@ -322,14 +395,14 @@ class UserController {
 
     async getSavedBookings(req: Request, res: Response): Promise<void> {
         try {
-            console.log(req.query,'Query')
+            console.log(req.query, 'Query')
             console.log(req.params, 'dsfsd')
-            const { page, limit } = req.query
-            const pageStr = typeof page === 'string' ? page : '1';
+            const { skip, limit } = req.query
+            const pageStr = typeof skip === 'string' ? skip : '0';
             const limitStr = typeof limit === 'string' ? limit : '10';
             const id = req.params.id;
             const userId = new ObjectId(id)
-            const response = await this.userService.getSavedBookings(userId,pageStr, limitStr);
+            const response = await this.userService.getSavedBookings(userId, pageStr, limitStr);
             res.status(200).json({ success: true, message: response })
         } catch (error) {
             console.log(error)
@@ -406,6 +479,20 @@ class UserController {
         try {
             const response = await this.userService.allHost();
             res.status(200).json({ message: response })
+        } catch (error) {
+            res.status(500).json({ message: error })
+        }
+    }
+
+    async markAllRead(req: Request, res: Response): Promise<void> {
+        try {
+            console.log('hello')
+            const userId = req.user?._id
+            if (userId) {
+                console.log("daa")
+                const response = await this.userService.markAllRead(userId)
+                res.status(200).json({ message: response })
+            }
         } catch (error) {
             res.status(500).json({ message: error })
         }

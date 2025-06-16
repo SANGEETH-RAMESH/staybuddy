@@ -4,6 +4,9 @@ import { Request, Response } from "express";
 import { IAdminService } from "../interface/admin/IAdminService";
 import mongoose, { Types } from "mongoose";
 import uploadImage from "../cloudinary/cloudinary";
+import { signInValidation } from "../validations/commonValidations";
+import { ValidationError } from "yup";
+import { categoryValidation } from "../validations/categoryValidation";
 // const ObjectId = mongoose.Types.ObjectId;
 
 class adminController {
@@ -14,6 +17,24 @@ class adminController {
     async adminLogin(req: Request, res: Response): Promise<void> {
         try {
             // const {admin_email,admin_password} = req.body
+            let validationErrors: Record<string, string> = {};
+            await signInValidation.validate(req.body, { abortEarly: false })
+                .catch((error: ValidationError) => {
+                    error.inner.forEach((err: ValidationError) => {
+                        if (err.path) {
+                            validationErrors[err.path] = err.message;
+                        }
+                    });
+                });
+
+            if (Object.keys(validationErrors).length > 0) {
+                res.status(400).json({
+                    success: false,
+                    message: "Validation failed",
+                    errors: validationErrors,
+                });
+                return;
+            }
             const response = await this.adminService.adminLogin(req.body);
             res.status(200).json({ success: true, data: response })
 
@@ -24,7 +45,15 @@ class adminController {
 
     async getUser(req: Request, res: Response): Promise<void> {
         try {
-            const response = await this.adminService.getUser();
+            console.log(req.query, 'eyy')
+            // const {page,limit} = req.query
+            // const pageNumber = parseInt(page, 10)
+            let { page, limit } = req.query
+
+            const pageNumber = parseInt(req.query.page as string) || 1;
+            const limitNumber = parseInt(req.query.limit as string) || 4;
+
+            const response = await this.adminService.getUser(pageNumber, limitNumber);
             res.json({ success: true, message: response })
         } catch (error) {
             console.log(error)
@@ -59,13 +88,15 @@ class adminController {
             res.status(200).json({ success: true, message: response })
         } catch (error) {
             console.log(error)
-        }      
+        }
     }
 
     async getHost(req: Request, res: Response): Promise<void> {
         try {
-            console.log('hello')
-            const response = await this.adminService.getHost();
+            console.log('hello', req.query)
+            const skip = parseInt(req.query.skip as string)
+            const limit = parseInt(req.query.limit as string)
+            const response = await this.adminService.getHost(skip, limit);
             console.log(response, 'hello')
             res.status(200).json({ success: true, message: response })
         } catch (error) {
@@ -169,18 +200,43 @@ class adminController {
 
     async addCategory(req: Request, res: Response): Promise<void> {
         try {
-            console.log(req.body)
-            console.log(req.file)
-            let photo: string | undefined = undefined;
-
-            if (req.file && req.file.buffer) {
-                photo = await uploadImage(req.file.buffer)
-            }
             const name = req.body.name;
-            const isActive = req.body.isActive
-            const response = await this.adminService.addCategory(name, isActive, photo)
-            console.log(photo, "Photo")
-            res.status(200).json({ message: response })
+            const isActive = req.body.isActive;
+            const imageFile = req.file;
+            console.log(imageFile, 'image')
+            let validationErrors: Record<string, string> = {};
+
+            await categoryValidation
+                .validate({ name, image: imageFile }, { abortEarly: false })
+                .catch((error: ValidationError) => {
+                    error.inner.forEach((err) => {
+                        if (err.path) {
+                            if (err.path.startsWith('image.')) {
+                                validationErrors['image'] = err.message;
+                            } else {
+                                validationErrors[err.path] = err.message;
+                            }
+                        }
+                    });
+                });
+
+
+            if (Object.keys(validationErrors).length > 0) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Validation failed',
+                    errors: validationErrors,
+                });
+                return
+            }
+
+            let photo: string | undefined = undefined;
+            if (imageFile?.buffer) {
+                photo = await uploadImage(imageFile.buffer);
+            }
+
+            const response = await this.adminService.addCategory(name, isActive, photo);
+            res.status(200).json({ success: true, message: response });
         } catch (error) {
             console.log(error)
             res.status(400).json({ message: error })
@@ -215,6 +271,26 @@ class adminController {
 
     async updateCategory(req: Request, res: Response): Promise<void> {
         try {
+            let validationErrors: Record<string, string> = {};
+            await categoryValidation
+                .pick(['name'])
+                .validate({ name:req.body.name }, { abortEarly: false })
+                .catch((error: ValidationError) => {
+                    error.inner.forEach((err) => {
+                        if (err.path) {
+                            validationErrors[err.path] = err.message;
+                        }
+                    });
+                });
+
+            if (Object.keys(validationErrors).length > 0) {
+                res.status(400).json({
+                    success: false,
+                    message: 'Validation failed',
+                    errors: validationErrors,
+                });
+                return
+            }
             const id = req.params.id;
             const { name, isActive } = req.body;
             console.log(name, isActive, id)
@@ -282,9 +358,61 @@ class adminController {
             if (name) {
                 const categoryname = name.toString();
                 const response = await this.adminService.searchCategory(categoryname)
-                res.status(200).json({message:response})
+                res.status(200).json({ message: response })
             }
 
+        } catch (error) {
+            res.status(500).json({ message: error })
+        }
+    }
+
+    async searchUser(req: Request, res: Response): Promise<void> {
+        try {
+            console.log(req.query, "QUery")
+            const name = req.query.name as string;
+            const response = await this.adminService.searchUser(name)
+            res.status(200).json({ message: response })
+        } catch (error) {
+            res.status(500).json({ message: error })
+        }
+    }
+
+    async searchHost(req: Request, res: Response): Promise<void> {
+        try {
+            console.log(req.query, "Query")
+            const name = req.query.name as string;
+            const response = await this.adminService.searchHost(name);
+            res.status(200).json({ message: response })
+        } catch (error) {
+            res.status(500).json({ message: error })
+        }
+    }
+
+    async searchHostel(req: Request, res: Response): Promise<void> {
+        try {
+            const name = req.query.name as string;
+            const response = await this.adminService.searchHostel(name);
+            res.status(200).json({ message: response })
+        } catch (error) {
+            res.status(500).json({ message: error })
+        }
+    }
+
+    async getReviews(req: Request, res: Response): Promise<void> {
+        try {
+            console.log("Params", req.params)
+            const hostelId = req.params.hostelId;
+            const response = await this.adminService.getReviews(hostelId);
+            res.status(200).json({ message: response });
+        } catch (error) {
+            res.status(500).json({ message: error })
+        }
+    }
+
+    async getSales(req: Request, res: Response): Promise<void> {
+        try {
+            const response = await this.adminService.getSales();
+            res.status(200).json({ message: response });
         } catch (error) {
             res.status(500).json({ message: error })
         }

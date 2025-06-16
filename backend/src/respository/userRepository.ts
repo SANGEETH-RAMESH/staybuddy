@@ -14,7 +14,7 @@ import Order, { IOrder } from "../model/orderModel";
 import Wishlist, { IWishlist } from "../model/wishlistModel";
 import { IUserResponse } from "../dtos/UserResponse";
 import Host, { IHost } from "../model/hostModel";
-import Notification,{ INotification } from "../model/notificationModel";
+import Notification,{INotification} from "../model/notificationModel";
 
 type ResetPasswordData = {
     email: string;
@@ -505,22 +505,22 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async getSavedBookings(id: Types.ObjectId, page: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null> {
+    async getSavedBookings(id: Types.ObjectId, skip: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null> {
         try {
-            const pageNumber = parseInt(page, 10);
+            const skipnumber = parseInt(skip, 0);
             const limitNumber = parseInt(limit, 10);
 
-            if (isNaN(pageNumber) || isNaN(limitNumber)) {
+            if (isNaN(skipnumber) || isNaN(limitNumber)) {
                 return 'Invalid pagination values';
             }
 
-            const skip = (pageNumber - 1) * limitNumber;
+
             const totalCount = await Order.countDocuments({ userId: id });
             const bookings = await Order.find({ userId: id })
                 .populate('hostel_id.id')
                 .populate('host_id')
                 .populate('userId')
-                .skip(skip)
+                .skip(skipnumber)
                 .limit(limitNumber);
 
             return { bookings, totalCount };
@@ -618,7 +618,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-     async sendNotification(notification: INotification): Promise<INotification | string | null> {
+    async sendNotification(notification: INotification): Promise<INotification | string | null> {
         try {
             console.log('log',notification)
             const newNotification = new Notification({

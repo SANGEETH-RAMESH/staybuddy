@@ -5,29 +5,60 @@ import { Mail, Lock, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { loginSuccess } from '../../../redux/hostAuthSlice';
-import { Formik, Field, Form, ErrorMessage } from 'formik';
-import { signInValidation } from '../../../validations/commonValidations';
+// import { Field, } from 'formik';
+// import { signInValidation } from '../../../validations/commonValidations';
+import { LoginValues } from '../../../interface/Login';
+import { useState } from 'react';
 
-
-interface LoginFormValues {
-    email: string;
-    password: string;
-}
+// interface LoginFormValues {
+//     email: string;
+//     password: string;
+// }
 
 const HostLoginBody = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
+    const [errors,setErrors] = useState<Partial<LoginValues>>({});
+    const [formValues, setFormValues] = useState<LoginValues>({
+            email: '',
+            password: '',
+        });
+    
 
-   
 
-    const handleLogin = async (values:LoginFormValues) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            const { name, value } = e.target;
+    
+            setFormValues(prev => ({ ...prev, [name]: value }));
+            setErrors(prev => {
+                const updated = { ...prev };
+                delete updated[name as keyof LoginValues];
+                return updated;
+            });
+    
+            // setValidFields(prev => ({
+            //     ...prev,
+            //     [name as keyof LoginValues]: value.trim() !== ""
+            // }));
+        };
+
+    const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+         e.preventDefault();
         try {
-            const response = await axios.post('http://localhost:4000/host/verifylogin', values);
-            console.log(response,'hello')
+            const response = await axios.post('http://localhost:4000/host/verifylogin', { ...formValues});
+            console.log(response.data.message, 'hello')
             if (response.data.message === 'Invalid password') {
-                toast.error('Invalid password', { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
+                // toast.error('Invalid password', { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
+                setErrors((prev)=>({
+                    ...prev,
+                    password:"Invalid password"
+                }))
             } else if (response.data.message === 'Invalid email') {
-                toast.error('Invalid email', { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
+                // toast.error('Invalid email', { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
+                setErrors((prev)=>({
+                    ...prev,
+                    email:"Invalid email"
+                }))
             } else if (response.data.message === 'Host is blocked') {
                 toast.error("You are blocked", { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
             } else {
@@ -36,12 +67,31 @@ const HostLoginBody = () => {
                     refreshToken: response.data.refreshToken,
                     isLoggedIn: true
                 }));
-                toast.success("Login Successful", {position: "top-center",  style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
+                toast.success("Login Successful", { position: "top-center", style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
                 navigate('/host/home');
             }
         } catch (error) {
-            toast.error("An error occurred", { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
-            console.log(error);
+            const axiosError = error as any;
+
+            if (axiosError.response) {
+                const { message, errors } = axiosError.response.data;
+
+                if (errors) {
+                    setErrors(errors);
+
+                    return;
+                }
+
+                toast.error(message || "Login failed", {
+                    style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+                });
+            } else {
+                toast.error("An unexpected error occurred", {
+                    style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+                });
+            }
+
+            console.error("Login error:", error);
         }
     };
 
@@ -50,11 +100,11 @@ const HostLoginBody = () => {
             <div className="flex flex-col md:flex-row max-w-4xl w-full shadow-xl rounded-xl overflow-hidden">
                 {/* Left Panel - Image Space */}
                 <div className="w-full md:w-5/12 relative h-48 md:h-auto">
-                    <img 
+                    {/* <img 
                         src="/api/placeholder/600/800" 
                         alt="Login" 
                         className="w-full h-full object-cover"
-                    />
+                    /> */}
                     <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/80 to-emerald-600/80 flex flex-col items-center justify-center p-6 text-white">
                         <h2 className="text-2xl font-bold mb-2">Welcome Host!</h2>
                         <p className="text-sm text-center mb-4 text-white/90">Manage your rooms with ease<br />and grow your business</p>
@@ -72,26 +122,24 @@ const HostLoginBody = () => {
                     <div className="max-w-sm mx-auto w-full">
                         <h1 className="text-2xl font-bold text-gray-800 mb-6">Host Sign In</h1>
 
-                        <Formik
-                            initialValues={{ email: '', password: '' }}
-                            validationSchema={signInValidation}
-                            onSubmit={handleLogin}
-                        >
-                            {() => (
-                                <Form className="space-y-4">
+                       
+                           
+                                <form className="space-y-4" onSubmit={handleLogin}>
                                     {/* Email Input */}
                                     <div className="space-y-1">
                                         <label className="text-sm font-medium text-gray-700">Email</label>
                                         <div className="relative">
                                             <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                                            <Field
+                                            <input
                                                 type="text"
                                                 name="email"
+                                                value={formValues.email}
+                                                onChange={handleChange}
                                                 placeholder="Enter your email"
                                                 className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
                                             />
                                         </div>
-                                        <ErrorMessage name="email" component="div" className="text-red-500 text-xs mt-1" />
+                                        {errors.email && <div className="text-red-500 text-xs mt-1">{errors.email}</div>}
                                     </div>
 
                                     {/* Password Input */}
@@ -99,14 +147,16 @@ const HostLoginBody = () => {
                                         <label className="text-sm font-medium text-gray-700">Password</label>
                                         <div className="relative">
                                             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                                            <Field
+                                            <input
                                                 type="password"
                                                 name="password"
+                                                value={formValues.password}
+                                                onChange={handleChange}
                                                 placeholder="Enter your password"
                                                 className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-sm"
                                             />
                                         </div>
-                                        <ErrorMessage name="password" component="div" className="text-red-500 text-xs mt-1" />
+                                        {errors.password && <div className="text-red-500 text-xs mt-1">{errors.password}</div>}
                                     </div>
 
                                     <div className="flex justify-end">
@@ -159,9 +209,8 @@ const HostLoginBody = () => {
                                         </svg>
                                         <span className="text-gray-600 text-sm font-medium">Sign in with Google</span>
                                     </a>
-                                </Form>
-                            )}
-                        </Formik>
+                                </form>
+                           
                     </div>
                 </div>
             </div>

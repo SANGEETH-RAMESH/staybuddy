@@ -85,15 +85,18 @@ const HostBookings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const limit = 6;
+  const limit = 3; // Changed to 3 as per your requirement
   const { id } = useParams();
   const navigate = useNavigate();
 
   const fetchHostBookings = async (page: number = 1, statusFilter: string = 'all') => {
     setIsLoading(true);
     try {
+      // Calculate skip value based on current page
+      const skip = (page - 1) * limit;
+
       const params = new URLSearchParams({
-        page: page.toString(),
+        skip: skip.toString(),
         limit: limit.toString(),
         ...(statusFilter !== 'all' && { status: statusFilter })
       });
@@ -129,7 +132,6 @@ const HostBookings = () => {
     }
   };
 
-
   useEffect(() => {
     fetchHostBookings(currentPage, filter);
   }, [id, currentPage, filter]);
@@ -163,75 +165,41 @@ const HostBookings = () => {
   const renderPagination = () => {
     if (paginationData.totalPages <= 1) return null;
 
-    const pages = [];
-    const maxVisiblePages = 5;
-    const startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-    const endPage = Math.min(paginationData.totalPages, startPage + maxVisiblePages - 1);
-
-    for (let i = startPage; i <= endPage; i++) {
-      pages.push(i);
-    }
-
     return (
       <div className="flex items-center justify-center gap-2 mt-8">
         <button
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={!paginationData.hasPrevPage}
-          className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-center w-8 h-8 text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ChevronLeft className="w-4 h-4" />
-          Previous
         </button>
 
-        <div className="flex gap-1">
-          {startPage > 1 && (
-            <>
+        {(() => {
+          const buttons = [];
+          for (let i = 1; i <= paginationData.totalPages; i++) {
+            buttons.push(
               <button
-                onClick={() => handlePageChange(1)}
-                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                key={i}
+                onClick={() => handlePageChange(i)}
+                className={`flex items-center justify-center w-8 h-8 text-sm font-medium rounded ${i === currentPage
+                    ? 'text-white bg-blue-600 border border-blue-600'
+                    : 'text-gray-600 bg-white border border-gray-300 hover:bg-gray-50'
+                  }`}
               >
-                1
+                {i}
               </button>
-              {startPage > 2 && (
-                <span className="px-3 py-2 text-sm text-gray-500">...</span>
-              )}
-            </>
-          )}
+            );
+          }
+          return buttons;
+        })()}
 
-          {pages.map((page) => (
-            <button
-              key={page}
-              onClick={() => handlePageChange(page)}
-              className={`px-3 py-2 text-sm font-medium rounded-md ${page === currentPage
-                ? 'text-blue-600 bg-blue-50 border border-blue-200'
-                : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
-                }`}
-            >
-              {page}
-            </button>
-          ))}
-
-          {endPage < paginationData.totalPages && (
-            <>
-              {endPage < paginationData.totalPages - 1 && (
-                <span className="px-3 py-2 text-sm text-gray-500">...</span>
-              )}
-              <button
-                onClick={() => handlePageChange(paginationData.totalPages)}
-                className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                {paginationData.totalPages}
-              </button>
-            </>
-          )}
-        </div>
-
+        {/* Next Button */}
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={!paginationData.hasNextPage}
-          className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center justify-center w-8 h-8 text-gray-600 bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Next
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>

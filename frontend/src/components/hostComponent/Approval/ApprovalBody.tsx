@@ -4,21 +4,25 @@ import hostapiClient from '../../../services/hostapiClient';
 import { LOCALHOST_URL } from '../../../constants/constants';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { Host } from '../../../interface/Host';
+import { Notification } from '../../../interface/Notification';
+import { io } from "socket.io-client";
+const socket = io("http://localhost:4000");
 
-interface Host{
-  approvalRequest:number;
-  documentType:string;
-  email:string;
-  isBlock:boolean;
-  mobile:number;
-  password:string;
-  photo:string;
-  temp:boolean;
-}
+// interface Host{
+//   approvalRequest:number;
+//   documentType:string;
+//   email:string;
+//   isBlock:boolean;
+//   mobile:number;
+//   password:string;
+//   photo:string;
+//   temp:boolean;
+// }
 
 const ApprovalBody = () => {
   const navigate = useNavigate();
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [documentType, setDocumentType] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
@@ -26,16 +30,7 @@ const ApprovalBody = () => {
   const [requestAlreadySent, setRequestAlreadySent] = useState(false);
   const [isRejected, setIsRejected] = useState(false);
 
-  const [host, setHost] = useState<Host>({
-    approvalRequest: 0,
-    documentType: '',
-    email: '',
-    isBlock: false,
-    mobile: 0,
-    password: '',
-    photo: '',
-    temp: false,
-  });
+  const [host, setHost] = useState<Host>();
 
   const idOptions = [
     { value: 'aadhaar', label: 'Aadhaar Card' },
@@ -45,8 +40,8 @@ const ApprovalBody = () => {
     { value: 'pan', label: 'PAN Card' }
   ];
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
       setSelectedFile(file);
       setUploadSuccess(false);
@@ -54,7 +49,7 @@ const ApprovalBody = () => {
     }
   };
 
-  const handleDocumentTypeChange = (e) => {
+  const handleDocumentTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setDocumentType(e.target.value);
   };
 
@@ -68,10 +63,6 @@ const ApprovalBody = () => {
     setUploadError('');
 
     try {
-      // Simulating upload - in a real app, replace with actual API call
-      // const response = await hostapiClient.post(`${LOCALHOST_URL}/host/upload-document`, formData);
-
-      // For demonstration, we'll simulate success after 1.5 seconds
       setTimeout(() => {
         setIsUploading(false);
         setUploadSuccess(true);
@@ -93,52 +84,68 @@ const ApprovalBody = () => {
     }
 
     const formData = new FormData();
-    formData.append('file', selectedFile);
+
+    if (selectedFile) {
+      formData.append('file', selectedFile);
+    }
     formData.append('documentType', documentType);
     console.log(formData, 'Document')
     console.log(selectedFile)
 
-      try {
-        const response = await hostapiClient.post(`${LOCALHOST_URL}/host/approval`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+    try {
+      const response = await hostapiClient.post(`${LOCALHOST_URL}/host/approval`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
-        console.log(response);
-        toast.success("Approval Request Sent");
-        navigate('/host/home');
-      } catch (error) {
-        console.log(error);
-        toast.error("Failed to submit verification request");
-      }
+      const adminData = await hostapiClient.get(`${LOCALHOST_URL}/host/getAdmin`)
+      const id = adminData.data.message._id;
+      console.log(adminData.data.message._id, 'Admin')
+
+      console.log(response);
+      const newNotification: Notification = {
+        receiver: id,
+        message: `You have received a new verification request on ${new Date().toLocaleDateString()}`,
+        title: 'Verification Request',
+        type: 'info', 
+        isRead: false
+      };
+      console.log('rece', newNotification)
+      socket.emit('send_notification', newNotification)
+      toast.success("Approval Request Sent");
+      navigate('/host/home');
+    } catch (error) {
+      console.log(error);
+      toast.error("Failed to submit verification request");
+    }
   };
 
-  useEffect(()=>{
-    const fetchHostData = async() =>{
+  useEffect(() => {
+    const fetchHostData = async () => {
       try {
         const response = await hostapiClient.get(`${LOCALHOST_URL}/host/getHost`)
         setHost(response.data.message)
 
         // Check if request was rejected
-        
+
         if (response.data.message.photo && Number(response.data.message.approvalRequest) === 1) {
           setIsRejected(true);
-          return 
+          return
         }
-        
+
         // Check if request already sent and not rejected
         if (response.data.message.photo && response.data.message.documentType && response.data.message.approvalRequest !== 1) {
           setRequestAlreadySent(true);
         }
-        
-        
+
+
       } catch (error) {
         console.log(error)
       }
     }
     fetchHostData()
-  },[])
+  }, [])
 
   // If request was rejected, show rejection UI with option to resubmit
   if (isRejected) {
@@ -169,7 +176,7 @@ const ApprovalBody = () => {
                       Your verification was rejected
                     </p>
                     <p className="text-sm text-red-700 mt-1">
-                      Your previous document ({host.documentType}) was rejected. This may be due to image quality issues, invalid document, or information mismatch. Please upload a clearer document to continue.
+                      Your previous document ({host?.documentType}) was rejected. This may be due to image quality issues, invalid document, or information mismatch. Please upload a clearer document to continue.
                     </p>
                   </div>
                 </div>
@@ -284,8 +291,8 @@ const ApprovalBody = () => {
               <div className="pt-4">
                 <button
                   className={`w-full sm:w-auto px-6 py-3 rounded-lg font-medium transition-colors ${uploadSuccess
-                      ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
                   onClick={handleRequestPermission}
                   disabled={!uploadSuccess}
@@ -334,12 +341,12 @@ const ApprovalBody = () => {
                       Verification request already sent!
                     </p>
                     <p className="text-sm text-emerald-700 mt-1">
-                      Your document ({host.documentType}) is currently under review by our team. We'll notify you once the verification process is complete.
+                      Your document ({host?.documentType}) is currently under review by our team. We'll notify you once the verification process is complete.
                     </p>
                   </div>
                 </div>
               </div>
-              
+
               <div className="space-y-4">
                 <h2 className="text-lg font-medium text-gray-900">What's Next?</h2>
 
@@ -566,8 +573,8 @@ const ApprovalBody = () => {
             <div className="pt-4">
               <button
                 className={`w-full sm:w-auto px-6 py-3 rounded-lg font-medium transition-colors ${uploadSuccess
-                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 onClick={handleRequestPermission}
                 disabled={!uploadSuccess}

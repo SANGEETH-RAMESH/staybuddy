@@ -9,7 +9,7 @@ interface AdminProtectiveCheckProps {
 
 const AdminProtectiveCheck: React.FC<AdminProtectiveCheckProps> = ({ element }) => {
 
-  const isAdminLoggedIn = useSelector((state: RootState) => state.adminAuth.accessToken);
+  const isAdminLoggedIn = useSelector((state: RootState) => state.adminAuth.accessToken)  || localStorage.getItem('adminRefreshToken');
   const location = useLocation();
 
   return !isAdminLoggedIn ? (

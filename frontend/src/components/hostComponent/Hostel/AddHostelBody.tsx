@@ -5,12 +5,12 @@ import { toast } from 'react-toastify';
 import { LOCALHOST_URL } from '../../../constants/constants';
 import hostapiClient from '../../../services/hostapiClient';
 import { useNavigate } from 'react-router-dom';
+import { Category } from '../../../interface/Category';
 
-
-interface Category {
-  name: string;
-  isActive: boolean;
-}
+// interface Category {
+//   name: string;
+//   isActive: boolean;
+// }
 
 
 const HostelForm = () => {

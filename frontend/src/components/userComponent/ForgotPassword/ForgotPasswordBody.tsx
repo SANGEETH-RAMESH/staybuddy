@@ -4,45 +4,68 @@ import email from '../../../assets/email.png';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
+import { forgotPasswordValues } from '../../../interface/forgotPassword';
 
 const ForgotPasswordBody = () => {
     const navigate = useNavigate();
+    const [emailValue, setEmailValue] = useState('');
+    const [errors, setErrors] = useState<Partial<forgotPasswordValues>>({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const [error,setError] = useState('')
 
-    const formik = useFormik({
-        initialValues: {
-            email: '',
-        },
-        validationSchema: Yup.object({
-            email: Yup.string()
-                .email('Invalid email address')
-                .required('Email is required'),
-        }),
-        onSubmit: async (values, { setSubmitting }) => {
-            try {
-                const response = await axios.post('http://localhost:4000/user/forgotpassword', { email: values.email });
+    const handleSubmit = async (e:React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        // setErrors('');
+        setIsSubmitting(true);
 
-                if (response.data.message === 'User found') {
-                    navigate('/user/forgotpasswordotp', { state: { email: values.email } });
-                } else if (response.data.message === 'User not found') {
-                    // toast.error('Incorrect email');
-                    setError('Incorrect email')
-                }
-            } catch (error) {
-                toast.error('Something went wrong. Please try again later.',error);
-            } finally {
-                setSubmitting(false); 
+        try {
+            // Validate email using Yup
+            // await validationSchema.validate({ email: emailValue });
+
+            // Send API request
+            const response = await axios.post('http://localhost:4000/user/forgotpassword', {
+                email: emailValue,
+            });
+
+            if (response.data.message === 'User found') {
+                navigate('/user/forgotpasswordotp', {
+                    state: { email: emailValue },
+                });
+            } else if (response.data.message === 'User not found') {
+                setErrors((prev)=>({
+                    ...prev,
+                    email:'Incorrect email'}));
             }
-        },
-    });
+        } catch (error) {
+            const axiosError = error as any;
+
+      if (axiosError.response) {
+        const { message, errors } = axiosError.response.data;
+        console.log('catch', message, errors)
+        if (errors) {
+          setErrors(errors);
+
+          return;
+        }
+
+        toast.error(message || "Otp failed", {
+          style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+        });
+      } else {
+        toast.error("An unexpected error occurred", {
+          style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+        });
+      }
+
+      console.error("Otp error:", error);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     return (
         <div className="h-screen w-full relative">
             <div className="h-[50%] bg-[#31AFEF]"></div>
-
             <div className="h-[50%] bg-[#EEEEEE]"></div>
 
             <div className="absolute top-[50px] left-[100px] text-[35px] font-bold text-white">
@@ -62,7 +85,7 @@ const ForgotPasswordBody = () => {
                     </p>
                 </div>
 
-                <form onSubmit={formik.handleSubmit}>
+                <form onSubmit={handleSubmit}>
                     <div className="relative mb-4">
                         <img
                             src={email}
@@ -70,27 +93,23 @@ const ForgotPasswordBody = () => {
                             className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
                         />
                         <input
-                            type="email"
+                            type="text"
                             name="email"
                             placeholder="abc@gmail.com"
-                            value={formik.values.email}
-                            onChange={formik.handleChange}
-                            onBlur={formik.handleBlur}
+                            value={emailValue}
+                            onChange={(e) => setEmailValue(e.target.value)}
                             className="w-full border border-gray-300 rounded-lg pl-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#31AFEF]"
                         />
                     </div>
 
-                    {/* {formik.touched.email && formik.errors.email ? (
-                        <div className="text-red-500 text-sm mt-1 ml-2">{formik.errors.email}</div>
-                    ) : null} */}
-                    {error?
-                    <div className="text-red-500 text-sm mt-1 ml-2">{error}</div>:''
-                    }
+                    {errors.email && (
+                        <div className="text-red-500 text-sm mt-1 ml-2">{errors.email}</div>
+                    )}
 
                     <button
                         type="submit"
                         className="w-full bg-[#31AFEF] text-white py-2 rounded-lg font-semibold hover:bg-[#2499ce] transition"
-                        disabled={formik.isSubmitting}
+                        disabled={isSubmitting}
                     >
                         SUBMIT
                     </button>

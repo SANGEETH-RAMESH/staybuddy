@@ -12,12 +12,14 @@ import Host, { IHost } from "../model/hostModel";
 import Hostel, { IHostel } from "../model/hostelModel";
 import Category, { ICategory } from "../model/categoryModel";
 import baseRepository from "./baseRespository";
+import Review, { IReview } from "../model/reviewModel";
+import Order, { IOrder } from "../model/orderModel";
 
 class adminRespository extends baseRepository<IUser> implements IAdminRepository {
     constructor() {
         super(User)
     }
- 
+
     async FindAdminByEmail(email: string): Promise<IUser | null> {
         try {
             const user = await this.findByEmail({ email, isAdmin: true })
@@ -28,11 +30,11 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
         }
     }
 
-    async AdminVerifyLogin(adminData: { admin_email: string, admin_password: string }): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
+    async AdminVerifyLogin(adminData: { email: string, password: string }): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
         try {
-            const checkAdmin = await User.findOne({ email: adminData.admin_email, isAdmin: true });
+            const checkAdmin = await User.findOne({ email: adminData.email, isAdmin: true });
             if (checkAdmin) {
-                const isAdmin = await bcrypt.compare(adminData.admin_password, checkAdmin.password);
+                const isAdmin = await bcrypt.compare(adminData.password, checkAdmin.password);
                 if (isAdmin) {
                     const adminPayload: adminPayload = {
                         _id: checkAdmin._id as Types.ObjectId,
@@ -53,13 +55,20 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
         }
     }
 
-    async getUser(): Promise<IUser[] | null> {
+    async getUser(page: number, limit: number): Promise<{ users: IUser[]; totalCount: number } | string | null> {
         try {
-            const getUser = await User.find({ isAdmin: false });
-            return getUser
+            const skipCount = (page - 1) * limit;
+
+            const users = await User.find({ isAdmin: false })
+                .skip(skipCount)
+                .limit(limit);
+
+            const totalCount = await User.countDocuments({ isAdmin: false });
+
+            return { users, totalCount };
         } catch (error) {
             console.log(error)
-            return null
+            return error as string
         }
     }
 
@@ -101,13 +110,17 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
         }
     }
 
-    async getHost(): Promise<IHost[] | null> {
+    async getHost(skip: number, limit: number): Promise<{ hosts: IHost[]; totalCount: number } | null> {
         try {
-            const getHost = await Host.find();
-            return getHost
+            const [hosts, totalCount] = await Promise.all([
+                Host.find().skip(skip).limit(limit),
+                Host.countDocuments()
+            ]);
+
+            return { hosts, totalCount };
         } catch (error) {
             console.log(error);
-            return null
+            return null;
         }
     }
 
@@ -164,6 +177,7 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
 
     async rejectHost(hostId: mongoose.Types.ObjectId): Promise<string> {
         try {
+            console.log("iddd", hostId)
             const result = await Host.findByIdAndUpdate(
                 { _id: hostId },
                 { $set: { approvalRequest: 1 } },
@@ -339,13 +353,67 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
     async searchCategory(name: string): Promise<ICategory[] | string | null> {
         try {
             const response = await Category.find({
-                name: { $regex: `^${name}`, $options: 'i' } 
+                name: { $regex: `^${name}`, $options: 'i' }
             });
             return response;
         } catch (error) {
             return error as string;
         }
     }
+
+    async searchUser(name: string): Promise<IUser[] | string> {
+        try {
+            const users = await User.find({
+                name: { $regex: `^${name}`, $options: 'i' },
+                isAdmin: false
+            });
+            return users;
+        } catch (error) {
+            return error as string;
+        }
+    }
+
+    async searchHost(name: string): Promise<IHost[] | string | null> {
+        try {
+            const hosts = await Host.find({
+                name: { $regex: `^${name}`, $options: 'i' }
+            });
+            return hosts
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async searchHostel(name: string): Promise<IHostel[] | string | null> {
+        try {
+            const hostels = await Hostel.find({
+                hostelname: { $regex: `^${name}`, $options: 'i' }
+            }).populate('host_id')
+            return hostels
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getReviews(hostelId: string): Promise<IReview[] | string | null> {
+        try {
+            const reviews = await Review.find({ hostelId: hostelId })
+                .populate('userId')
+            return reviews
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getSales(): Promise<IOrder[] | string | null> {
+        try {
+            const response = await Order.find();
+            return response;
+        } catch (error) {
+            return error as string
+        }
+    }
+
 }
 
 

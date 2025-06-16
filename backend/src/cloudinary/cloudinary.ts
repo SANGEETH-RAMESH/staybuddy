@@ -15,7 +15,7 @@ const uploadImage = (imageBuffering: Buffer): Promise<string> => {
                 return reject(new Error('Failed to upload image'));
             }
             if (!result) {
-                return reject(new Error('Result is undefined'));
+                return reject(new Error('Result is undefined')); 
             }
             resolve(result.secure_url);
         }).end(imageBuffering);

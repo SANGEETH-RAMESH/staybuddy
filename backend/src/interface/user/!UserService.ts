@@ -31,14 +31,11 @@ export interface IUserService {
     getWalletDetails(id: string): Promise<IWallet | string | null>,
     walletDeposit({id,amount,}: {id: string;amount: string;}): Promise<{ message: string; userWallet: IWallet } | string>,
     walletWithdraw({id,amount}:{id:string,amount:string}):Promise<string>,
-    getSavedBookings(id: Types.ObjectId, page: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null>,
+    getSavedBookings(id: Types.ObjectId, skip: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null>,
     addToWishlist(id:string,userId:string):Promise<string>,
     removeFromWishlist(hostelId:string,userId:string):Promise<string>,
     checkWishlist(userId:string,hostelId:string):Promise<string>,
     getWishlist(userId:string):Promise<string | IWishlist[]>,
     deleteWishlist(userId:string): Promise<string>,
-    allHost(): Promise<IHost[] | string | null>,
-     sendNotification(notification:INotification):Promise<INotification | string | null>,
-    getOldNotification(userId:string):Promise<INotification [] | string | null>,
-    markAllRead(userId: string): Promise<string>
+    allHost(): Promise<IHost[] | string | null>
 }

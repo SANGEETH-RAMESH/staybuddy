@@ -1,6 +1,7 @@
 export type Review = {
   userId: string;
   rating: number;
-  comment: string;
+  review: string;
   createdAt: string;
+  hostelId:string
 };

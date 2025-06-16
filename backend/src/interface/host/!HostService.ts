@@ -74,4 +74,5 @@ export interface IHostService {
     walletDeposit({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string>,
     walletWithDraw({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string>,
     getAllUsers(): Promise<IUser[] | string | null>,
+    getAdmin(): Promise<IUser | string | null>
 }

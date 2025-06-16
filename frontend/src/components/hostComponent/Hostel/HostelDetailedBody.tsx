@@ -17,32 +17,34 @@ import {
   Star
 } from 'lucide-react';
 import axios from 'axios';
+// import { Host } from '../../../interface/Host';
+import { Hostel } from '../../../interface/Hostel';
 
-interface Host {
-  _id: string;
-  name: string;
-  email: string;
-  mobile: string;
-  isBlock: boolean;
-  approvalRequest: string;
-  tempExpires: string;
-}
+// interface Host {
+//   _id: string;
+//   name: string;
+//   email: string;
+//   mobile: string;
+//   isBlock: boolean;
+//   approvalRequest: string;
+//   tempExpires: string;
+// }
 
-interface HostelDetail {
-  advanceamount: number;
-  bedShareRoom: number;
-  beds: number;
-  category: string;
-  facilities: string[] | string;
-  foodRate: number;
-  host_id: Host;
-  hostelname: string;
-  location: string;
-  nearbyaccess: string;
-  phone: string;
-  photos: string[];
-  policies: string;
-}
+// interface HostelDetail {
+//   advanceamount: number;
+//   bedShareRoom: number;
+//   beds: number;
+//   category: string;
+//   facilities: string[] | string;
+//   foodRate: number;
+//   host_id: Host;
+//   hostelname: string;
+//   location: string;
+//   nearbyaccess: string;
+//   phone: string;
+//   photos: string[];
+//   policies: string;
+// }
 
 const ImageGallery = ({ photos }: { photos: string[] }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -118,7 +120,7 @@ const ImageGallery = ({ photos }: { photos: string[] }) => {
 };
 
 const HostelDetailPage = () => {
-  const [hostel, setHostel] = useState<HostelDetail | null>(null);
+  const [hostel, setHostel] = useState<Hostel | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const { search } = useLocation();
@@ -203,7 +205,7 @@ const HostelDetailPage = () => {
           </div>
         </div>
 
-        <ImageGallery photos={hostel.photos} />
+        <ImageGallery photos={[hostel.photos]} />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Main Info Column */}

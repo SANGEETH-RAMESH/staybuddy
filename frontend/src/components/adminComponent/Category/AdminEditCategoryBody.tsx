@@ -1,10 +1,10 @@
-import React,{ useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Package, ArrowLeft, Save, Loader2, ToggleLeft, ToggleRight, Info, AlertCircle } from 'lucide-react';
 import AdminHeader from '../../commonComponents/adminHeader';
 import AdminSidebar from '../../commonComponents/adminSidebar';
-import adminApiClient from '../../../services/adminApiClient'; 
+import adminApiClient from '../../../services/adminApiClient';
 
 const AdminEditCategoryPage = () => {
     const navigate = useNavigate();
@@ -50,29 +50,28 @@ const AdminEditCategoryPage = () => {
     }, [id, navigate]);
 
     // Validate form fields
-    const validateForm = () => {
-        let valid = true;
-        const newErrors = {
-            name: ''
-        };
+    // const validateForm = () => {
+    //     let valid = true;
+    //     const newErrors = {
+    //         name: ''
+    //     };
 
-        if (!name.trim()) {
-            newErrors.name = 'Category name is required';
-            valid = false;
-        } else if (name.length < 2) {
-            newErrors.name = 'Name must be at least 2 characters';
-            valid = false;
-        }
+    //     if (!name.trim()) {
+    //         newErrors.name = 'Category name is required';
+    //         valid = false;
+    //     } else if (name.length < 2) {
+    //         newErrors.name = 'Name must be at least 2 characters';
+    //         valid = false;
+    //     }
 
-        setErrors(newErrors);
-        return valid;
-    };
+    //     setErrors(newErrors);
+    //     return valid;
+    // };
 
-    // Submit form
-    const handleSubmit = async (e : React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        if (!validateForm()) return;
+        // if (!validateForm()) return;
 
         // Proceed with submission
 
@@ -96,7 +95,26 @@ const AdminEditCategoryPage = () => {
                 toast.error(response.data.message || 'Failed to update category');
             }
         } catch (error) {
-            console.log(error)
+            const axiosError = error as any;
+            console.log(axiosError.response.data, 'hee')
+            if (axiosError.response) {
+                const { message, errors } = axiosError.response.data;
+
+                if (errors) {
+                    setErrors(errors);
+                    return;
+                }
+
+                toast.error(message || "Login failed", {
+                    style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+                });
+            } else {
+                toast.error("An unexpected error occurred", {
+                    style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+                });
+            }
+
+            console.error("Login error:", error);
         } finally {
             setIsSubmitting(false);
         }
