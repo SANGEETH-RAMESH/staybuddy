@@ -304,7 +304,6 @@ const VideoCall: React.FC<VideoCallProps> = ({
 
     const acceptCall = async () => {
         try {
-            console.log('heeljfdslf')
             setIncomingCall(false);
             setIsCallStarted(true);
             setCallStatus('Accepting call...');
