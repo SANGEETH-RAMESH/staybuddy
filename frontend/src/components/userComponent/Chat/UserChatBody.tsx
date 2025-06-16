@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Send, Search, Plus, Paperclip, Image, FileText, X, Clock } from 'lucide-react';
+import { Send, Search, Plus, Paperclip, Image, FileText, X, Clock, Video, Phone } from 'lucide-react';
 import dummy_profile from '../../../assets/dummy profile.png';
 import apiClient from '../../../services/apiClient';
 import { LOCALHOST_URL } from '../../../constants/constants';
 import { useLocation } from 'react-router-dom';
+import VideoCall from '../../commonComponents/VideoCall'
 
 interface Message {
   chatId: string;
@@ -58,7 +59,6 @@ interface Chat {
   unreadCount: number;
   messages: Message[];
   receiverId: string;
-  // lastMessageTime: string;
 }
 
 const socket: Socket = io('http://localhost:4000');
@@ -76,6 +76,11 @@ const ChatApplication: React.FC = () => {
   const [showFileOptions, setShowFileOptions] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [onlineHosts, setOnlineHosts] = useState<string[]>([]);
+  
+  // Video call states
+  const [isCallActive, setIsCallActive] = useState<boolean>(false);
+  const [isCallInitiator, setIsCallInitiator] = useState<boolean>(false);
+  
   const location = useLocation();
   const hostId = location.state?.hostId || null;
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -96,7 +101,7 @@ const ChatApplication: React.FC = () => {
     socket.emit("getOnlineHosts");
 
     socket.on("onlineHosts", (hosts) => {
-      console.log("✅ Online hosts:", hosts);
+      console.log("Online hosts:", hosts);
       setOnlineHosts(hosts);
     });
 
@@ -114,12 +119,21 @@ const ChatApplication: React.FC = () => {
       setOnlineHosts((prev) => prev.filter((id: string) => id !== hostId));
     });
 
+    socket.on('incoming_call', ({ callerId, callerName, chatId }) => {
+      console.log('Incoming call from:', callerName);
+      if (selectedChat && selectedChat.id === chatId) {
+        setIsCallActive(true);
+        setIsCallInitiator(false);
+      }
+    });
+
     return () => {
       socket.off("onlineHosts");
       socket.off("hostLoggedIn");
       socket.off("hostLoggedOut");
+      socket.off("incoming_call");
     };
-  }, []);
+  }, [selectedChat]);
 
   const fetchAvailableHosts = async () => {
     try {
@@ -139,7 +153,6 @@ const ChatApplication: React.FC = () => {
       try {
         const payloadBase64 = token.split('.')[1];
         const decodedPayload = JSON.parse(atob(payloadBase64));
-        // console.log(decodedPayload, "Decoded Payload");
         const id = decodedPayload._id
         setUserId(id)
       } catch (error) {
@@ -159,8 +172,7 @@ const ChatApplication: React.FC = () => {
         });
         console.log(res.data.data)
         const chatData = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
-        // console.log(chatData,'dfsdfd')
-        // setUserId(chatData[0]?.participant1);
+        
         const formattedChats = chatData.map((chat: Chats) => ({
           id: chat._id,
           name: chat.participant2.name,
@@ -201,13 +213,14 @@ const ChatApplication: React.FC = () => {
     socket.on('receiveMessage', (newMessage) => {
       console.log("New message received:", newMessage);
       console.log(chats, 'Before')
-      // const currentSelectedChat = selectedChatRef.current;
+      
       setSelectedChat(prevChat => {
         if (!prevChat || prevChat.id !== newMessage.chatId) return prevChat;
         const updatedMessages = [...(prevChat.messages || []), newMessage];
         const updatedChat = { ...prevChat, messages: updatedMessages };
         return updatedChat;
       });
+      
       console.log(newMessage, 'heee')
       setChats(prevChats =>
         prevChats.map(chat => {
@@ -230,7 +243,7 @@ const ChatApplication: React.FC = () => {
           }
         })
       );
-      // console.log(chats, 'Changu')
+      
       setTimeout(scrollToBottom, 100);
     });
 
@@ -249,7 +262,6 @@ const ChatApplication: React.FC = () => {
   }, [selectedChat?.messages]);
 
   const handleSelectChat = (chat: Chat, receiverId: string) => {
-    // console.log(chat, 'chatIddfdf')
     setSelectedChat(chat);
     console.log(chat, 'sett')
     setReceiverId(receiverId);
@@ -286,14 +298,10 @@ const ChatApplication: React.FC = () => {
         receiverId: receiverId,
         message: reader.result as string,
         type: file.type.startsWith('image/') ? 'image' : 'document',
-        // fileName: file.name,
-        // fileUrl: reader.result as string,
-        // fileSize: file.size,
         isRead: false,
         timestamp: new Date().toISOString(),
       };
 
-      // console.log(selectedChat, 'Before')
       socket.emit('send_message', message);
       setSelectedChat((prevChat) => {
         if (!prevChat) return null;
@@ -302,8 +310,7 @@ const ChatApplication: React.FC = () => {
           messages: [...prevChat.messages, message],
         };
       });
-      // console.log(selectedChat, 'Selected')
-      // console.log(chats, 'chats')
+      
       setChats(prevChats =>
         prevChats.map(chat =>
           chat.id === selectedChat.id
@@ -315,7 +322,7 @@ const ChatApplication: React.FC = () => {
             : chat
         )
       );
-      // console.log(chats, 'Kazhinjitt')
+      
       setTimeout(scrollToBottom, 100);
     };
     reader.readAsDataURL(file);
@@ -325,16 +332,6 @@ const ChatApplication: React.FC = () => {
     if (!selectedChat) {
       return null;
     }
-
-
-
-
-    // const now = new Date();
-    // const formattedTime = now.toLocaleTimeString([], {
-    //   hour: '2-digit',
-    //   minute: '2-digit',
-    //   hour12: false,
-    // });
 
     if (newMessage.trim() && selectedChat) {
       const message: Message = {
@@ -359,18 +356,16 @@ const ChatApplication: React.FC = () => {
       console.log(chats, 'chats')
 
       setChats(prevChats => {
-        // First, update the specific chat
         const updatedChats = prevChats.map(chat =>
           chat.id === selectedChat.id
             ? {
               ...chat,
               lastMessage: message.message,
-              lastMessageTime:message.timestamp,
+              lastMessageTime: message.timestamp,
             }
             : chat
         );
 
-        // Then sort by latest lastMessageTime (newest first)
         const sortedChats = [...updatedChats].sort((a, b) => {
           const timeA = new Date(a.lastMessageTime || 0).getTime();
           const timeB = new Date(b.lastMessageTime || 0).getTime();
@@ -380,15 +375,31 @@ const ChatApplication: React.FC = () => {
         return sortedChats;
       });
 
-
       setNewMessage('');
       setTimeout(scrollToBottom, 100);
     }
   };
 
+  // Video call functions
+  const initiateVideoCall = () => {
+    if (!selectedChat || !onlineHosts.includes(receiverId)) {
+      alert('User is not online for video call');
+      return;
+    }
+
+    console.log('🎥 Initiating video call to:', selectedChat.name);
+    setIsCallActive(true);
+    setIsCallInitiator(true);
+  };
+
+  const handleEndCall = () => {
+    console.log('📞 Ending call');
+    setIsCallActive(false);
+    setIsCallInitiator(false);
+  };
+
   const handleAddNewChat = async (selectedUser: User) => {
     try {
-      // Create new chat with selected user
       console.log(selectedUser, 'Userr')
       const res = await apiClient.post(`${LOCALHOST_URL}/chat/createchat`, {
         ownerId: selectedUser._id
@@ -403,7 +414,6 @@ const ChatApplication: React.FC = () => {
         socket.on('receive_all_chats', (chats) => {
           console.log("Received all chats", chats)
           const setChatss = chats.map((chat: Chats) => {
-
             const formattedTime = chat.updatedAt
             return {
               id: chat._id,
@@ -415,32 +425,9 @@ const ChatApplication: React.FC = () => {
             };
           })
           setChats(setChatss)
-
           console.log(chats, 'Chattt')
-          // setChats(chats)
         })
-        // const newChat: Chat = {
-        //   id: res.data.data._id,
-        //   name: selectedUser.name,
-        //   lastMessage: "No messages yet",
-        //   receiverId: selectedUser._id,
-        //   lastMessageTime: "",
-        //   unreadCount: 0,
-        //   messages: [],
-        // };
-        // setChats(prev => [...prev, newChat]);
-        // setSelectedChat(newChat);
-        // setReceiverId(selectedUser._id);
-        // setShowAddChatModal(false);
-        // setSearchUsers('');
-
-        // socket.emit('join_room', newChat.id);
       }
-
-
-
-
-
     } catch (error) {
       console.error('Error creating new chat:', error);
       alert('Failed to create chat. Please try again.');
@@ -457,17 +444,9 @@ const ChatApplication: React.FC = () => {
     !chats.some(chat => chat.receiverId === user._id)
   );
 
-  // const formatFileSize = (bytes: number) => {
-  //   if (bytes === 0) return '0 Bytes';
-  //   const k = 1024;
-  //   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-  //   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  //   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  // };
-
   const renderMessage = (msg: Message, index: number) => {
     const isOwnMessage = msg.senderId === userId;
-    // console.log(msg, "Message")
+    
     return (
       <div
         key={index}
@@ -487,7 +466,6 @@ const ChatApplication: React.FC = () => {
                 className="max-w-full h-auto rounded-lg mb-2 cursor-pointer"
                 onClick={() => window.open(msg.fileUrl, '_blank')}
               />
-              {/* <p className="text-sm">{msg.fileName}</p> */}
             </div>
           ) : (
             <p className="text-sm">{msg.message}</p>
@@ -512,7 +490,6 @@ const ChatApplication: React.FC = () => {
     <div className="flex h-[89svh] bg-white border rounded-lg shadow-md overflow-hidden">
       {/* Chat List Sidebar */}
       <div className="w-1/3 border-r bg-gray-50">
-        {/* Search Bar with Add Button */}
         <div className="p-4 border-b">
           <div className="flex space-x-2">
             <div className="relative flex-grow">
@@ -535,7 +512,6 @@ const ChatApplication: React.FC = () => {
           </div>
         </div>
 
-        {/* Chat List */}
         <div className="overflow-y-auto h-[calc(100%-100px)]">
           {filteredChats.map((chat) => (
             <div
@@ -554,7 +530,6 @@ const ChatApplication: React.FC = () => {
                 <div className="flex justify-between">
                   <h3 className="font-semibold">{chat.name}</h3>
                   <span className="text-xs text-gray-500">
-                    {/* {chat.lastMessageTime} */}
                     {new Date(chat.lastMessageTime).toLocaleTimeString([], {
                       hour: '2-digit',
                       minute: '2-digit',
@@ -591,23 +566,41 @@ const ChatApplication: React.FC = () => {
       {selectedChat && (
         <div className="flex flex-col w-2/3">
           {/* Chat Header */}
-          <div className="flex items-center p-4 bg-white border-b">
-            <img src={dummy_profile} alt={selectedChat.name} className="w-10 h-10 rounded-full mr-4" />
-            <div>
-              <h2 className="font-semibold">{selectedChat.name}</h2>
-              <div className="flex items-center space-x-1.5 mt-0.5">
-                {onlineHosts.includes(selectedChat.receiverId) ? (
-                  <>
-                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-xs font-medium text-green-600">Online</span>
-                  </>
-                ) : (
-                  <>
-                    <Clock className="w-3 h-3 text-gray-400" />
-                    <span className="text-xs text-gray-500">Offline</span>
-                  </>
-                )}
+          <div className="flex items-center justify-between p-4 bg-white border-b">
+            <div className="flex items-center">
+              <img src={dummy_profile} alt={selectedChat.name} className="w-10 h-10 rounded-full mr-4" />
+              <div>
+                <h2 className="font-semibold">{selectedChat.name}</h2>
+                <div className="flex items-center space-x-1.5 mt-0.5">
+                  {onlineHosts.includes(selectedChat.receiverId) ? (
+                    <>
+                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-xs font-medium text-green-600">Online</span>
+                    </>
+                  ) : (
+                    <>
+                      <Clock className="w-3 h-3 text-gray-400" />
+                      <span className="text-xs text-gray-500">Offline</span>
+                    </>
+                  )}
+                </div>
               </div>
+            </div>
+
+            {/* Video Call Button */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={initiateVideoCall}
+                disabled={!onlineHosts.includes(selectedChat.receiverId)}
+                className={`p-2 rounded-full transition-colors ${
+                  onlineHosts.includes(selectedChat.receiverId)
+                    ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+                title={onlineHosts.includes(selectedChat.receiverId) ? 'Start video call' : 'User is offline'}
+              >
+                <Video size={20} />
+              </button>
             </div>
           </div>
 
@@ -622,7 +615,6 @@ const ChatApplication: React.FC = () => {
           {/* Message Input Area */}
           <div className="bg-white p-4 border-t">
             <div className="flex items-center space-x-2">
-              {/* Attachment Button */}
               <div className="relative">
                 <button
                   onClick={() => setShowFileOptions(!showFileOptions)}
@@ -640,13 +632,6 @@ const ChatApplication: React.FC = () => {
                       <Image size={16} className="text-blue-500" />
                       <span className="text-sm">Photo</span>
                     </button>
-                    {/* <button
-                      onClick={() => handleFileSelect('document')}
-                      className="flex items-center space-x-2 w-full p-2 hover:bg-gray-100 rounded"
-                    >
-                      <FileText size={16} className="text-green-500" />
-                      <span className="text-sm">Document</span>
-                    </button> */}
                   </div>
                 )}
               </div>
@@ -669,7 +654,6 @@ const ChatApplication: React.FC = () => {
             </div>
           </div>
 
-          {/* Hidden File Input */}
           <input
             ref={fileInputRef}
             type="file"
@@ -696,7 +680,6 @@ const ChatApplication: React.FC = () => {
               </button>
             </div>
 
-            {/* Search Hosts */}
             <div className="relative mb-4">
               <input
                 type="text"
@@ -708,7 +691,6 @@ const ChatApplication: React.FC = () => {
               <Search size={16} className="absolute left-2 top-3 text-gray-400" />
             </div>
 
-            {/* Users List */}
             <div className="max-h-60 overflow-y-auto">
               {filteredUsers.length === 0 ? (
                 <p className="text-gray-500 text-center py-4">No hosts found</p>
@@ -736,6 +718,20 @@ const ChatApplication: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Video Call Component */}
+      {isCallActive && selectedChat && (
+        <VideoCall
+          socket={socket}
+          isCallActive={isCallActive}
+          onEndCall={handleEndCall}
+          chatId={selectedChat.id}
+          userId={userId}
+          receiverId={selectedChat.receiverId}
+          receiverName={selectedChat.name}
+          isInitiator={isCallInitiator}
+        />
       )}
     </div>
   );

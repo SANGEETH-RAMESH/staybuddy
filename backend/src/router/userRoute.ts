@@ -59,4 +59,4 @@ user_route.get('/auth/google/callback',
     });
  
 
-export default user_route;
+export { user_route, userService };

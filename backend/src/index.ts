@@ -45,7 +45,7 @@ app.use(express.json());
 
 
 import admin_route from './router/adminRoute';
-import user_route from './router/userRoute';
+import {user_route} from './router/userRoute';
 import host_route from './router/hostRoute';
 import order_route from './router/orderRoute';
 import chat_route from './router/chatRoute';

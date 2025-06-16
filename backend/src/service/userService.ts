@@ -13,6 +13,7 @@ import { IOrder } from "../model/orderModel";
 import { IWishlist } from "../model/wishlistModel";
 import { IUserResponse } from "../dtos/UserResponse";
 import { IHost } from "../model/hostModel";
+import { INotification } from "../model/notificationModel";
 // import jwt, { decode } from "jsonwebtoken";
 
 // type UserType = InstanceType<typeof User>;
@@ -428,6 +429,33 @@ class UserService implements IUserService {
         } catch (error) {
             return error as string
         }
+    }
+
+    async sendNotification(notification: INotification): Promise<INotification | string | null> {
+        try {
+            const response = await this.userRepository.sendNotification(notification);
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getOldNotification(userId: string): Promise<INotification[] | string | null> {
+        try {
+            const response = await this.userRepository.getOldNotification(userId);
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async markAllRead(userId: string): Promise<string> {
+        try {
+            const response = await this.userRepository.markAllRead(userId);
+            return response
+        } catch (error) {
+            return error as string
+        } 
     }
 
 

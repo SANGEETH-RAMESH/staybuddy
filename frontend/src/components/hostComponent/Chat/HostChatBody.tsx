@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Search, UserPlus, Settings, Bell, Loader2, Clock, Paperclip, Image, FileText, X, Download } from 'lucide-react';
+import { Send, Search, UserPlus, Settings, Bell, Loader2, Clock, Paperclip, Image, FileText, X, Download, Video } from 'lucide-react';
 // import { useParams } from 'react-router-dom';
 import hostapiClient from '../../../services/hostapiClient';
 import dummy_profile from '../../../assets/dummy profile.png'
 import { LOCALHOST_URL } from '../../../constants/constants';
 import { io, Socket } from 'socket.io-client';
+import VideoCall from '../../commonComponents/VideoCall'
 
 type Messages = {
   senderId: string;
@@ -15,7 +16,7 @@ type Messages = {
   fileName?: string;
   fileSize?: number;
   fileUrl?: string;
-  type:string
+  type: string
 };
 
 interface Message {
@@ -34,7 +35,7 @@ interface Message {
 type User = {
   _id: string;
   name: string;
-  email:string;
+  email: string;
 };
 
 type Chats = {
@@ -63,10 +64,10 @@ const HostChatBody = () => {
   const [searchUsers, setSearchUsers] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [onlineUser, setOnlineUsers] =useState<string[]>([])
+  const [onlineUser, setOnlineUsers] = useState<string[]>([])
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [showAddChatModal,setShowAddChatModal] = useState<boolean>(false);
+  const [showAddChatModal, setShowAddChatModal] = useState<boolean>(false);
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [showFileMenu, setShowFileMenu] = useState(false);
@@ -75,14 +76,17 @@ const HostChatBody = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
+  const [isCallActive, setIsCallActive] = useState<boolean>(false);
+  const [isCallInitiator, setIsCallInitiator] = useState<boolean>(false);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const filteredUsers = availableUsers.filter((user) =>
-  user.name.toLowerCase().includes(searchUsers.toLowerCase()) &&
-  !chats.some(chat => chat.receiverId === user._id)
-);
+    user.name.toLowerCase().includes(searchUsers.toLowerCase()) &&
+    !chats.some(chat => chat.receiverId === user._id)
+  );
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -135,15 +139,11 @@ const HostChatBody = () => {
     return <FileText size={16} />;
   };
 
-  // console.log(selectedChat, 'selected')
 
   useEffect(() => {
-    // Ask for the online users
     socket.emit("getOnlineUsers");
 
-    // Listen for the response
     socket.on("onlineUsers", (users) => {
-      // console.log("✅ Online users:", users);
       setOnlineUsers(users);
     });
 
@@ -157,25 +157,32 @@ const HostChatBody = () => {
     });
 
     socket.on("userLoggedOut", (userId: string) => {
-      // console.log("🚪 User logged out:", userId);
       setOnlineUsers(prev => prev.filter((id: string) => id !== userId));
     });
 
-    // Cleanup on unmount
+    socket.on('incoming_call', ({ callerId, callerName, chatId }) => {
+      console.log('Incoming call from:', callerName);
+      console.log(selectedChat,selectedChat?._id,chatId)
+      if (selectedChat && selectedChat._id === chatId) {
+        setIsCallActive(true);
+        setIsCallInitiator(false);
+      }
+    });
+
     return () => {
       socket.off("onlineUsers");
       socket.off("userLoggedOut");
       socket.off("userLoggedIn");
+      socket.off("incoming_call")
     };
   }, []);
 
-  // console.log(onlineUser, 'Online')
 
-  useEffect(()=>{
-      const token = localStorage.getItem("hostAccessToken");
-      if (token) {
+  useEffect(() => {
+    const token = localStorage.getItem("hostAccessToken");
+    if (token) {
       try {
-        const payloadBase64 = token.split('.')[1]; 
+        const payloadBase64 = token.split('.')[1];
         const decodedPayload = JSON.parse(atob(payloadBase64));
         console.log(decodedPayload, "Decoded Payload");
         const id = decodedPayload._id
@@ -184,70 +191,88 @@ const HostChatBody = () => {
         console.error("Invalid token format", error);
       }
     }
-    },[])
+  }, [])
+
+  const initiateVideoCall = () => {
+    if (!selectedChat || !onlineUser.includes(receiverId)) {
+      console.log(selectedChat, !onlineUser.includes(receiverId))
+      alert('User is not online for video call');
+      return;
+    }
+
+    console.log('Initiating video call to:', selectedChat.name);
+    setIsCallActive(true);
+    setIsCallInitiator(true);
+  };
+
+  const handleEndCall = () => {
+    console.log(' Ending call');
+    setIsCallActive(false);
+    setIsCallInitiator(false);
+  };
 
   const handleAddNewChat = async (selectedUser: User) => {
-      try {
-        // Create new chat with selected user
-        console.log(selectedUser, 'Userr')
-        const res = await hostapiClient.post(`${LOCALHOST_URL}/chat/hostChat`, {
-          userId: selectedUser._id
-        }, {
-          headers: { Authorization: `Bearer` }
-        });
-        console.log(res.data, "Response")
-        if (res.data.message == 'Chat Created') {
-          setShowAddChatModal(false)
-          const id = hostId
-          console.log('Id',id)
-          socket.emit('get_all_hostchats', id);
-  
-          socket.on('receive_all_hostchats', (chats) => {
-            console.log("Received all chats", chats)
-            const setChatss = chats.map((chat: Chats) => {
-  
-              const formattedTime = chat.updatedAt
-              return {
-                id: chat._id,
-                name: chat.participant1.name,
-                lastMessage: chat.latestMessage || "No message yet",
-                receiverId: chat.participant1._id,
-                lastMessageTime: formattedTime,
-                type: chat.type,
-              };
-            })
-            setChats(setChatss)
-  
-            console.log(chats, 'Chattt')
-            // setChats(chats)
+    try {
+      // Create new chat with selected user
+      console.log(selectedUser, 'Userr')
+      const res = await hostapiClient.post(`${LOCALHOST_URL}/chat/hostChat`, {
+        userId: selectedUser._id
+      }, {
+        headers: { Authorization: `Bearer` }
+      });
+      console.log(res.data, "Response")
+      if (res.data.message == 'Chat Created') {
+        setShowAddChatModal(false)
+        const id = hostId
+        console.log('Id', id)
+        socket.emit('get_all_hostchats', id);
+
+        socket.on('receive_all_hostchats', (chats) => {
+          console.log("Received all chats", chats)
+          const setChatss = chats.map((chat: Chats) => {
+
+            const formattedTime = chat.updatedAt
+            return {
+              id: chat._id,
+              name: chat.participant1.name,
+              lastMessage: chat.latestMessage || "No message yet",
+              receiverId: chat.participant1._id,
+              lastMessageTime: formattedTime,
+              type: chat.type,
+            };
           })
-          // const newChat: Chat = {
-          //   id: res.data.data._id,
-          //   name: selectedUser.name,
-          //   lastMessage: "No messages yet",
-          //   receiverId: selectedUser._id,
-          //   lastMessageTime: "",
-          //   unreadCount: 0,
-          //   messages: [],
-          // };
-          // setChats(prev => [...prev, newChat]);
-          // setSelectedChat(newChat);
-          // setReceiverId(selectedUser._id);
-          // setShowAddChatModal(false);
-          // setSearchUsers('');
-  
-          // socket.emit('join_room', newChat.id);
-        }
-  
-  
-  
-  
-  
-      } catch (error) {
-        console.error('Error creating new chat:', error);
-        alert('Failed to create chat. Please try again.');
+          setChats(setChatss)
+
+          console.log(chats, 'Chattt')
+          // setChats(chats)
+        })
+        // const newChat: Chat = {
+        //   id: res.data.data._id,
+        //   name: selectedUser.name,
+        //   lastMessage: "No messages yet",
+        //   receiverId: selectedUser._id,
+        //   lastMessageTime: "",
+        //   unreadCount: 0,
+        //   messages: [],
+        // };
+        // setChats(prev => [...prev, newChat]);
+        // setSelectedChat(newChat);
+        // setReceiverId(selectedUser._id);
+        // setShowAddChatModal(false);
+        // setSearchUsers('');
+
+        // socket.emit('join_room', newChat.id);
       }
-    };
+
+
+
+
+
+    } catch (error) {
+      console.error('Error creating new chat:', error);
+      alert('Failed to create chat. Please try again.');
+    }
+  };
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -283,7 +308,7 @@ const HostChatBody = () => {
     fetchAvailableUsers()
   }, [])
 
-  const fetchAvailableUsers = async() =>{
+  const fetchAvailableUsers = async () => {
     try {
       const response = await hostapiClient.get(`${LOCALHOST_URL}/host/allUsers`);
       // console.log(response.data.message,'Data')
@@ -332,7 +357,7 @@ const HostChatBody = () => {
               ...chat,
               latestMessage: newMessage.message,
               latestMessageTime: newMessage.timestamp,
-              type:newMessage.type
+              type: newMessage.type
             };
           } else {
             console.log("Unchanged Chat:", chat);
@@ -444,7 +469,7 @@ const HostChatBody = () => {
             ? {
               ...chat,
               lastMessage: message.message,
-              latestMessageTime:message.timestamp,
+              latestMessageTime: message.timestamp,
             }
             : chat
         );
@@ -682,8 +707,8 @@ const HostChatBody = () => {
         {/* New Chat Button */}
         <div className="p-4 border-t">
           <button
-          onClick={()=> setShowAddChatModal(true)}
-          className="w-full bg-green-600 text-white py-2 rounded-lg flex items-center justify-center hover:bg-green-700">
+            onClick={() => setShowAddChatModal(true)}
+            className="w-full bg-green-600 text-white py-2 rounded-lg flex items-center justify-center hover:bg-green-700">
             <UserPlus size={18} className="mr-2" />
             New Message
           </button>
@@ -726,9 +751,17 @@ const HostChatBody = () => {
                   </div>
                 </div>
               </div>
-              <div>
-                <button className="text-gray-500 hover:text-gray-700 focus:outline-none">
-                  <Settings size={20} />
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={initiateVideoCall}
+                  disabled={!onlineUser.includes(selectedChat.receiverId)}
+                  className={`p-2 rounded-full transition-colors ${onlineUser.includes(selectedChat.receiverId)
+                      ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  title={onlineUser.includes(selectedChat.receiverId) ? 'Start video call' : 'User is offline'}
+                >
+                  <Video size={20} />
                 </button>
               </div>
             </div>
@@ -878,62 +911,75 @@ const HostChatBody = () => {
 
 
       {showAddChatModal && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg p-6 w-96 max-h-96">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold">Add New Chat</h3>
-                    <button
-                      onClick={() => {
-                        setShowAddChatModal(false);
-                        setSearchUsers('');
-                      }}
-                      className="text-gray-500 hover:text-gray-700"
-                    >
-                      <X size={20} />
-                    </button>
-                  </div>
-      
-                  {/* Search Hosts */}
-                  <div className="relative mb-4">
-                    <input
-                      type="text"
-                      placeholder="Search users"
-                      value={searchUsers}
-                      onChange={(e) => setSearchUsers(e.target.value)}
-                      className="w-full p-2 pl-8 border rounded-full focus:outline-none focus:ring-2 focus:ring-green-200"
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-h-96">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Add New Chat</h3>
+              <button
+                onClick={() => {
+                  setShowAddChatModal(false);
+                  setSearchUsers('');
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Search Hosts */}
+            <div className="relative mb-4">
+              <input
+                type="text"
+                placeholder="Search users"
+                value={searchUsers}
+                onChange={(e) => setSearchUsers(e.target.value)}
+                className="w-full p-2 pl-8 border rounded-full focus:outline-none focus:ring-2 focus:ring-green-200"
+              />
+              <Search size={16} className="absolute left-2 top-3 text-gray-400" />
+            </div>
+
+            {/* Users List */}
+            <div className="max-h-60 overflow-y-auto">
+              {filteredUsers.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No Users found</p>
+              ) : (
+                filteredUsers.map((user) => (
+                  <div
+                    key={user._id}
+                    onClick={() => handleAddNewChat(user)}
+                    className="flex items-center p-3 hover:bg-gray-100 cursor-pointer rounded"
+                  >
+                    <img
+                      src={dummy_profile}
+                      alt={user.name}
+                      className="w-10 h-10 rounded-full mr-3"
                     />
-                    <Search size={16} className="absolute left-2 top-3 text-gray-400" />
+                    <div>
+                      <h4 className="font-medium">{user.name}</h4>
+                      {user.email && (
+                        <p className="text-sm text-gray-500">{user.email}</p>
+                      )}
+                    </div>
                   </div>
-      
-                  {/* Users List */}
-                  <div className="max-h-60 overflow-y-auto">
-                    {filteredUsers.length === 0 ? (
-                      <p className="text-gray-500 text-center py-4">No Users found</p>
-                    ) : (
-                      filteredUsers.map((user) => (
-                        <div
-                          key={user._id}
-                          onClick={() => handleAddNewChat(user)}
-                          className="flex items-center p-3 hover:bg-gray-100 cursor-pointer rounded"
-                        >
-                          <img
-                            src={dummy_profile}
-                            alt={user.name}
-                            className="w-10 h-10 rounded-full mr-3"
-                          />
-                          <div>
-                            <h4 className="font-medium">{user.name}</h4>
-                            {user.email && (
-                              <p className="text-sm text-gray-500">{user.email}</p>
-                            )}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Video Call Component */}
+      {isCallActive && selectedChat && (
+        <VideoCall
+          socket={socket}
+          isCallActive={isCallActive}
+          onEndCall={handleEndCall}
+          chatId={selectedChat._id}
+          userId={hostId}
+          receiverId={selectedChat.receiverId}
+          receiverName={selectedChat.name}
+          isInitiator={isCallInitiator}
+        />
+      )}
     </div>
   );
 };

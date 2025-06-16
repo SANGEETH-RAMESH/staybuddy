@@ -6,6 +6,7 @@ import { IOrder } from "../../model/orderModel";
 import { IWishlist } from "../../model/wishlistModel";
 import { IUserResponse } from "../../dtos/UserResponse";
 import { IHost } from "../../model/hostModel";
+import { INotification } from "../../model/notificationModel";
 // type UserType = InstanceType<typeof User>;
 interface UserData {
     displayName?: string;
@@ -36,5 +37,8 @@ export interface IUserService {
     checkWishlist(userId:string,hostelId:string):Promise<string>,
     getWishlist(userId:string):Promise<string | IWishlist[]>,
     deleteWishlist(userId:string): Promise<string>,
-    allHost(): Promise<IHost[] | string | null>
+    allHost(): Promise<IHost[] | string | null>,
+     sendNotification(notification:INotification):Promise<INotification | string | null>,
+    getOldNotification(userId:string):Promise<INotification [] | string | null>,
+    markAllRead(userId: string): Promise<string>
 }
