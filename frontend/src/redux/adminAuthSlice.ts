@@ -11,13 +11,15 @@ const adminAuthSlice = createSlice({
     initialState,
     reducers:{
         loginSuccess:(state,action) =>{
-            localStorage.setItem('adminToken',action.payload.token)
+            localStorage.setItem('adminAccessToken',action.payload.accessToken);
+            localStorage.setItem('adminRefreshToken',action.payload.refreshToken);
             state.isLoggedIn = action.payload.isLoggedIn
             state.accessToken = action.payload.accessToken
             state.refreshToken = action.payload.refreshToken
         },
         logout:(state,action) =>{
-            localStorage.removeItem('adminToken');
+            localStorage.removeItem('adminAccessToken');
+            localStorage.removeItem('adminRefreshToken');
             state.isLoggedIn = action.payload.isLoggedIn
             state.accessToken = ""
             state.refreshToken = ""

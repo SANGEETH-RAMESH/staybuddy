@@ -13,6 +13,7 @@ import { IOrder } from "../model/orderModel";
 import { IWishlist } from "../model/wishlistModel";
 import { IUserResponse } from "../dtos/UserResponse";
 import { IHost } from "../model/hostModel";
+import { INotification } from "../model/notificationModel";
 // import jwt, { decode } from "jsonwebtoken";
 
 // type UserType = InstanceType<typeof User>;
@@ -285,9 +286,9 @@ class UserService implements IUserService {
         }
     }
 
-    async getHostels(page: string, limit: string,search?:string): Promise<{ hostels: IHostel[]; totalCount: number } | string> {
+    async getHostels(page: string, limit: string, search?: string): Promise<{ hostels: IHostel[]; totalCount: number } | string> {
         try {
-            const response = await this.userRepository.getHostels(page,limit,search);
+            const response = await this.userRepository.getHostels(page, limit, search);
             return response;
         } catch (error) {
             return error as string
@@ -367,9 +368,9 @@ class UserService implements IUserService {
         }
     }
 
-    async getSavedBookings(id: Types.ObjectId, page: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null> {
+    async getSavedBookings(id: Types.ObjectId, skip: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null> {
         try {
-            const response = await this.userRepository.getSavedBookings(id,page,limit);
+            const response = await this.userRepository.getSavedBookings(id, skip, limit);
             return response
         } catch (error) {
             return error as string;
@@ -430,7 +431,32 @@ class UserService implements IUserService {
         }
     }
 
+    async sendNotification(notification: INotification): Promise<INotification | string | null> {
+        try {
+            const response = await this.userRepository.sendNotification(notification);
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
 
+    async getOldNotification(userId: string): Promise<INotification[] | string | null> {
+        try {
+            const response = await this.userRepository.getOldNotification(userId);
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async markAllRead(userId: string): Promise<string> {
+        try {
+            const response = await this.userRepository.markAllRead(userId);
+            return response
+        } catch (error) {
+            return error as string
+        } 
+    }
 }
 
 export default UserService;

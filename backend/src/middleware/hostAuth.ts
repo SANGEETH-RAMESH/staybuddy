@@ -5,7 +5,7 @@ import { hostPayload } from "../types/commonInterfaces/tokenInterface";
 import Host from "../model/hostModel";
 
 const hostAuthMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    console.log('MAcha')
+    // console.log('MAcha')
     const token = req.header('Authorization')?.split(' ')[1];
 
     if (!token) {
@@ -27,7 +27,7 @@ const hostAuthMiddleware = async (req: Request, res: Response, next: NextFunctio
             res.status(404).json({ message: "User not found" });
             return;
         }
-        console.log('hey')
+        // console.log('hey')
         req.customHost = decoded;
         next();
     } catch (error) {

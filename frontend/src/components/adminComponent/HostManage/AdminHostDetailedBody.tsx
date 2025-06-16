@@ -4,63 +4,95 @@ import { useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { LOCALHOST_URL } from '../../../constants/constants';
 import adminApiClient from '../../../services/adminApiClient';
+import { Host } from '../../../interface/Host'
+import { Hostel } from '../../../interface/Hostel';
+import { Notification } from '../../../interface/Notification';
+import { io } from "socket.io-client";
+const socket = io("http://localhost:4000");
 
-interface Host {
-  _id: string;
-  approvalRequest: string;
-  photo: string;
-  mobile: string;
-  createdAt: string;
-  address: string;
-  documentType: string;
-  status: string;
-  name: string;
-  email: string;
-}
+// interface Host {
+//   _id: string;
+//   approvalRequest: string;
+//   photo: string;
+//   mobile: string;
+//   createdAt: string;
+//   address: string;
+//   documentType: string;
+//   status: string;
+//   name: string;
+//   email: string;
+// }
 
-interface Hostel {
-  _id: string;
-  hostelname: string;
-  location: string;
-  length: string;
-  status: string
-}
+// interface Hostel {
+//   _id: string;
+//   hostelname: string;
+//   location: string;
+//   length: string;
+//   status: string
+// }
+
+type RouteParams = {
+  id: string;
+};
 
 const AdminHostDetailedBody = () => {
- 
+
 
   const [hostel, setHostel] = useState<Hostel[]>([])
   const [showImageModal, setShowImageModal] = useState(false);
   const [host, setHost] = useState<Host>();
 
-  const hostId = useParams()
+  const {id} = useParams<RouteParams>()
 
   const handleStatusChange = async (newStatus: string) => {
     setHost({ ...(host as Host), status: newStatus });
-    // In a real app, you would make an API call here
+
     try {
+      const finalHostId = id as string;
+
+      console.log(finalHostId,'host')
       if (newStatus == 'approved') {
-        console.log("hostId", hostId)
-        const response = await adminApiClient.patch(`${LOCALHOST_URL}/admin/approvehost`, { hostId });
+        console.log("hostId", id)
+        const response = await adminApiClient.patch(`${LOCALHOST_URL}/admin/approvehost`, { hostId:finalHostId });
         console.log(response)
+
         if (response.data.message == 'Approved') {
-          toast.success("Host approved");
+          const newNotification: Notification = {
+            receiver: finalHostId,
+            message: `Your request has been approved on ${new Date().toLocaleDateString()}`,
+            title: 'Request Approved',
+            type: 'success',
+            isRead: false
+          };
+
+          socket.emit('send_notification', newNotification);
           console.log(host, 'hostt')
           const updateHost = {
             ...host,
             approvalRequest: "3"
           } as Host
           setHost(updateHost)
+          toast.success("Host approved");
         }
       } else if (newStatus == 'rejected') {
-        const response = await adminApiClient.patch(`${LOCALHOST_URL}/admin/rejecthost`, { hostId })
+        const response = await adminApiClient.patch(`${LOCALHOST_URL}/admin/rejecthost`, { hostId:finalHostId })
+          console.log(response,'rejjj')
         if (response.data.message == 'Reject') {
-          toast.success("Host Rejected")
+          const newNotification: Notification = {
+            receiver: finalHostId,
+            message: `Your request has been rejected on ${new Date().toLocaleDateString()}`,
+            title: 'Request Rejected',
+            type: 'warning',
+            isRead: false
+          };
+
+          socket.emit('send_notification', newNotification);
           const updateHost = {
             ...host,
             approvalRequest: "1"
           } as Host;
           setHost(updateHost)
+          toast.success("Host Rejected")
 
         } else if (response.data.message == 'Not Reject') {
           toast.error("Host Not Rejected")
@@ -80,7 +112,7 @@ const AdminHostDetailedBody = () => {
 
 
 
-  const { id } = useParams();
+  // const { id } = useParams();
 
   useEffect(() => {
     const fetchHostData = async () => {
@@ -188,7 +220,7 @@ const AdminHostDetailedBody = () => {
             {/* Profile info */}
             <div className="p-6 text-center">
               <h2 className="text-2xl font-bold text-gray-800">{host?.name}</h2>
-              <p className="text-gray-500 text-sm mt-1">Host ID: {host?._id}</p>
+              <p className="text-gray-500 text-sm mt-1">Host ID: {host?._id?.toString()}</p>
 
               {/* Status badge */}
               <div className="mt-4">
@@ -351,9 +383,9 @@ const AdminHostDetailedBody = () => {
             {hostel?.length > 0 ? (
               <>
                 <div className="space-y-3">
-                  {hostel?.map((property, index) => (
+                  {hostel?.map((property) => (
                     <div
-                      key={property._id}
+                      key={property.hostelname}
                       className="group bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:border-blue-200 transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
                     >
                       <div className="flex items-center gap-4">

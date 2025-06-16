@@ -157,13 +157,13 @@ const HostelDetailPage = () => {
 
     const handleBooking = () => {
         console.log('Booking initiated for hostel:', id);
-        if(hostel.beds>0){
+        if(hostel && typeof hostel.beds === 'number' && hostel.beds > 0){
         navigate(`/user/booking/${id}`)
 
         }else{
             toast.error("No Room Availbale")
         }
-        console.log(hostel.beds,'hee')
+        // console.log(hostel.beds,'hee')
     };
 
     const handleChatWithOwner = async(ownerId:string) => {

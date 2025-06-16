@@ -3,6 +3,7 @@ import OTPInput from "react-otp-input";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import { OtpValues } from "../../../interface/Otp";
 
 const HostForgotPasswordOtpBody = () => {
   const [otp, setOtp] = useState("");
@@ -10,12 +11,13 @@ const HostForgotPasswordOtpBody = () => {
   const [timer, setTimer] = useState(59);
   const [canResend, setCanResend] = useState(false);
   const navigate = useNavigate();
+  const [errors, setErrors] = useState<Partial<OtpValues>>({});
 
   const location = useLocation();
-  const email = location.state?.email;
+  const [email, setEmail] = useState(location.state?.email || "");
 
   useEffect(() => {
-    let countdown = null;  // initialize explicitly
+    let countdown = null;
     if (timer > 0) {
       countdown = setTimeout(() => {
         setTimer((prev) => prev - 1);
@@ -30,7 +32,8 @@ const HostForgotPasswordOtpBody = () => {
 
   const handleSubmit = async () => {
     const numericOtp = Number(otp);
-    if (otp.length === 4) {
+    setEmail(email)
+    // if (otp.length === 4) {
       setLoading(true);
       try {
         const response = await axios.post(
@@ -40,24 +43,51 @@ const HostForgotPasswordOtpBody = () => {
         if (response.data.message === "success") {
           toast.success("OTP verified successfully!");
           navigate("/host/resetpassword", { state: { email } });
-        } else {
-          toast.error("Invalid OTP. Please try again!");
+        } else if (response.data.message == 'Invalid otp') {
+          setErrors((prev) => ({
+            ...prev,
+            otp: "Invalid otp"
+          }))
+        } else if (response.data.message == 'otp expired') {
+          setErrors((prev) => ({
+            ...prev,
+            otp: "otp expired"
+          }))
         }
       } catch (error) {
-        console.error("Error verifying OTP:", error);
-        toast.error("An error occurred while verifying OTP.");
+        const axiosError = error as any;
+
+        if (axiosError.response) {
+          const { message, errors } = axiosError.response.data;
+          console.log('catch', message, errors)
+          if (errors) {
+            setErrors(errors);
+
+            return;
+          }
+
+          toast.error(message || "Otp failed", {
+            style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+          });
+        } else {
+          toast.error("An unexpected error occurred", {
+            style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+          });
+        }
+
+        console.error("Otp error:", error);
       } finally {
         setLoading(false);
       }
-    } else {
-      alert("Please enter a valid 4-digit OTP.");
-    }
+    // } else {
+    //   alert("Please enter a valid 4-digit OTP.");
+    // }
   };
 
   const handleResendOtp = async () => {
     setCanResend(false);
     setTimer(59);
-
+    console.log(email,'emaill')
     try {
       const response = await axios.post(
         "http://localhost:4000/host/resendOtp",
@@ -104,6 +134,7 @@ const HostForgotPasswordOtpBody = () => {
                 />
               )}
             />
+            {errors.otp && <div className="text-red-500 text-xs mt-1">{errors.otp}</div>}
           </div>
 
           <button

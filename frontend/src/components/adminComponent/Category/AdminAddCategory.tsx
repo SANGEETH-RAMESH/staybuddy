@@ -59,23 +59,23 @@ const AdminAddCategoryPage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file type
-    if (!file.type.match(/image\/(jpeg|jpg|png|webp)/i)) {
-      setErrors({
-        ...errors,
-        image: 'Please select a valid image file (JPG, PNG, WEBP)'
-      });
-      return;
-    }
+    // // Check file type
+    // if (!file.type.match(/image\/(jpeg|jpg|png|webp)/i)) {
+    //   setErrors({
+    //     ...errors,
+    //     image: 'Please select a valid image file (JPG, PNG, WEBP)'
+    //   });
+    //   return;
+    // }
 
-    // Check file size (limit to 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      setErrors({
-        ...errors,
-        image: 'Image size must be less than 2MB'
-      });
-      return;
-    }
+    // // Check file size (limit to 2MB)
+    // if (file.size > 2 * 1024 * 1024) {
+    //   setErrors({
+    //     ...errors,
+    //     image: 'Image size must be less than 2MB'
+    //   });
+    //   return;
+    // }
 
     setImageFile(file);
     setErrors({
@@ -95,7 +95,7 @@ const AdminAddCategoryPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    // if (!validateForm()) return;
 
     setIsSubmitting(true);
 
@@ -134,8 +134,27 @@ const AdminAddCategoryPage = () => {
         toast.error(response.data.message || 'Failed to add category');
       }
     } catch (error) {
-      // const err = error ; 
-      console.log(error)
+      const axiosError = error as any;
+      console.log(axiosError.response.data, 'hee')
+      if (axiosError.response) {
+        const { message, errors } = axiosError.response.data;
+
+        if (errors) {
+          setErrors(errors);
+
+          return;
+        }
+
+        toast.error(message || "Login failed", {
+          style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+        });
+      } else {
+        toast.error("An unexpected error occurred", {
+          style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+        });
+      }
+
+      console.error("Login error:", error);
     } finally {
       setIsSubmitting(false);
     }

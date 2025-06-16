@@ -9,28 +9,31 @@ const ForgotPasswordOtpBody = () => {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(59);
-  const [canResend, setCanResend] = useState(false); 
+  const [canResend, setCanResend] = useState(false);
+  const [error, setError] = useState(""); // Added error state
   const navigate = useNavigate();
-
 
   const location = useLocation();
   const email = location.state?.email;
 
   useEffect(() => {
-    let countdown:number;
+    let countdown: number;
     if (timer > 0) {
       countdown = setTimeout(() => {
         setTimer((prev) => prev - 1);
       }, 1000);
     } else {
-      setCanResend(true); 
+      setCanResend(true);
     }
     return () => clearTimeout(countdown);
   }, [timer]);
 
-  
   const handleSubmit = async () => {
     const numericOtp = Number(otp);
+    
+    // Clear any previous error
+    setError("");
+    
     if (otp.length === 4) {
       setLoading(true);
       try {
@@ -40,15 +43,13 @@ const ForgotPasswordOtpBody = () => {
         );
         console.log(response.data.message, "sd");
         if (response.data.message === "success") {
-
           toast.success("OTP verified successfully!");
-          navigate('/user/resetpassword', { state: { email } })
-
+          navigate('/user/resetpassword', { state: { email } });
         } else if (response.data.message == 'Invalid OTP') {
           toast.error("Invalid OTP. Please try again!");
         } else {
-            toast.error("Not verified")  
-      }
+          toast.error("Not verified");
+        }
       } catch (error) {
         console.error("Error verifying OTP:", error);
         toast.error("An error occurred while verifying OTP.");
@@ -56,14 +57,14 @@ const ForgotPasswordOtpBody = () => {
         setLoading(false);
       }
     } else {
-      alert("Please enter a valid 4-digit OTP.");
+      // Set error message instead of alert
+      setError("Please enter a valid 4-digit OTP.");
     }
   };
 
- 
   const handleResendOtp = async () => {
     setCanResend(false);
-    setTimer(59); 
+    setTimer(59);
 
     try {
       const response = await axios.post(
@@ -75,6 +76,14 @@ const ForgotPasswordOtpBody = () => {
     } catch (error) {
       console.error("Error resending OTP:", error);
       toast.error("Failed to resend OTP. Please try again.");
+    }
+  };
+
+  // Clear error when user starts typing
+  const handleOtpChange = (value) => {
+    setOtp(value);
+    if (error) {
+      setError("");
     }
   };
 
@@ -100,7 +109,7 @@ const ForgotPasswordOtpBody = () => {
         <div className="mb-6">
           <OTPInput
             value={otp}
-            onChange={setOtp}
+            onChange={handleOtpChange}
             numInputs={4}
             renderSeparator={<span className="text-lg font-bold mx-2">-</span>}
             renderInput={(props) => (
@@ -111,6 +120,13 @@ const ForgotPasswordOtpBody = () => {
               />
             )}
           />
+          
+          {/* Error message display */}
+          {error && (
+            <div className="mt-3 text-red-500 text-sm text-center">
+              {error}
+            </div>
+          )}
         </div>
 
         <button

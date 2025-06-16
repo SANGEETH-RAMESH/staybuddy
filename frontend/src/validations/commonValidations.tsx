@@ -48,7 +48,7 @@ export const otpValidation = Yup.object({
 export const signInValidation = Yup.object({
   email: Yup.string()
     .trim()
-    .email("Please enter a valid email")
+    .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Invalid email format')
     .required("Please enter your email"),
 
   password: Yup.string()

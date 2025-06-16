@@ -165,9 +165,9 @@ const TransactionHistory = () => {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             {transaction.type === 'deposit' ? (
-                              <ArrowDownRight className="h-5 w-5 text-green-500 mr-2" />
+                              <ArrowUpRight className="h-5 w-5 text-green-500 mr-2" />
                             ) : (
-                              <ArrowUpRight className="h-5 w-5 text-red-500 mr-2" />
+                              <ArrowDownRight className="h-5 w-5 text-red-500 mr-2" />
                             )}
                             <span className={`text-sm font-medium ${
                               transaction.type === 'deposit' ? 'text-green-700' : 'text-red-700'

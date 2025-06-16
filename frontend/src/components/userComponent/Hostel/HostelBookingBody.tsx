@@ -4,6 +4,9 @@ import { Wallet, CreditCard, AlertCircle, AlertTriangle } from 'lucide-react';
 import apiClient from '../../../services/apiClient';
 import { LOCALHOST_URL } from '../../../constants/constants';
 import { toast } from 'react-toastify';
+import { Notification } from '../../../interface/Notification';
+import { io } from "socket.io-client";
+const socket = io("http://localhost:4000");
 
 declare class Razorpay {
   constructor(options: RazorpayOptions);
@@ -69,6 +72,8 @@ const BookingForm = () => {
   const [paymentMethod, setPaymentMethod] = useState('online');
   const [walletBalance, setWalletBalance] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState('')
+  const [hostelName, setHostelName] = useState('')
 
   // Validation states
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -181,8 +186,9 @@ const BookingForm = () => {
         const hostelData = hostelResponse.data.message;
         const userData = userResponse.data.data;
         const walletData = walletResponse.data.message;
-        console.log(walletData,'hee')
+        console.log(walletData, 'hee')
         setWalletBalance(walletData.balance);
+        setUserId(userData._id)
         setCustomerEmail(userData.email);
         setCustomerName(userData.name);
         setCustomerPhone(userData.mobile);
@@ -194,6 +200,7 @@ const BookingForm = () => {
         setTenantPreferred(hostelData.policies);
         setHost_id(hostelData.host_id._id);
         setFoodRate(hostelData.foodRate);
+        setHostelName(hostelData.hostelname)
 
         const facilitiesArray = hostelData.facilities[0].split(',').map((f: string) => f.trim().toLowerCase());
         setAvailableFacilities(facilitiesArray);
@@ -218,9 +225,9 @@ const BookingForm = () => {
       ...selectedFacilities,
       [name]: checked,
     };
-    
+
     setSelectedFacilities(newFacilities);
-    
+
     if (name === 'food' && !checked) {
       setFoodRate(0);
     }
@@ -278,7 +285,17 @@ const BookingForm = () => {
       const response = await apiClient.post(`${LOCALHOST_URL}/order/bookings`, bookingDetails);
       console.log(response)
       if (response.data.message === 'Hostel Booked') {
+        const newNotification: Notification = {
+          receiver: userId,
+          message: `Your booking at ${hostelName} has been confirmed for ${new Date().toLocaleDateString()}`,
+          title: 'Booking Confirmed',
+          type: 'success',
+          isRead: true
+        }
+        console.log('rece', newNotification)
+        socket.emit('send_notification', newNotification)
         toast.success('Hostel Booked Successfully');
+
         navigate('/user/hostel');
       } else {
         toast.error('Booking failed');
@@ -332,7 +349,7 @@ const BookingForm = () => {
         handler: async (response: RazorpayResponse) => {
           console.log(response)
           await handleSubmit();
-          toast.success('Payment successful!');
+          // toast.success('Payment successful!');
         },
         modal: {
           ondismiss: () => toast.info('Payment cancelled'),
@@ -377,6 +394,15 @@ const BookingForm = () => {
     try {
       const response = await apiClient.post(`${LOCALHOST_URL}/order/bookings`, bookingDetails);
       if (response.data.message === 'Hostel Booked') {
+        const newNotification: Notification = {
+          receiver: userId,
+          message: `Your booking at ${hostelName} has been confirmed for ${new Date().toLocaleDateString()}`,
+          title: 'Booking Confirmed',
+          type: 'success',
+          isRead: true
+        }
+        console.log('rece', newNotification)
+        socket.emit('send_notification', newNotification)
         toast.success('Hostel Booked Successfully');
         navigate('/user/hostel');
       } else {
@@ -415,9 +441,8 @@ const BookingForm = () => {
                 validateField('customerName');
               }}
               onBlur={() => handleBlur('customerName')}
-              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${
-                touched.customerName && errors.customerName ? 'border-red-500' : ''
-              }`}
+              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${touched.customerName && errors.customerName ? 'border-red-500' : ''
+                }`}
             />
             {renderError('customerName')}
           </div>
@@ -441,9 +466,8 @@ const BookingForm = () => {
               onBlur={() => handleBlur('selectedBeds')}
               min="1"
               max={maxBeds}
-              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${
-                touched.selectedBeds && errors.selectedBeds ? 'border-red-500' : ''
-              }`}
+              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${touched.selectedBeds && errors.selectedBeds ? 'border-red-500' : ''
+                }`}
             />
             {renderError('selectedBeds')}
           </div>
@@ -459,7 +483,7 @@ const BookingForm = () => {
           </div>
 
           <div>
-          <label className="block text-sm text-blue-400 mb-1">Preferred</label>
+            <label className="block text-sm text-blue-400 mb-1">Preferred</label>
             <input
               type="text"
               readOnly
@@ -469,40 +493,40 @@ const BookingForm = () => {
           </div>
 
           <div className="p-4 bg-blue-50 rounded-lg">
-  <h3 className="text-sm text-blue-600 mb-2">Available Facilities</h3>
-  <div className="space-y-2">
-    {['Washing Machine', 'Food', 'Stove', 'Wifi', 'Refrigerator', 'Laundry'].map((facility) => {
-      const facilityKey = facility.toLowerCase();
-      const isAvailable = availableFacilities.includes(facilityKey);
-      return (
-        <div key={facility} className="flex items-center">
-          <input
-            type="checkbox"
-            id={facility}
-            name={facilityKey}
-            checked={selectedFacilities[facilityKey] || false}
-            onChange={handleFacilityChange}
-            disabled={!isAvailable}
-            className={`mr-2 ${touched.facilities && errors.facilities ? 'border-red-500' : ''}`}
-          />
-          <label
-            htmlFor={facility}
-            className={`text-sm ${isAvailable ? 'text-gray-700' : 'text-gray-400 line-through'}`}
-          >
-            {facility}
-            {!isAvailable && ' (Unavailable)'}
-          </label>
-        </div>
-      );
-    })}
-  </div>
-  {touched.facilities && errors.facilities && (
-    <div className="flex items-center text-red-500 text-sm mt-2">
-      <AlertTriangle className="h-4 w-4 mr-1" />
-      <span>{errors.facilities}</span>
-    </div>
-  )}
-</div>
+            <h3 className="text-sm text-blue-600 mb-2">Available Facilities</h3>
+            <div className="space-y-2">
+              {['Washing Machine', 'Food', 'Stove', 'Wifi', 'Refrigerator', 'Laundry'].map((facility) => {
+                const facilityKey = facility.toLowerCase();
+                const isAvailable = availableFacilities.includes(facilityKey);
+                return (
+                  <div key={facility} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={facility}
+                      name={facilityKey}
+                      checked={selectedFacilities[facilityKey] || false}
+                      onChange={handleFacilityChange}
+                      disabled={!isAvailable}
+                      className={`mr-2 ${touched.facilities && errors.facilities ? 'border-red-500' : ''}`}
+                    />
+                    <label
+                      htmlFor={facility}
+                      className={`text-sm ${isAvailable ? 'text-gray-700' : 'text-gray-400 line-through'}`}
+                    >
+                      {facility}
+                      {!isAvailable && ' (Unavailable)'}
+                    </label>
+                  </div>
+                );
+              })}
+            </div>
+            {touched.facilities && errors.facilities && (
+              <div className="flex items-center text-red-500 text-sm mt-2">
+                <AlertTriangle className="h-4 w-4 mr-1" />
+                <span>{errors.facilities}</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right Column */}
@@ -517,9 +541,8 @@ const BookingForm = () => {
                 validateField('customerPhone');
               }}
               onBlur={() => handleBlur('customerPhone')}
-              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${
-                touched.customerPhone && errors.customerPhone ? 'border-red-500' : ''
-              }`}
+              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${touched.customerPhone && errors.customerPhone ? 'border-red-500' : ''
+                }`}
             />
             {renderError('customerPhone')}
           </div>
@@ -534,9 +557,8 @@ const BookingForm = () => {
                 validateField('customerEmail');
               }}
               onBlur={() => handleBlur('customerEmail')}
-              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${
-                touched.customerEmail && errors.customerEmail ? 'border-red-500' : ''
-              }`}
+              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${touched.customerEmail && errors.customerEmail ? 'border-red-500' : ''
+                }`}
             />
             {renderError('customerEmail')}
           </div>
@@ -567,7 +589,7 @@ const BookingForm = () => {
           <div className="p-4 bg-gray-50 rounded-lg">
             <h3 className="text-sm font-medium text-gray-900 mb-4">Select Payment Method</h3>
             <div className="space-y-3">
-              <div 
+              <div
                 className="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
                 onClick={() => setPaymentMethod('online')}
               >
@@ -585,7 +607,7 @@ const BookingForm = () => {
                 </label>
               </div>
 
-              <div 
+              <div
                 className="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
                 onClick={() => setPaymentMethod('wallet')}
               >

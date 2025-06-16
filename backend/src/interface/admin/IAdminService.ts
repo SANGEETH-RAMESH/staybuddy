@@ -4,14 +4,16 @@ import { IUser } from "../../model/userModel";
 import {ObjectId} from 'mongoose'
 import { IHostel } from "../../model/hostelModel";
 import { ICategory } from "../../model/categoryModel";
+import { IReview } from "../../model/reviewModel";
+import { IOrder } from "../../model/orderModel";
 
 export interface IAdminService{
-    adminLogin(adminData:{admin_email:string,admin_password:string}):Promise<{ message: string; accessToken: string; refreshToken: string } | string>,
-    getUser():Promise<IUser[] | null>,
+    adminLogin(adminData: { email: string,password: string }): Promise<{ message: string; accessToken: string; refreshToken: string } | string>,
+    getUser(page: number, limit: number): Promise<{ users: IUser[]; totalCount: number } | string | null>,
     userBlock(userId:ObjectId):Promise<string>,
     userUnBlock(userId: Types.ObjectId): Promise<{ message: string; userUnBlock: IUser | null; error?: string }>,
     userDelete(userId:object):Promise<string>,
-    getHost():Promise<{ hosts: IHost[] | null; hostIdCounts: Record<string, number> } | null>,
+    getHost(skip:number,limit:number): Promise<{ hosts: IHost[] | null;totalCount: number, hostIdCounts: Record<string, number> } | null>,
     hostUnBlock(hostId:ObjectId):Promise<string>,
     hostBlock(hostId:ObjectId):Promise<string>,
     hostDelete(hostId:Types.ObjectId):Promise<string>,
@@ -26,5 +28,10 @@ export interface IAdminService{
     getHostHostelData(hostId:string): Promise<IHostel[] | string | null>,
     deleteHostel(hostelId: string): Promise<string>,
     deleteCategory(id: string): Promise<string | null>,
-    searchCategory(name:string):Promise<ICategory[] | string | null>
+    searchCategory(name:string):Promise<ICategory[] | string | null>,
+    searchUser(name: string): Promise<IUser[] | string>,
+    searchHost(name: string): Promise<IHost[] | string | null>,
+    searchHostel(name: string): Promise<IHostel[] | string | null>,
+    getReviews(hostelId: string): Promise<IReview[] | string | null>,
+    getSales():Promise<IOrder[]| string | null>
 }

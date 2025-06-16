@@ -18,9 +18,41 @@ const UserEditProfileBody: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [mobileError, setMobileError] = useState<string | null>(null);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
+    if (name === 'name') {
+      const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;;
+      if (!nameRegex.test(value)) {
+        setNameError('Name should only contain alphabets without spaces or special characters');
+      } else {
+        setNameError(null);
+      }
+    }
+
+    if (name === 'mobile') {
+      const digitOnly = /^[0-9]*$/;
+      const zeroCount = (value.match(/0/g) || []).length;
+      const startsWith = value[0];
+
+      if (!digitOnly.test(value)) {
+        setMobileError('Mobile number should contain only digits');
+      } else if (value.length > 10) {
+        setMobileError('Mobile number must be exactly 10 digits');
+      } else if (value.length === 10 && +startsWith <= 5) {
+        setMobileError('First digit must be greater than 5');
+      } else if (zeroCount > 5) {
+        setMobileError('Mobile number should not contain more than 5 zeros');
+      } else if (value.length !== 10) {
+        setMobileError('Mobile number must be 10 digits');
+      } else {
+        setMobileError(null);
+      }
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
     setSuccess(false);
   };
@@ -66,7 +98,7 @@ const UserEditProfileBody: React.FC = () => {
     }
   };
 
-  const isValidMobile = formData.mobile.length > 0;
+  // const isValidMobile = formData.mobile.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -106,6 +138,7 @@ const UserEditProfileBody: React.FC = () => {
                 placeholder="John Doe"
               />
             </div>
+            {nameError && <p className="text-red-500 text-sm mt-1">{nameError}</p>}
           </div>
 
           <div>
@@ -124,12 +157,19 @@ const UserEditProfileBody: React.FC = () => {
                 placeholder="+1 (555) 000-0000"
               />
             </div>
+            {mobileError && <p className="text-red-500 text-sm mt-1">{mobileError}</p>}
           </div>
 
           <button
             type="submit"
             className={`w-full py-2 text-white font-bold rounded-md ${isSubmitting ? 'bg-blue-300 cursor-not-allowed' : 'bg-[#31AFEF] hover:bg-blue-500'}`}
-            disabled={!formData.name || !isValidMobile || isSubmitting}
+            disabled={
+              !formData.name ||
+              !formData.mobile ||
+              nameError !== null ||
+              mobileError !== null ||
+              isSubmitting
+            }
           >
             {isSubmitting ? (
               <span className="flex items-center justify-center">

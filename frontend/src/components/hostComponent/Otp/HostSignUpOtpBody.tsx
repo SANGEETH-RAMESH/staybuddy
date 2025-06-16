@@ -3,13 +3,14 @@ import OTPInput from "react-otp-input";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { OtpValues } from "../../../interface/Otp";
 
 const HostSignUpOtpBody = () => {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(59);
   const [canResend, setCanResend] = useState(false);
-
+  const [errors,setErrors]  = useState<Partial<OtpValues>>({});
   const navigate = useNavigate();
 
   const location = useLocation();
@@ -28,7 +29,7 @@ const HostSignUpOtpBody = () => {
 
   // Timer countdown for resending OTP
   useEffect(() => {
-    let countdown:number;
+    let countdown: ReturnType<typeof setTimeout>;
     if (timer > 0) {
       countdown = setTimeout(() => {
         setTimer((prev) => prev - 1);
@@ -71,22 +72,39 @@ const HostSignUpOtpBody = () => {
       if (response.data.message === "success") {
         navigate("/host/login");
       } else if (response.data.message === "Invalid otp") {
-        toast.error("Invalid OTP. Please try again!");
+        setErrors((prev)=>({
+          ...prev,
+          otp:"Invalid OTP"
+        }))
       } else if (response.data.message === "otp expired") {
-        toast.error("Otp expired", {
-          style: { backgroundColor: "white", color: "blue" },
-          icon: (
-            <i
-              className="fas fa-exclamation-circle"
-              style={{ color: "blue" }}
-            />
-          ),
-          progressStyle: { backgroundColor: "blue" },
-        });
+        setErrors((prev)=>({
+          ...prev,
+          otp:"otp expired"
+        }))
+        
       }
     } catch (error) {
-      console.error("Error verifying OTP:", error);
-      toast.error("An error occurred while verifying the OTP. Please try again.");
+      const axiosError = error as any;
+
+      if (axiosError.response) {
+        const { message, errors } = axiosError.response.data;
+        console.log('catch', message, errors)
+        if (errors) {
+          setErrors(errors);
+
+          return;
+        }
+
+        toast.error(message || "Otp failed", {
+          style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+        });
+      } else {
+        toast.error("An unexpected error occurred", {
+          style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+        });
+      }
+
+      console.error("Otp error:", error);
     } finally {
       setLoading(false);
     }
@@ -127,6 +145,7 @@ const HostSignUpOtpBody = () => {
               />
             )}
           />
+          {errors.otp && <div className="text-red-500 text-xs mt-1">{errors.otp}</div>}
         </div>
 
         {/* Submit Button */}

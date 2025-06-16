@@ -3,6 +3,8 @@ import { IHostService } from "../interface/host/!HostService";
 import uploadImage from "../cloudinary/cloudinary";
 import { hostPayload } from "../types/commonInterfaces/tokenInterface";
 import { ObjectId } from "mongodb";
+import { forgotPasswordValidation, otpValidation, resetPasswordValidation, signInValidation, signupValidation } from "../validations/commonValidations";
+import { ValidationError } from "yup";
 
 declare module "express" {
     interface Request {
@@ -15,6 +17,27 @@ class hostController {
 
     async SignUp(req: Request, res: Response): Promise<void> {
         try {
+            let validationErrors: Record<string, string> = {};
+
+            await signupValidation.validate(req.body.hostData, { abortEarly: false })
+                .catch((error: ValidationError) => {
+                    console.log('1')
+                    error.inner.forEach((err: ValidationError) => {
+                        if (err.path) {
+                            validationErrors[err.path] = err.message;
+                        }
+                    })
+                })
+
+            if (Object.keys(validationErrors).length > 0) {
+                console.log("2")
+                res.status(400).json({
+                    success: false,
+                    message: "Validation failed",
+                    errors: validationErrors
+                })
+                return
+            }
             const { hostData } = req.body
             const response = await this.hostService.SignUp(hostData);
             res.json({ success: true, message: response })
@@ -34,6 +57,28 @@ class hostController {
 
     async VerifyOtp(req: Request, res: Response): Promise<void> {
         try {
+
+            let validationErrors: Record<string, string> = {};
+
+            await otpValidation.validate(req.body, { abortEarly: false })
+                .catch((error: ValidationError) => {
+                    error.inner.forEach((err: ValidationError) => {
+                        if (err.path) {
+                            validationErrors[err.path] = err.message;
+                        }
+                    })
+                })
+
+            if (Object.keys(validationErrors).length > 0) {
+                res.status(400).json({
+                    success: false,
+                    message: "Validation failed",
+                    errors: validationErrors
+                })
+                return
+            }
+
+
             const response = await this.hostService.verifyOtp(req.body);
             res.status(200).json({ success: true, message: response })
         } catch (error) {
@@ -43,6 +88,27 @@ class hostController {
 
     async forgotPassword(req: Request, res: Response): Promise<void> {
         try {
+
+            let validationErrors: Record<string, string> = {};
+
+            await forgotPasswordValidation.validate(req.body, { abortEarly: false })
+                .catch((error: ValidationError) => {
+                    error.inner.forEach((err: ValidationError) => {
+                        if (err.path) {
+                            validationErrors[err.path] = err.message;
+                        }
+                    })
+                })
+
+            if (Object.keys(validationErrors).length > 0) {
+                res.status(400).json({
+                    success: false,
+                    message: "Validation failed",
+                    errors: validationErrors
+                })
+                return
+            }
+
             const existingHost = await this.hostService.forgotPassword(req.body);
             if (existingHost && existingHost.temp == false) {
                 res.status(200).json({ success: true, message: "Host found" })
@@ -56,6 +122,26 @@ class hostController {
 
     async verifyForgotPasswordOtp(req: Request, res: Response): Promise<void> {
         try {
+            console.log(req.body, 'body')
+            let validationErrors: Record<string, string> = {};
+
+            await otpValidation.validate(req.body, { abortEarly: false })
+                .catch((error: ValidationError) => {
+                    error.inner.forEach((err: ValidationError) => {
+                        if (err.path) {
+                            validationErrors[err.path] = err.message;
+                        }
+                    })
+                })
+
+            if (Object.keys(validationErrors).length > 0) {
+                res.status(400).json({
+                    success: false,
+                    message: "Validation failed",
+                    errors: validationErrors
+                })
+                return
+            }
             const response = await this.hostService.verifyOtp(req.body);
             res.json({ success: true, message: response })
         } catch (error) {
@@ -66,6 +152,33 @@ class hostController {
 
     async resetPassword(req: Request, res: Response): Promise<void> {
         try {
+            let validationErrors: Record<string, string> = {};
+
+            await resetPasswordValidation
+                .validate(
+                    {
+                        newPassword: req.body.password,
+                        confirmPassword: req.body.confirmPassword
+                    },
+                    { abortEarly: false }
+                )
+                .catch((error: ValidationError) => {
+                    error.inner.forEach((err: ValidationError) => {
+                        if (err.path) {
+                            validationErrors[err.path] = err.message;
+                        }
+                    });
+                });
+
+            if (Object.keys(validationErrors).length > 0) {
+                res.status(400).json({
+                    success: false,
+                    message: "Validation failed",
+                    errors: validationErrors
+                });
+                return;
+            }
+
             const response = await this.hostService.resetPassword(req.body);
             console.log(response, 'ss')
             res.json({ success: true, message: response.message })
@@ -76,10 +189,29 @@ class hostController {
 
     async verifyLogin(req: Request, res: Response): Promise<void> {
         try {
+            let validationErrors: Record<string, string> = {};
+            await signInValidation.validate(req.body, { abortEarly: false })
+                .catch((error: ValidationError) => {
+                    error.inner.forEach((err: ValidationError) => {
+                        if (err.path) {
+                            validationErrors[err.path] = err.message;
+                        }
+                    });
+                });
+
+            if (Object.keys(validationErrors).length > 0) {
+                res.status(400).json({
+                    success: false,
+                    message: "Validation failed",
+                    errors: validationErrors,
+                });
+                return;
+            }
             const response = await this.hostService.verifyLogin(req.body);
             res.status(200).json({ success: true, message: response.message, accessToken: response.accessToken, refreshToken: response.refreshToken })
         } catch (error) {
             console.log(error)
+            res.status(500).json({ message: 'Error processing the request' });
         }
     }
 
@@ -328,7 +460,7 @@ class hostController {
         }
     }
 
-    async walletWithDraw(req:Request,res:Response):Promise<void>{
+    async walletWithDraw(req: Request, res: Response): Promise<void> {
         try {
             const { amount } = req.body;
             const id = req.customHost?._id?.toString();
@@ -339,18 +471,27 @@ class hostController {
             }
             const data = { id, amount: String(amount) };
             const response = await this.hostService.walletWithDraw(data);
-            res.status(200).json({message:response})
+            res.status(200).json({ message: response })
         } catch (error) {
-            res.status(500).json({message:error})
+            res.status(500).json({ message: error })
         }
     }
 
-    async getAllUsers(req:Request,res:Response):Promise<void>{
+    async getAllUsers(req: Request, res: Response): Promise<void> {
         try {
             const response = await this.hostService.getAllUsers();
-            res.status(200).json({message:response})
+            res.status(200).json({ message: response })
         } catch (error) {
-            res.status(500).json({message:error})
+            res.status(500).json({ message: error })
+        }
+    }
+
+    async getAdmin(req: Request, res: Response): Promise<void> {
+        try {
+            const response = await this.hostService.getAdmin();
+            res.status(200).json({ message: response });
+        } catch (error) {
+            res.status(500).json({ message: error })
         }
     }
 }

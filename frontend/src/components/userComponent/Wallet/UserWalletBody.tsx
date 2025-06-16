@@ -289,13 +289,13 @@ const WalletTracker = () => {
             onClick={handlePayment}
             className="flex-1 bg-green-500 text-white p-2 rounded flex items-center justify-center hover:bg-green-600 transition-colors"
           >
-            <ArrowDownRight className="mr-2" /> Deposit
+            <ArrowUpRight className="mr-2" /> Deposit
           </button>
           <button
             onClick={handleWithdraw}
             className="flex-1 bg-red-500 text-white p-2 rounded flex items-center justify-center hover:bg-red-600 transition-colors"
           >
-            <ArrowUpRight className="mr-2" /> Withdraw
+            <ArrowDownRight className="mr-2" /> Withdraw
           </button>
         </div>
 

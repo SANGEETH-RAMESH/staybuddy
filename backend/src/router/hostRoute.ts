@@ -34,6 +34,8 @@ host_route.post('/deposit',hostAuthMiddleware,hostController.walletDeposit.bind(
 host_route.post('/withdraw',hostAuthMiddleware,hostController.walletWithDraw.bind(hostController))
 // host_route.get('/getChat/:id',hostAuthMiddleware,hostController.getChat.bind(hostController))
 host_route.get('/allUsers',hostAuthMiddleware,hostController.getAllUsers.bind(hostController))
+host_route.get('/getAdmin',hostAuthMiddleware,hostController.getAdmin.bind(hostController))
+
 
 
 host_route.use(passport.initialize());

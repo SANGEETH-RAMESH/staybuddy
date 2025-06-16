@@ -401,6 +401,15 @@ class hostService implements IHostService {
             return error as string
         }
     }
+
+    async getAdmin(): Promise<IUser | string | null> {
+        try {
+            const response = await this.hostRepository.getAdmin();
+            return response;
+        } catch (error) {
+            return error as string
+        }
+    }
 }
 
 export default hostService

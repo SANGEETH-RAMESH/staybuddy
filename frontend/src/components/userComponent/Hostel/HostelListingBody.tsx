@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Wifi, RefreshCw, ArrowLeft, Search, Home, UtensilsCrossed, Shirt, MapPin, Star, Users, Phone, Heart, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 // import axios from 'axios';
@@ -634,7 +634,6 @@ const HostelCardGrid: React.FC = () => {
           )}
         </div>
 
-        {/* Pagination Component */}
         {hostels.length > 0 && (
           <Pagination
             currentPage={currentPage}

@@ -44,7 +44,7 @@ const UserLandingBody = () => {
     const accessToken = localStorage.getItem('userAccessToken');
     if (accessToken) {
       const decoded = jwtDecode(accessToken);
-      const userId = decoded._id
+      const userId = decoded?._id
       console.log(userId._id, 'ddaaaaa')
       if (userId) {
         socket.emit('userLoggedIn', userId);
@@ -57,8 +57,8 @@ const UserLandingBody = () => {
     const fetchHostel = async () => {
       try {
         const response = await apiClient.get(`${LOCALHOST_URL}/user/getHostels`)
-        console.log(response.data.message, "Response")
-        const hostelData = (response.data.message as Room[]).slice(0, 3);
+        console.log(response.data.response.hostels, "Response")
+        const hostelData = (response.data.response.hostels  as Room[]).slice(0, 3);
         setHostel(
           hostelData.map((hostel) => ({
             _id: hostel._id,

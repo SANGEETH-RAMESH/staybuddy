@@ -9,6 +9,8 @@ import { IHost } from "../model/hostModel";
 import { sendApprovalOrRejectionMail } from "../utils/mail";
 import { IHostel } from "../model/hostelModel";
 import { ICategory } from "../model/categoryModel";
+import { IReview } from "../model/reviewModel";
+import { IOrder } from "../model/orderModel";
 
 
 class adminService implements IAdminService {
@@ -16,7 +18,7 @@ class adminService implements IAdminService {
 
     }
 
-    async adminLogin(adminData: { admin_email: string, admin_password: string }): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
+    async adminLogin(adminData: { email: string,password: string }): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
         try {
             const response = await this.adminRepository.AdminVerifyLogin(adminData)
             return response
@@ -26,9 +28,9 @@ class adminService implements IAdminService {
         }
     }
 
-    async getUser(): Promise<IUser[] | null> {
+    async getUser(page: number, limit: number): Promise<{ users: IUser[]; totalCount: number } | string | null> {
         try {
-            const getUser = await this.adminRepository.getUser();
+            const getUser = await this.adminRepository.getUser(page, limit);
             return getUser
         } catch (error) {
             console.log(error)
@@ -70,30 +72,32 @@ class adminService implements IAdminService {
         }
     }
 
-    async getHost(): Promise<{ hosts: IHost[] | null; hostIdCounts: Record<string, number> } | null> {
+    async getHost(skip: number, limit: number): Promise<{ hosts: IHost[] | null; totalCount: number, hostIdCounts: Record<string, number> } | null> {
         try {
-            const getHostels = await this.adminRepository.getHostels(); // Array of objects containing hostels
-            const getHost = await this.adminRepository.getHost(); // Fetching hosts
+            const getHostels = await this.adminRepository.getHostels();
+            const getHost = await this.adminRepository.getHost(skip, limit);
 
             if (!Array.isArray(getHostels)) {
                 console.error("Invalid data format: getHostels is not an array.");
                 return null;
             }
 
-            // Count occurrences of host_id (or _id)
             const hostIdCounts: Record<string, number> = {};
             getHostels.forEach((hostel: IHostel) => {
-                // Extract only the host_id or _id property
                 const hostId = typeof hostel.host_id === 'string'
                     ? hostel.host_id
-                    : hostel.host_id?._id?.toString(); // Ensure _id is properly handled
+                    : hostel.host_id?._id?.toString(); 
 
                 if (hostId) {
                     hostIdCounts[hostId] = (hostIdCounts[hostId] || 0) + 1;
                 }
             });
 
-            return { hosts: getHost, hostIdCounts };
+            return {
+                hosts: getHost?.hosts ?? null,
+                totalCount: getHost?.totalCount ?? 0,
+                hostIdCounts
+            };
         } catch (error) {
             console.error(error);
             return null;
@@ -187,9 +191,9 @@ class adminService implements IAdminService {
         }
     }
 
-    async getAllCategory(skip:number,limit:number): Promise<{getCategories:ICategory[],totalCount:number} | string> {
+    async getAllCategory(skip: number, limit: number): Promise<{ getCategories: ICategory[], totalCount: number } | string> {
         try {
-            const response = await this.adminRepository.getAllCategory(skip,limit);
+            const response = await this.adminRepository.getAllCategory(skip, limit);
             return response
         } catch (error) {
             return error as string
@@ -251,12 +255,57 @@ class adminService implements IAdminService {
         }
     }
 
-    async searchCategory(name:string):Promise<ICategory[] | string | null>{
+    async searchCategory(name: string): Promise<ICategory[] | string | null> {
         try {
             const response = await this.adminRepository.searchCategory(name);
             return response;
         } catch (error) {
             return error as string;
+        }
+    }
+
+    async searchUser(name: string): Promise<IUser[] | string> {
+        try {
+            const response = await this.adminRepository.searchUser(name);
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async searchHost(name: string): Promise<IHost[] | string | null> {
+        try {
+            const response = await this.adminRepository.searchHost(name);
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async searchHostel(name: string): Promise<IHostel[] | string | null> {
+        try {
+            const response = await this.adminRepository.searchHostel(name);
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getReviews(hostelId: string): Promise<IReview[] | string | null> {
+        try {
+            const response = await this.adminRepository.getReviews(hostelId);
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getSales():Promise<IOrder[]| string | null>{
+        try {
+            const response = await this.adminRepository.getSales();
+            return response;
+        } catch (error) {
+            return error as string
         }
     }
 }

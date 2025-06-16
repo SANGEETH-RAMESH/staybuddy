@@ -4,6 +4,7 @@ import { LOCALHOST_URL } from '../../../constants/constants';
 import hostapiClient from '../../../services/hostapiClient';
 import { useNavigate } from 'react-router-dom';
 
+
 // Type definitions
 type Facilities = {
   wifi: boolean;
@@ -54,7 +55,6 @@ const EmptyState = () => {
 
   return (
     <div className="col-span-full flex flex-col items-center justify-center min-h-[400px] p-8">
-      {/* Animated Illustration Container */}
       <div className="relative mb-8">
         <div className="absolute inset-0 bg-blue-100 rounded-full animate-pulse" />
         <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-full">
@@ -67,7 +67,6 @@ const EmptyState = () => {
         </div>
       </div>
 
-      {/* Text Content */}
       <div className="text-center max-w-md mb-8">
         <h3 className="text-2xl font-bold text-gray-900 mb-3 animate-fade-in">
           No Hostels Found

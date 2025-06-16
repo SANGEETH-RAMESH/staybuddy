@@ -21,13 +21,14 @@ import adminApiClient from '../../../services/adminApiClient';
 
 const AdminCategoryBody = () => {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
+  // const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
+  
   const [allCategories, setAllCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState<boolean>(true);
   // const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   // const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
+  // const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const [pages, setPages] = useState<number>(0)
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -82,7 +83,7 @@ const AdminCategoryBody = () => {
           setCurrentPage(newPage);
 
           // Fetch updated data
-          fetchCategories(newPage, searchTerm, filterStatus);
+          fetchCategories(newPage);
         } else {
           Swal.fire('Failed!', 'There was an issue deleting the category.', 'error');
         }
@@ -121,7 +122,7 @@ const AdminCategoryBody = () => {
   //   };
 
   // Fetch categories function with pagination
-  const fetchCategories = async (page: number = 1, search: string = '', status: string = 'all') => {
+  const fetchCategories = async (page: number = 1) => {
     setLoading(true);
     try {
       // const skip = (page - 1) * categoriesPerPage;
@@ -168,34 +169,35 @@ const AdminCategoryBody = () => {
   };
 
   // Update filtered categories based on search and filters
-  const updateFilteredCategories = (categoryList = categories) => {
-    let filtered = categoryList;
+  // const updateFilteredCategories = (categoryList = categories) => {
+  //   const filtered = categoryList;
 
-    // Apply status filter (if not already applied on backend)
-    // if (filterStatus === 'active') {
-    //   filtered = filtered.filter(category => category.isActive);
-    // } else if (filterStatus === 'inactive') {
-    //   filtered = filtered.filter(category => !category.isActive);
-    // }
 
-    // Apply search filter (if not already applied on backend)
-    // if (searchTerm) {
-    //   const lowercaseSearch = searchTerm.toLowerCase();
-    //   filtered = filtered.filter(
-    //     category =>
-    //       category.name.toLowerCase().includes(lowercaseSearch) ||
-    //       category.description?.toLowerCase().includes(lowercaseSearch)
-    //   );
-    // }
+  //   // Apply status filter (if not already applied on backend)
+  //   // if (filterStatus === 'active') {
+  //   //   filtered = filtered.filter(category => category.isActive);
+  //   // } else if (filterStatus === 'inactive') {
+  //   //   filtered = filtered.filter(category => !category.isActive);
+  //   // }
 
-    setFilteredCategories(filtered);
-  };
+  //   // Apply search filter (if not already applied on backend)
+  //   // if (searchTerm) {
+  //   //   const lowercaseSearch = searchTerm.toLowerCase();
+  //   //   filtered = filtered.filter(
+  //   //     category =>
+  //   //       category.name.toLowerCase().includes(lowercaseSearch) ||
+  //   //       category.description?.toLowerCase().includes(lowercaseSearch)
+  //   //   );
+  //   // }
+
+  //   setFilteredCategories(filtered);
+  // };
 
   // Handle search input change
   const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const newSearchTerm = e.target.value;
     setSearchTerm(newSearchTerm);
-    console.log(pages, 'Tpal')
+    console.log(searchTimeout.current, 'Tpal')
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
     }
@@ -217,7 +219,10 @@ const AdminCategoryBody = () => {
           setCategories(response.data.message);
           setPages(totalPages)
           setTotalPages(1)
+        }else if(response.data.message.length==0){
+          setCategories([])
         }
+        console.log(response.data.message.length)
 
       } catch (error) {
         console.error('Search API error:', error);
@@ -245,25 +250,26 @@ const AdminCategoryBody = () => {
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      fetchCategories(page, searchTerm, filterStatus);
+      fetchCategories(page);
     }
   };
 
   // Handle filter change
-  const handleFilterChange = (status: 'all' | 'active' | 'inactive') => {
-    setFilterStatus(status);
-    setCurrentPage(1); // Reset to first page when filtering
-    fetchCategories(1, searchTerm, status);
-  };
+  // const handleFilterChange = (status: 'all' | 'active' | 'inactive') => {
+  //   setFilterStatus(status);
+  //   setCurrentPage(1); // Reset to first page when filtering
+  //   fetchCategories(1, searchTerm, status);
+  // };
 
   // Apply filters whenever dependencies change
-  useEffect(() => {
-    updateFilteredCategories();
-  }, [categories]);
+  // useEffect(() => {
+  //   updateFilteredCategories();
+  // }, [categories]);
+
 
   // Fetch categories on mount
   useEffect(() => {
-    fetchCategories(currentPage, searchTerm, filterStatus);
+    fetchCategories(currentPage);
   }, []);
 
   // Format date string
@@ -280,43 +286,34 @@ const AdminCategoryBody = () => {
     navigate('/admin/addcategory')
   }
 
-  // Generate page numbers for pagination
   const generatePageNumbers = () => {
-    const pages = [];
-    const maxVisiblePages = 5;
+    const pages: (number | string)[] = [];
 
-    if (totalPages <= maxVisiblePages) {
+    if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) {
-          pages.push(i);
-        }
-        pages.push('...');
-        pages.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1);
-        pages.push('...');
-        for (let i = totalPages - 3; i <= totalPages; i++) {
-          pages.push(i);
-        }
+      pages.push(1);
+
+      if (currentPage > 3) pages.push('...');
+
+      if (currentPage > 2 && currentPage < totalPages - 1) {
+        pages.push(currentPage - 1, currentPage, currentPage + 1);
+      } else if (currentPage <= 3) {
+        pages.push(2, 3, 4);
       } else {
-        pages.push(1);
-        pages.push('...');
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
-          pages.push(i);
-        }
-        pages.push('...');
-        pages.push(totalPages);
+        pages.push(totalPages - 3, totalPages - 2, totalPages - 1);
       }
+
+      if (currentPage < totalPages - 2) pages.push('...');
+
+      pages.push(totalPages);
     }
 
     return pages;
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh] mt-[11vh] lg:ml-64 pt-24">
@@ -392,11 +389,11 @@ const AdminCategoryBody = () => {
       </div>
 
       {/* Empty state */}
-      {categories.length === 0 && !loading && (
+      {categories?.length === 0 && !loading && (
         <div className="bg-[#212936] rounded-lg shadow-lg p-8 flex flex-col items-center justify-center">
           <PackageX className="w-16 h-16 text-gray-500 mb-4" />
           <h3 className="text-xl text-white mb-2">No categories found</h3>
-          <p className="text-gray-400 text-center mb-6">
+          {/* <p className="text-gray-400 text-center mb-6">
             {searchTerm || filterStatus !== 'all'
               ? 'Try adjusting your search or filters'
               : 'There are no categories to display'}
@@ -415,7 +412,7 @@ const AdminCategoryBody = () => {
                 Clear Filters
               </button>
             </div>
-          )}
+          )} */}
         </div>
       )}
 
@@ -501,7 +498,7 @@ const AdminCategoryBody = () => {
       {/* Mobile View */}
       {categories.length > 0 && (
         <div className="sm:hidden space-y-4">
-          {categories.map((category, index) => (
+          {categories.map((category) => (
             <div
               key={category._id.toString()}
               className="bg-[#212936] rounded-lg p-4 space-y-3 shadow-md"

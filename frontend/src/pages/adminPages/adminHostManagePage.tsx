@@ -15,35 +15,55 @@ const AdminHostManagePage = () => {
       </div>
       
       {/* Main content area with proper spacing */}
-      <div className="flex flex-1 pt-16"> {/* Push content below fixed header */}
-        {/* Sidebar - Fixed on the left */}
-        <div className="fixed left-0 top-16 bottom-0 z-40">
-          <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-        </div>
-        
-        {/* Overlay for mobile when sidebar is open */}
+      <div className="flex flex-1 relative pt-[11vh] min-h-screen">
+        {/* Mobile Overlay */}
         {isSidebarOpen && (
           <div 
-            className="fixed inset-0 top-16 bg-black bg-opacity-50 lg:hidden z-30"
+            className="fixed inset-0 bg-black/50 lg:hidden z-40 top-[11vh]"
             onClick={() => setIsSidebarOpen(false)}
           />
         )}
         
-        {/* Main content with proper margin to avoid sidebar overlap */}
-        <div className={`flex-1 transition-all duration-300 ${
-          isSidebarOpen ? 'lg:ml-64 pl-2 md:pl-4' : 'ml-0'
-        }`}>
+        {/* Sidebar Container */}
+        <div className={`
+          fixed left-0 z-40 h-[89vh] top-[11vh]
+          transition-transform duration-300 ease-in-out
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          lg:translate-x-0 lg:relative lg:top-0 lg:h-auto lg:flex-shrink-0
+        `}>
+          <AdminSidebar 
+            isOpen={isSidebarOpen} 
+            onClose={() => setIsSidebarOpen(false)} 
+          />
+        </div>
+
+        {/* Main Content */}
+        <div className={`
+          flex-1 transition-all duration-300 ease-in-out
+          w-full lg:w-auto
+          ${isSidebarOpen ? 'lg:ml-0' : 'lg:ml-0'}
+        `}>
           <AdminHostManageBody />
         </div>
+
+        {/* Floating Toggle Button for Mobile */}
+        <button
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          className={`
+            fixed bottom-4 right-4 z-50 lg:hidden
+            bg-[#45B8F2] hover:bg-[#3AA3E0] active:bg-[#2E8BC7]
+            p-3 rounded-full shadow-lg shadow-black/20
+            transition-all duration-200 ease-in-out
+            transform hover:scale-105 active:scale-95
+          `}
+          aria-label={isSidebarOpen ? "Close menu" : "Open menu"}
+        >
+          {isSidebarOpen ? 
+            <X size={20} className="text-white" /> : 
+            <Menu size={20} className="text-white" />
+          }
+        </button>
       </div>
-      
-      {/* Toggle button for mobile */}
-      <button
-        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="fixed bottom-4 right-4 z-50 lg:hidden bg-[#45B8F2] p-3 rounded-full shadow-lg"
-      >
-        {isSidebarOpen ? <X size={24} color="white" /> : <Menu size={24} color="white" />}
-      </button>
     </div>
   );
 };

@@ -5,11 +5,12 @@ import { Mail, Lock, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { loginSuccess } from '../../../redux/userAuthSlice';
+import { LoginValues } from '../../../interface/Login';
 
-interface LoginValues {
-    email: string;
-    password: string;
-}
+// interface LoginValues {
+//     email: string;
+//     password: string;
+// }
 
 const UserLoginBody = () => {
     const navigate = useNavigate();
@@ -21,85 +22,69 @@ const UserLoginBody = () => {
     });
 
     const [errors, setErrors] = useState<Partial<LoginValues>>({});
-    const [validFields, setValidFields] = useState<Partial<Record<keyof LoginValues, boolean>>>({});
+    // const [validFields, setValidFields] = useState<Partial<Record<keyof LoginValues, boolean>>>({});
 
-    // JavaScript validation functions
-    const validateEmail = (email: string): string | null => {
-    if (!email.trim()) {
-        return 'Email is required';
-    }
-    const emailRegex = /^[a-zA-Z0-9][a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(email)) {
-        return 'Invalid email format';
-    }
-    return null;
-};
+    // const validateEmail = (email: string): string | null => {
+    //     if (!email.trim()) {
+    //         return 'Email is required';
+    //     }
+    //     const emailRegex = /^[a-zA-Z0-9][a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    //     if (!emailRegex.test(email)) {
+    //         return 'Invalid email format';
+    //     }
+    //     return null;
+    // };
 
-    const validatePassword = (password: string): string | null => {
-        if (!password) {
-            return 'Password is required';
-        }
-        if (password.length < 6) {
-            return 'Password must be at least 6 characters';
-        }
-        return null;
-    };
+    // const validatePassword = (password: string): string | null => {
+    //     if (!password) {
+    //         return 'Password is required';
+    //     }
+    //     if (password.length < 6) {
+    //         return 'Password must be at least 6 characters';
+    //     }
+    //     return null;
+    // };
 
-    const validateForm = (values: LoginValues): Partial<LoginValues> => {
-        const validationErrors: Partial<LoginValues> = {};
-        
-        const emailError = validateEmail(values.email);
-        if (emailError) validationErrors.email = emailError;
-        
-        const passwordError = validatePassword(values.password);
-        if (passwordError) validationErrors.password = passwordError;
-        
-        return validationErrors;
-    };
+    // const validateForm = (values: LoginValues): Partial<LoginValues> => {
+    //     const validationErrors: Partial<LoginValues> = {};
+
+    //     const emailError = validateEmail(values.email);
+    //     if (emailError) validationErrors.email = emailError;
+
+    //     const passwordError = validatePassword(values.password);
+    //     if (passwordError) validationErrors.password = passwordError;
+
+    //     return validationErrors;
+    // };
 
     // Helper function to get input className based on validation state
-    const getInputClassName = (fieldName: keyof LoginValues) => {
-        const baseClass = "w-full pl-9 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all text-sm";
-        
-        if (errors[fieldName]) {
-            return `${baseClass} border-red-300 focus:ring-red-500 bg-red-50`;
-        } else if (validFields[fieldName]) {
-            return `${baseClass} border-green-300 focus:ring-green-500 bg-green-50`;
-        } else {
-            return `${baseClass} border-gray-300 focus:ring-blue-500`;
-        }
-    };
+    // const getInputClassName = (fieldName: keyof LoginValues) => {
+    //     const baseClass = "w-full pl-9 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all text-sm";
+
+    //     if (errors[fieldName]) {
+    //         return `${baseClass} border-red-300 focus:ring-red-500 bg-red-50`;
+    //     } else if (validFields[fieldName]) {
+    //         return `${baseClass} border-green-300 focus:ring-green-500 bg-green-50`;
+    //     } else {
+    //         return `${baseClass} border-gray-300 focus:ring-blue-500`;
+    //     }
+    // };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormValues({ ...formValues, [name]: value });
-        
-        // Clear the error for this field and validate in real-time
-        const newErrors = { ...errors };
-        const newValidFields = { ...validFields };
-        delete newErrors[name as keyof LoginValues];
-        
-        // Real-time validation for better UX
-        let fieldError: string | null = null;
-        switch (name) {
-            case 'email':
-                fieldError = validateEmail(value);
-                break;
-            case 'password':
-                fieldError = validatePassword(value);
-                break;
-        }
-        
-        if (fieldError) {
-            newErrors[name as keyof LoginValues] = fieldError;
-            newValidFields[name as keyof LoginValues] = false;
-        } else {
-            // Mark field as valid if there's no error and field has content
-            newValidFields[name as keyof LoginValues] = value.trim() !== '';
-        }
-        
-        setErrors(newErrors);
-        setValidFields(newValidFields);
+
+        setFormValues(prev => ({ ...prev, [name]: value }));
+
+        setErrors(prev => {
+            const updated = { ...prev };
+            delete updated[name as keyof LoginValues];
+            return updated;
+        });
+
+        // setValidFields(prev => ({
+        //     ...prev,
+        //     [name as keyof LoginValues]: value.trim() !== ""
+        // }));
     };
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -107,31 +92,42 @@ const UserLoginBody = () => {
 
         try {
             // Validate form values using JavaScript validation
-            const validationErrors = validateForm(formValues);
-            
-            if (Object.keys(validationErrors).length > 0) {
-                setErrors(validationErrors);
-                return;
-            }
+            // const validationErrors = validateForm(formValues);
 
-            // Clear errors if validation passes
-            setErrors({});
+            // if (Object.keys(validationErrors).length > 0) {
+            //     setErrors(validationErrors);
+            //     return;
+            // }
+
+            // // Clear errors if validation passes
+            // setErrors({});
 
             const response = await axios.post("http://localhost:4000/user/verifylogin", { ...formValues });
-            console.log(response, 'response');
-            
+            console.log(response.data.message, 'response');
+
+            const { message, accessToken, refreshToken } = response.data;
+            console.log(message, "MEssage")
+
             if (response.data.message === 'Invalid password') {
-                toast.error('Invalid password', { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
+                // toast.error('Invalid password', { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
+                setErrors((prev)=>({
+                    ...prev,
+                    password:'Invalid password'
+                }))
             } else if (response.data.message === 'Invalid email') {
-                toast.error('Invalid email', { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
+                // toast.error('Invalid email', { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
+                setErrors((prev)=>({
+                    ...prev,
+                    email:'Invalid email'
+                }))
             } else if (response.data.message === 'User is blocked') {
                 toast.error("User is blocked", { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
             } else if (response.data.message == undefined) {
                 toast.error("Invalid credentials", { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
-            } else if (response.data.accessToken && response.data.refreshToken) {
+            } else if (accessToken && refreshToken) {
                 dispatch(loginSuccess({
-                    accessToken: response.data.accessToken,
-                    refreshToken: response.data.refreshToken,
+                    accessToken: accessToken,
+                    refreshToken: refreshToken,
                     isLoggedIn: true
                 }));
                 toast.success("Login Successful", { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
@@ -139,22 +135,40 @@ const UserLoginBody = () => {
             } else {
                 toast.error("Unexpected error occurred", { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
             }
-        } catch (error) {
-            toast.error("An error occurred", { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
-            console.log(error);
+        } catch (error: unknown) {
+            const axiosError = error as any;
+
+            if (axiosError.response) {
+                const { message, errors } = axiosError.response.data;
+
+                if (errors) {
+                    setErrors(errors); 
+
+                    return;
+                }
+
+                toast.error(message || "Login failed", {
+                    style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+                });
+            } else {
+                toast.error("An unexpected error occurred", {
+                    style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+                });
+            }
+
+            console.error("Login error:", error);
         }
     };
 
     return (
         <div className="min-h-screen w-full bg-gray-50 flex items-center justify-center p-4">
             <div className="flex flex-col md:flex-row max-w-4xl w-full shadow-xl rounded-xl overflow-hidden">
-                {/* Left Panel - Image Space */}
                 <div className="w-full md:w-5/12 relative h-48 md:h-auto">
-                    <img
+                    {/* <img
                         src="/api/placeholder/600/800"
                         alt="Login"
                         className="w-full h-full object-cover"
-                    />
+                    /> */}
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-500/80 to-blue-600/80 flex flex-col items-center justify-center p-6 text-white">
                         <h2 className="text-2xl font-bold mb-2">Welcome Back!</h2>
                         <p className="text-sm text-center mb-4 text-white/90">Find your perfect stay with StayBuddy</p>
@@ -184,7 +198,7 @@ const UserLoginBody = () => {
                                         value={formValues.email}
                                         onChange={handleChange}
                                         placeholder="Enter your email"
-                                        className={getInputClassName('email')}
+                                        className="w-full pl-9 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all text-sm"
                                     />
                                 </div>
                                 {errors.email && <div className="text-red-500 text-xs mt-1">{errors.email}</div>}
@@ -201,7 +215,7 @@ const UserLoginBody = () => {
                                         value={formValues.password}
                                         onChange={handleChange}
                                         placeholder="Enter your password"
-                                        className={getInputClassName('password')}
+                                        className='w-full pl-9 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all text-sm'
                                     />
                                 </div>
                                 {errors.password && <div className="text-red-500 text-xs mt-1">{errors.password}</div>}
