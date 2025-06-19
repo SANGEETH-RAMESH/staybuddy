@@ -306,18 +306,12 @@ class UserService implements IUserService {
 
     async validateRefreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | string> {
         try {
-            // console.log("RefreshTOken",refreshToken)
             const decoded = verifyToken(refreshToken)
-            // console.log("Decoded in user",decoded)
             if (typeof decoded === 'object' && decoded !== null && 'email' in decoded) {
                 const response = await this.userRepository.FindUserByEmail(decoded.email);
-                // console.log(decoded.email, 'decoded email');
-
                 if (!response) {
                     return "No User";
                 }
-
-                // console.log(response,"response")
                 const userPayload: userPayload = {
                     _id: new Types.ObjectId(response._id),
                     name: response.name,
@@ -331,7 +325,6 @@ class UserService implements IUserService {
                 return { accessToken, refreshToken: newRefreshToken };
             }
 
-            // If the token is not a valid object or lacks the required email property
             return "Invalid Token";
         } catch (error) {
             console.log(error)

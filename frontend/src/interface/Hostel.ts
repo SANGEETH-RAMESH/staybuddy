@@ -6,8 +6,9 @@ import { Host } from "./Host";
 export interface Hostel  {
   _id: string;
   hostName: string;
-  hostelName: string;
+  // hostelName: string;
   location: string;
+  // photos:sst
   image: string;
   averageRating: number;
   reviews: Review[];

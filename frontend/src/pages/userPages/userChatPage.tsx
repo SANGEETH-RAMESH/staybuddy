@@ -1,4 +1,4 @@
-import React from 'react'
+
 import UserHeader from '../../components/commonComponents/userHeader'
 import UserChatBody from '../../components/userComponent/Chat/UserChatBody'
 

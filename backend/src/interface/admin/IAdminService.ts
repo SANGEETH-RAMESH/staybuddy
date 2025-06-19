@@ -33,5 +33,6 @@ export interface IAdminService{
     searchHost(name: string): Promise<IHost[] | string | null>,
     searchHostel(name: string): Promise<IHostel[] | string | null>,
     getReviews(hostelId: string): Promise<IReview[] | string | null>,
-    getSales():Promise<IOrder[]| string | null>
+    getSales():Promise<IOrder[]| string | null>,
+    validateRefreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | string>
 }

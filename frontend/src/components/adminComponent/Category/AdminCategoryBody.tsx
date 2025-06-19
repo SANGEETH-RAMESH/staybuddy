@@ -416,75 +416,99 @@ const AdminCategoryBody = () => {
         </div>
       )}
 
-      {/* Desktop Table View */}
+      {/* Responsive Categories View */}
       {categories.length > 0 && (
-        <div className="hidden sm:block overflow-x-auto rounded-lg shadow-lg">
-          <table className="min-w-full bg-[#212936] text-white">
-            <thead>
+        <div className="overflow-x-auto rounded-lg shadow-lg">
+          <table className="min-w-full bg-[#212936] text-white table-auto sm:table-fixed">
+            <thead className="hidden sm:table-header-group">
               <tr className="border-b border-gray-700">
-                <th className="py-4 px-6 text-left">ID</th>
-                <th className="py-4 px-6 text-left">Image</th>
-                <th className="py-4 px-6 text-left">Name</th>
-                <th className="py-4 px-6 text-center">Status</th>
-                <th className="py-4 px-6 text-left">Created</th>
-                <th className="py-4 px-6 text-right">Actions</th>
+                <th className="py-3 px-2 sm:py-4 sm:px-6 text-left text-xs sm:text-sm">ID</th>
+                <th className="py-3 px-2 sm:py-4 sm:px-6 text-left text-xs sm:text-sm">Image</th>
+                <th className="py-3 px-2 sm:py-4 sm:px-6 text-left text-xs sm:text-sm">Name</th>
+                <th className="py-3 px-2 sm:py-4 sm:px-6 text-center text-xs sm:text-sm">Status</th>
+                <th className="py-3 px-2 sm:py-4 sm:px-6 text-left text-xs sm:text-sm hidden md:table-cell">Created</th>
+                <th className="py-3 px-2 sm:py-4 sm:px-6 text-right text-xs sm:text-sm">Actions</th>
               </tr>
             </thead>
             <tbody>
               {categories.map((category, index) => (
                 <tr
                   key={category._id.toString()}
-                  className="border-b border-gray-700 hover:bg-[#2D394E] transition-colors"
+                  className="border-b border-gray-700 hover:bg-[#2D394E] transition-colors block sm:table-row bg-[#212936] mb-4 sm:mb-0 rounded-lg sm:rounded-none p-4 sm:p-0"
                 >
-                  <td className="py-4 px-6 font-mono text-sm">
+                  {/* Mobile: Card Layout, Desktop: Table Row */}
+                  <td className="py-2 px-2 sm:py-4 sm:px-6 font-mono text-xs sm:text-sm block sm:table-cell">
+                    <span className="inline-block sm:hidden font-semibold text-gray-400 text-xs mb-1">ID: </span>
                     {(currentPage - 1) * categoriesPerPage + index + 1}
                   </td>
-                  <td className="py-4 px-6">
-                    <div className="h-12 w-12 rounded-md overflow-hidden bg-gray-700">
-                      {category.image ? (
-                        <img
-                          src={category.image}
-                          alt={category.name}
-                          className="h-full w-full object-cover"
-                        />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center">
-                          <Package className="text-gray-400 h-6 w-6" />
-                        </div>
-                      )}
+                  
+                  <td className="py-2 px-2 sm:py-4 sm:px-6 block sm:table-cell">
+                    <div className="flex items-center sm:block">
+                      <span className="inline-block sm:hidden font-semibold text-gray-400 text-xs mr-3 min-w-[60px]">Image:</span>
+                      <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-md overflow-hidden bg-gray-700">
+                        {category.image ? (
+                          <img
+                            src={category.image}
+                            alt={category.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center">
+                            <Package className="text-gray-400 h-4 w-4 sm:h-6 sm:w-6" />
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </td>
-                  <td className="py-4 px-6 font-medium">{category.name}</td>
-                  <td className="py-4 px-6 text-center">
-                    <span
-                      className={`px-3 py-1 rounded-full text-sm ${category.isActive
-                        ? 'bg-green-900/50 text-green-200'
-                        : 'bg-red-900/50 text-red-200'
-                        }`}
-                    >
-                      {category.isActive ? 'Active' : 'Inactive'}
-                    </span>
+                  
+                  <td className="py-2 px-2 sm:py-4 sm:px-6 font-medium block sm:table-cell">
+                    <span className="inline-block sm:hidden font-semibold text-gray-400 text-xs mb-1">Name: </span>
+                    <span className="text-sm sm:text-base">{category.name}</span>
                   </td>
-                  <td className="py-4 px-6 text-sm text-gray-300">
+                  
+                  <td className="py-2 px-2 sm:py-4 sm:px-6 block sm:table-cell sm:text-center">
+                    <div className="flex items-center sm:justify-center">
+                      <span className="inline-block sm:hidden font-semibold text-gray-400 text-xs mr-3 min-w-[60px]">Status:</span>
+                      <span
+                        className={`px-2 py-1 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm ${category.isActive
+                          ? 'bg-green-900/50 text-green-200'
+                          : 'bg-red-900/50 text-red-200'
+                          }`}
+                      >
+                        {category.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </td>
+                  
+                  <td className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm text-gray-300 block sm:table-cell md:table-cell hidden sm:block">
+                    <span className="inline-block sm:hidden font-semibold text-gray-400 text-xs mb-1">Created: </span>
                     {formatDate(category.createdAt)}
                   </td>
-                  <td className="py-4 px-6">
-                    <div className="flex justify-end space-x-3">
+                  
+                  <td className="py-2 px-2 sm:py-4 sm:px-6 block sm:table-cell">
+                    <div className="flex items-center justify-start sm:justify-end space-x-2 sm:space-x-3 mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-gray-700 sm:border-t-0">
+                      <span className="inline-block sm:hidden font-semibold text-gray-400 text-xs mr-2">Actions:</span>
                       <button
-                        className="p-2 rounded-lg hover:bg-gray-700 transition-colors group tooltip-container"
+                        className="relative p-1.5 sm:p-2 rounded-lg hover:bg-gray-700 transition-colors group flex items-center sm:block bg-gray-700/50 sm:bg-transparent"
                         onClick={() => handleEditCategory(category)}
                         aria-label="Edit category"
                       >
-                        <Pencil className="w-5 h-5 text-blue-400 group-hover:text-blue-300" />
-                        <span className="tooltip">Edit Category</span>
+                        <Pencil className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 group-hover:text-blue-300" />
+                        <span className="text-xs sm:hidden text-blue-400 ml-1">Edit</span>
+                        <span className="invisible absolute bottom-full left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 text-white text-center py-1 px-2 rounded text-xs whitespace-nowrap mb-1 opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-200 hidden sm:block">
+                          Edit Category
+                        </span>
                       </button>
                       <button
-                        className="p-2 rounded-lg hover:bg-red-900/50 transition-colors group tooltip-container"
+                        className="relative p-1.5 sm:p-2 rounded-lg hover:bg-red-900/50 transition-colors group flex items-center sm:block bg-red-900/30 sm:bg-transparent"
                         onClick={() => handleDeleteCategory(category._id)}
                         aria-label="Delete category"
                       >
-                        <Trash2 className="w-5 h-5 text-red-400 group-hover:text-red-300" />
-                        <span className="tooltip">Delete Category</span>
+                        <Trash2 className="w-4 h-4 sm:w-5 sm:h-5 text-red-400 group-hover:text-red-300" />
+                        <span className="text-xs sm:hidden text-red-400 ml-1">Delete</span>
+                        <span className="invisible absolute bottom-full left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 text-white text-center py-1 px-2 rounded text-xs whitespace-nowrap mb-1 opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-200 hidden sm:block">
+                          Delete Category
+                        </span>
                       </button>
                     </div>
                   </td>
@@ -492,69 +516,6 @@ const AdminCategoryBody = () => {
               ))}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* Mobile View */}
-      {categories.length > 0 && (
-        <div className="sm:hidden space-y-4">
-          {categories.map((category) => (
-            <div
-              key={category._id.toString()}
-              className="bg-[#212936] rounded-lg p-4 space-y-3 shadow-md"
-            >
-              <div className="flex items-center">
-                <div className="h-12 w-12 rounded-md overflow-hidden bg-gray-700 mr-3">
-                  {category.image ? (
-                    <img
-                      src={category.image}
-                      alt={category.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center">
-                      <Package className="text-gray-400 h-6 w-6" />
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-medium text-white">{category.name}</h3>
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-xs ${category.isActive
-                      ? 'bg-green-900/50 text-green-200'
-                      : 'bg-red-900/50 text-red-200'
-                      }`}
-                  >
-                    {category.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-2 text-white">
-                <div className="flex flex-col">
-                  <span className="text-gray-400 text-sm">Created</span>
-                  <span className="text-sm">{formatDate(category.createdAt)}</span>
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-3 pt-2 border-t border-gray-700">
-                <button
-                  className="p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors flex items-center"
-                  onClick={() => handleEditCategory(category)}
-                >
-                  <Pencil className="w-4 h-4 text-blue-400 mr-1" />
-                  <span className="text-sm text-blue-400">Edit</span>
-                </button>
-                <button
-                  className="p-2 rounded-lg bg-red-900/30 hover:bg-red-900/50 transition-colors flex items-center"
-                  onClick={() => handleDeleteCategory(category._id)}
-                >
-                  <Trash2 className="w-4 h-4 text-red-400 mr-1" />
-                  <span className="text-sm text-red-400">Delete</span>
-                </button>
-              </div>
-            </div>
-          ))}
         </div>
       )}
 
@@ -611,35 +572,6 @@ const AdminCategoryBody = () => {
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .tooltip-container {
-          position: relative;
-        }
-        
-        .tooltip {
-          visibility: hidden;
-          position: absolute;
-          bottom: 100%;
-          left: 50%;
-          transform: translateX(-50%);
-          background-color: rgba(0, 0, 0, 0.8);
-          color: white;
-          text-align: center;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 12px;
-          white-space: nowrap;
-          margin-bottom: 5px;
-          opacity: 0;
-          transition: opacity 0.2s;
-        }
-        
-        .tooltip-container:hover .tooltip {
-          visibility: visible;
-          opacity: 1;
-        }
-      `}</style>
     </div>
   );
 };

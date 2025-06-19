@@ -9,15 +9,16 @@ import { LOCALHOST_URL } from '../../../constants/constants';
 import { jwtDecode } from 'jwt-decode';
 import { io } from "socket.io-client";
 const socket = io("http://localhost:4000");
+import {Hostel} from '../../../interface/Hostel'
 
 
-interface Room {
-  _id: string;
-  bedShareRoom: string;
-  hostelname: string;
-  location: string;
-  photos: string[]
-}
+// interface Room {
+//   _id: string;
+//   bedShareRoom: string;
+//   hostelname: string;
+//   location: string;
+//   photos: string[]
+// }
 
 const UserLandingBody = () => {
   const location = useLocation();
@@ -25,7 +26,7 @@ const UserLandingBody = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [hostel, setHostel] = useState<Room[]>([]);
+  const [hostel, setHostel] = useState<Hostel[]>([]);
 
   const accessToken = queryParams?.get('accessToken');
   const refreshToken = queryParams?.get('refreshToken');
@@ -58,9 +59,9 @@ const UserLandingBody = () => {
       try {
         const response = await apiClient.get(`${LOCALHOST_URL}/user/getHostels`)
         console.log(response.data.response.hostels, "Response")
-        const hostelData = (response.data.response.hostels  as Room[]).slice(0, 3);
+        const hostelData = (response.data.response.hostels).slice(0, 3);
         setHostel(
-          hostelData.map((hostel) => ({
+          hostelData.map((hostel:Hostel) => ({
             _id: hostel._id,
             hostelname: hostel.hostelname,
             location: hostel.location,

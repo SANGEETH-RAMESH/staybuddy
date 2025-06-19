@@ -32,6 +32,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
+        console.log('hey')
         const refreshToken = store.getState().userAuth.refreshToken || localStorage.getItem("userRefreshToken");
         // console.log(localStorage.getItem('userAccessToken'),'AccessToken')
         console.log(localStorage.getItem('userRefreshToken'),'RefreshTOken')
@@ -59,6 +60,15 @@ apiClient.interceptors.response.use(
         localStorage.removeItem("userRefreshToken");
         window.location.href = "/user/login";
       }
+    }
+
+    if (error.response?.status === 403) {
+      console.warn("User is blocked. Logging out...");
+
+      store.dispatch(logout({ isLoggedIn: false }));
+      localStorage.removeItem("userAccessToken");
+      localStorage.removeItem("userRefreshToken");
+      window.location.href = "/user/login";
     }
 
     return Promise.reject(error);

@@ -1,6 +1,6 @@
 import axios from 'axios';
 import store from '../redux/store';
-import { loginSuccess } from '../redux/hostAuthSlice';
+import { loginSuccess, logout } from '../redux/hostAuthSlice';
 
 const hostapiClient = axios.create({
   baseURL: 'http://localhost:4000',
@@ -53,12 +53,20 @@ hostapiClient.interceptors.response.use(
         return hostapiClient(originalRequest);
       } catch (refreshError) {
         console.error(refreshError,'error');
-        // Clear tokens and redirect to login page
         localStorage.removeItem('hostToken');
         localStorage.removeItem('refreshToken');
         window.location.href = "/host/login";
       }
     }
+
+    if (error.response?.status === 403) {
+          console.warn("Host is blocked. Logging out...");
+    
+          store.dispatch(logout({ isLoggedIn: false }));
+          localStorage.removeItem("hostAccessToken");
+          localStorage.removeItem("hostRefreshToken");
+          window.location.href = "/host/login";
+        }
 
     return Promise.reject(error);
   }

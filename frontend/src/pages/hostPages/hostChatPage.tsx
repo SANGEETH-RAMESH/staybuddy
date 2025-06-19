@@ -6,7 +6,9 @@ const HostChatPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <HostHeader />
-      <HostChatBody />
+      <div className="mt-16">
+        <HostChatBody />
+      </div>
     </div>
   );
 };

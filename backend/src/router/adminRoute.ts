@@ -38,6 +38,6 @@ admin_route.get('/searchhost',adminAuthMiddleware,adminController.searchHost.bin
 admin_route.get('/searchhostel',adminAuthMiddleware,adminController.searchHostel.bind(adminController))
 admin_route.get('/reviews/:hostelId',adminAuthMiddleware,adminController.getReviews.bind(adminController))
 admin_route.get('/sales',adminAuthMiddleware,adminController.getSales.bind(adminController))
-
+admin_route.post('/refresh',adminController.validaterefreshToken.bind(adminController))
 
 export default admin_route;

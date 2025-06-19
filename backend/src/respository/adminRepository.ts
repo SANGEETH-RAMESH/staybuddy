@@ -22,8 +22,8 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
 
     async FindAdminByEmail(email: string): Promise<IUser | null> {
         try {
-            const user = await this.findByEmail({ email, isAdmin: true })
-            return user
+            const admin = await this.findByEmail({ email, isAdmin: true })
+            return admin
         } catch (error) {
             console.log(error)
             return null
@@ -38,7 +38,9 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
                 if (isAdmin) {
                     const adminPayload: adminPayload = {
                         _id: checkAdmin._id as Types.ObjectId,
-                        email: checkAdmin.email
+                        email: checkAdmin.email,
+                        name: checkAdmin.name,
+                        mobile: checkAdmin.mobile
                     }
                     const accessToken = generateAccessToken(adminPayload);
                     const refreshToken = generateRefreshToken(adminPayload)

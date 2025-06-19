@@ -11,6 +11,8 @@ import { IHostel } from "../model/hostelModel";
 import { ICategory } from "../model/categoryModel";
 import { IReview } from "../model/reviewModel";
 import { IOrder } from "../model/orderModel";
+import { generateAccessToken, generateRefreshToken, verifyToken } from "../Jwt/jwt";
+import { adminPayload } from "../types/commonInterfaces/tokenInterface";
 
 
 class adminService implements IAdminService {
@@ -18,7 +20,7 @@ class adminService implements IAdminService {
 
     }
 
-    async adminLogin(adminData: { email: string,password: string }): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
+    async adminLogin(adminData: { email: string, password: string }): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
         try {
             const response = await this.adminRepository.AdminVerifyLogin(adminData)
             return response
@@ -86,7 +88,7 @@ class adminService implements IAdminService {
             getHostels.forEach((hostel: IHostel) => {
                 const hostId = typeof hostel.host_id === 'string'
                     ? hostel.host_id
-                    : hostel.host_id?._id?.toString(); 
+                    : hostel.host_id?._id?.toString();
 
                 if (hostId) {
                     hostIdCounts[hostId] = (hostIdCounts[hostId] || 0) + 1;
@@ -300,11 +302,40 @@ class adminService implements IAdminService {
         }
     }
 
-    async getSales():Promise<IOrder[]| string | null>{
+    async getSales(): Promise<IOrder[] | string | null> {
         try {
             const response = await this.adminRepository.getSales();
             return response;
         } catch (error) {
+            return error as string
+        }
+    }
+
+    async validateRefreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | string> {
+        try {
+
+            const decoded = verifyToken(refreshToken)
+            if (typeof decoded === 'object' && decoded !== null && 'email' in decoded) {
+                const response = await this.adminRepository.FindAdminByEmail(decoded.email);
+                if (!response) {
+                    return "No User";
+                }
+                const adminPayload: adminPayload = {
+                    _id: new Types.ObjectId(response._id),
+                    name: response.name,
+                    email: response.email,
+                    mobile: response.mobile
+                }
+
+                const accessToken = generateAccessToken(adminPayload);
+                const newRefreshToken = generateRefreshToken(adminPayload);
+
+                return { accessToken, refreshToken: newRefreshToken };
+            }
+
+            return "Invalid Token";
+        } catch (error) {
+            console.log(error)
             return error as string
         }
     }

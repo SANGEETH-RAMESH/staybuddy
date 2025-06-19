@@ -37,5 +37,8 @@ export interface IUserService {
     checkWishlist(userId:string,hostelId:string):Promise<string>,
     getWishlist(userId:string):Promise<string | IWishlist[]>,
     deleteWishlist(userId:string): Promise<string>,
-    allHost(): Promise<IHost[] | string | null>
+    allHost(): Promise<IHost[] | string | null>,
+    sendNotification(notification:INotification):Promise<INotification | string | null>,
+    getOldNotification(userId:string):Promise<INotification [] | string | null>,
+    markAllRead(userId: string): Promise<string>
 }

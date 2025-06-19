@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { Send, Search, Plus, Paperclip, Image, FileText, X, Clock, Video, Phone } from 'lucide-react';
+import { Send, Search, Plus, Paperclip, Image, X, Clock, Video, ArrowLeft } from 'lucide-react';
 import dummy_profile from '../../../assets/dummy profile.png';
 import apiClient from '../../../services/apiClient';
 import { LOCALHOST_URL } from '../../../constants/constants';
@@ -76,8 +76,8 @@ const ChatApplication: React.FC = () => {
   const [showFileOptions, setShowFileOptions] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [onlineHosts, setOnlineHosts] = useState<string[]>([]);
+  const [isMobileView, setIsMobileView] = useState<boolean>(false);
   
-  // Video call states
   const [isCallActive, setIsCallActive] = useState<boolean>(false);
   const [isCallInitiator, setIsCallInitiator] = useState<boolean>(false);
   
@@ -92,6 +92,16 @@ const ChatApplication: React.FC = () => {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     selectedChatRef.current = selectedChat;
@@ -115,7 +125,7 @@ const ChatApplication: React.FC = () => {
     });
 
     socket.on("hostLoggedOut", (hostId: string) => {
-      console.log("🚪 Host logged out:", hostId);
+      console.log("Host logged out:", hostId);
       setOnlineHosts((prev) => prev.filter((id: string) => id !== hostId));
     });
 
@@ -269,6 +279,10 @@ const ChatApplication: React.FC = () => {
     socket.emit("old_message", { chatId: chat.id });
   };
 
+  const handleBackToChats = () => {
+    setSelectedChat(null);
+  };
+
   const handleFileSelect = (type: string) => {
     if (fileInputRef.current) {
       if (type === 'image') {
@@ -380,20 +394,19 @@ const ChatApplication: React.FC = () => {
     }
   };
 
-  // Video call functions
   const initiateVideoCall = () => {
     if (!selectedChat || !onlineHosts.includes(receiverId)) {
       alert('User is not online for video call');
       return;
     }
 
-    console.log('🎥 Initiating video call to:', selectedChat.name);
+    console.log('Initiating video call to:', selectedChat.name);
     setIsCallActive(true);
     setIsCallInitiator(true);
   };
 
   const handleEndCall = () => {
-    console.log('📞 Ending call');
+    console.log('Ending call');
     setIsCallActive(false);
     setIsCallInitiator(false);
   };
@@ -453,7 +466,7 @@ const ChatApplication: React.FC = () => {
         className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'} mb-3`}
       >
         <div
-          className={`max-w-[70%] p-3 rounded-lg ${isOwnMessage
+          className={`max-w-[85%] sm:max-w-[70%] p-2 sm:p-3 rounded-lg ${isOwnMessage
             ? 'bg-white border shadow-sm'
             : 'bg-green-500 text-white'
             }`}
@@ -468,7 +481,7 @@ const ChatApplication: React.FC = () => {
               />
             </div>
           ) : (
-            <p className="text-sm">{msg.message}</p>
+            <p className="text-xs sm:text-sm break-words">{msg.message}</p>
           )}
 
           <span className={`text-xs block mt-1 text-right ${isOwnMessage ? 'text-gray-500' : 'text-green-100'
@@ -487,10 +500,9 @@ const ChatApplication: React.FC = () => {
   };
 
   return (
-    <div className="flex h-[89svh] bg-white border rounded-lg shadow-md overflow-hidden">
-      {/* Chat List Sidebar */}
-      <div className="w-1/3 border-r bg-gray-50">
-        <div className="p-4 border-b">
+    <div className="flex h-[89vh] bg-white border rounded-lg shadow-md overflow-hidden">
+      <div className={`${isMobileView && selectedChat ? 'hidden' : 'block'} w-full md:w-1/3 border-r bg-gray-50`}>
+        <div className="p-3 sm:p-4 border-b">
           <div className="flex space-x-2">
             <div className="relative flex-grow">
               <input
@@ -498,38 +510,38 @@ const ChatApplication: React.FC = () => {
                 placeholder="Search chats"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full p-2 pl-8 border rounded-full focus:outline-none focus:ring-2 focus:ring-green-200"
+                className="w-full p-2 pl-8 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-green-200"
               />
-              <Search size={20} className="absolute left-2 top-3 text-gray-400" />
+              <Search size={16} className="absolute left-2 top-3 text-gray-400" />
             </div>
             <button
               onClick={() => setShowAddChatModal(true)}
-              className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-colors"
+              className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600 transition-colors flex-shrink-0"
               title="Add new chat"
             >
-              <Plus size={20} />
+              <Plus size={16} className="sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
 
-        <div className="overflow-y-auto h-[calc(100%-100px)]">
+        <div className="overflow-y-auto h-[calc(100%-80px)] sm:h-[calc(100%-100px)]">
           {filteredChats.map((chat) => (
             <div
               key={chat.id}
               onClick={() => handleSelectChat(chat, chat.receiverId)}
-              className={`flex items-center p-4 hover:bg-gray-100 cursor-pointer ${selectedChat?.id === chat.id ? 'bg-gray-200' : ''
+              className={`flex items-center p-3 sm:p-4 hover:bg-gray-100 cursor-pointer ${selectedChat?.id === chat.id ? 'bg-gray-200' : ''
                 }`}
             >
               <img
                 src={dummy_profile}
                 alt={chat.name}
-                className={`w-12 h-12 rounded-full mr-4 ${onlineHosts.includes(chat?.receiverId) ? 'border-2 border-green-500' : ''
+                className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full mr-3 sm:mr-4 flex-shrink-0 ${onlineHosts.includes(chat?.receiverId) ? 'border-2 border-green-500' : ''
                   }`}
               />
-              <div className="flex-grow">
-                <div className="flex justify-between">
-                  <h3 className="font-semibold">{chat.name}</h3>
-                  <span className="text-xs text-gray-500">
+              <div className="flex-grow min-w-0">
+                <div className="flex justify-between items-start">
+                  <h3 className="font-semibold text-sm sm:text-base truncate pr-2">{chat.name}</h3>
+                  <span className="text-xs text-gray-500 flex-shrink-0">
                     {new Date(chat.lastMessageTime).toLocaleTimeString([], {
                       hour: '2-digit',
                       minute: '2-digit',
@@ -537,21 +549,21 @@ const ChatApplication: React.FC = () => {
                     })}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <div className="text-sm text-gray-600 truncate flex items-center">
+                <div className="flex justify-between items-center mt-1">
+                  <div className="text-xs sm:text-sm text-gray-600 truncate flex items-center flex-grow min-w-0">
                     {chat?.type === 'image' ? (
                       <>
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        <span>Photo</span>
+                        <span className="truncate">Photo</span>
                       </>
                     ) : (
-                      <p>{chat.lastMessage}</p>
+                      <p className="truncate">{chat.lastMessage}</p>
                     )}
                   </div>
                   {chat.unreadCount > 0 && (
-                    <span className="bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    <span className="bg-green-500 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 flex items-center justify-center flex-shrink-0 ml-2">
                       {chat.unreadCount}
                     </span>
                   )}
@@ -562,24 +574,34 @@ const ChatApplication: React.FC = () => {
         </div>
       </div>
 
-      {/* Individual Chat Area */}
       {selectedChat && (
-        <div className="flex flex-col w-2/3">
-          {/* Chat Header */}
-          <div className="flex items-center justify-between p-4 bg-white border-b">
-            <div className="flex items-center">
-              <img src={dummy_profile} alt={selectedChat.name} className="w-10 h-10 rounded-full mr-4" />
-              <div>
-                <h2 className="font-semibold">{selectedChat.name}</h2>
-                <div className="flex items-center space-x-1.5 mt-0.5">
+        <div className={`flex flex-col ${isMobileView ? 'w-full' : 'w-2/3'}`}>
+          <div className="flex items-center justify-between p-3 sm:p-4 bg-white border-b">
+            <div className="flex items-center min-w-0 flex-grow">
+              {isMobileView && (
+                <button
+                  onClick={handleBackToChats}
+                  className="mr-2 p-1 hover:bg-gray-100 rounded-full flex-shrink-0"
+                >
+                  <ArrowLeft size={20} className="text-gray-600" />
+                </button>
+              )}
+              <img 
+                src={dummy_profile} 
+                alt={selectedChat.name} 
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full mr-2 sm:mr-4 flex-shrink-0" 
+              />
+              <div className="min-w-0 flex-grow">
+                <h2 className="font-semibold text-sm sm:text-base truncate">{selectedChat.name}</h2>
+                <div className="flex items-center space-x-1 sm:space-x-1.5 mt-0.5">
                   {onlineHosts.includes(selectedChat.receiverId) ? (
                     <>
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                      <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 bg-green-500 rounded-full animate-pulse"></div>
                       <span className="text-xs font-medium text-green-600">Online</span>
                     </>
                   ) : (
                     <>
-                      <Clock className="w-3 h-3 text-gray-400" />
+                      <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-400" />
                       <span className="text-xs text-gray-500">Offline</span>
                     </>
                   )}
@@ -587,49 +609,46 @@ const ChatApplication: React.FC = () => {
               </div>
             </div>
 
-            {/* Video Call Button */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 flex-shrink-0">
               <button
                 onClick={initiateVideoCall}
                 disabled={!onlineHosts.includes(selectedChat.receiverId)}
-                className={`p-2 rounded-full transition-colors ${
+                className={`p-1.5 sm:p-2 rounded-full transition-colors ${
                   onlineHosts.includes(selectedChat.receiverId)
                     ? 'bg-blue-500 hover:bg-blue-600 text-white'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
                 title={onlineHosts.includes(selectedChat.receiverId) ? 'Start video call' : 'User is offline'}
               >
-                <Video size={20} />
+                <Video size={16} className="sm:w-5 sm:h-5" />
               </button>
             </div>
           </div>
 
-          {/* Messages Container */}
           <div
             ref={messagesContainerRef}
-            className="flex-grow overflow-y-auto p-4 space-y-3"
+            className="flex-grow overflow-y-auto p-2 sm:p-4 space-y-2 sm:space-y-3"
           >
             {selectedChat?.messages?.map((msg, index) => renderMessage(msg, index))}
           </div>
 
-          {/* Message Input Area */}
-          <div className="bg-white p-4 border-t">
-            <div className="flex items-center space-x-2">
+          <div className="bg-white p-2 sm:p-4 border-t">
+            <div className="flex items-center space-x-1 sm:space-x-2">
               <div className="relative">
                 <button
                   onClick={() => setShowFileOptions(!showFileOptions)}
-                  className="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100"
+                  className="text-gray-500 hover:text-gray-700 p-1.5 sm:p-2 rounded-full hover:bg-gray-100"
                 >
-                  <Paperclip size={20} />
+                  <Paperclip size={16} className="sm:w-5 sm:h-5" />
                 </button>
 
                 {showFileOptions && (
-                  <div className="absolute bottom-full left-0 mb-2 bg-white border rounded-lg shadow-lg p-2 min-w-32">
+                  <div className="absolute bottom-full left-0 mb-2 bg-white border rounded-lg shadow-lg p-2 min-w-32 z-10">
                     <button
                       onClick={() => handleFileSelect('image')}
                       className="flex items-center space-x-2 w-full p-2 hover:bg-gray-100 rounded"
                     >
-                      <Image size={16} className="text-blue-500" />
+                      <Image size={14} className="text-blue-500" />
                       <span className="text-sm">Photo</span>
                     </button>
                   </div>
@@ -641,15 +660,15 @@ const ChatApplication: React.FC = () => {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder="Type a message"
-                className="flex-grow p-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-green-200"
+                className="flex-grow p-2 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-green-200"
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               />
 
               <button
                 onClick={handleSendMessage}
-                className="bg-green-500 text-white p-2 rounded-full hover:bg-green-600"
+                className="bg-green-500 text-white p-1.5 sm:p-2 rounded-full hover:bg-green-600 flex-shrink-0"
               >
-                <Send size={20} />
+                <Send size={16} className="sm:w-5 sm:h-5" />
               </button>
             </div>
           </div>
@@ -663,10 +682,9 @@ const ChatApplication: React.FC = () => {
         </div>
       )}
 
-      {/* Add Chat Modal */}
       {showAddChatModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96 max-h-96">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-md max-h-96">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Add New Chat</h3>
               <button
@@ -686,14 +704,14 @@ const ChatApplication: React.FC = () => {
                 placeholder="Search hosts"
                 value={searchUsers}
                 onChange={(e) => setSearchUsers(e.target.value)}
-                className="w-full p-2 pl-8 border rounded-full focus:outline-none focus:ring-2 focus:ring-green-200"
+                className="w-full p-2 pl-8 text-sm border rounded-full focus:outline-none focus:ring-2 focus:ring-green-200"
               />
               <Search size={16} className="absolute left-2 top-3 text-gray-400" />
             </div>
 
             <div className="max-h-60 overflow-y-auto">
               {filteredUsers.length === 0 ? (
-                <p className="text-gray-500 text-center py-4">No hosts found</p>
+                <p className="text-gray-500 text-center py-4 text-sm">No hosts found</p>
               ) : (
                 filteredUsers.map((user) => (
                   <div
@@ -704,12 +722,12 @@ const ChatApplication: React.FC = () => {
                     <img
                       src={user.avatar || dummy_profile}
                       alt={user.name}
-                      className="w-10 h-10 rounded-full mr-3"
+                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full mr-3 flex-shrink-0"
                     />
-                    <div>
-                      <h4 className="font-medium">{user.name}</h4>
+                    <div className="min-w-0 flex-grow">
+                      <h4 className="font-medium text-sm sm:text-base truncate">{user.name}</h4>
                       {user.email && (
-                        <p className="text-sm text-gray-500">{user.email}</p>
+                        <p className="text-xs sm:text-sm text-gray-500 truncate">{user.email}</p>
                       )}
                     </div>
                   </div>
@@ -720,7 +738,6 @@ const ChatApplication: React.FC = () => {
         </div>
       )}
 
-      {/* Video Call Component */}
       {isCallActive && selectedChat && (
         <VideoCall
           socket={socket}

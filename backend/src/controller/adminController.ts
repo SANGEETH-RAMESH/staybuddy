@@ -417,6 +417,16 @@ class adminController {
             res.status(500).json({ message: error })
         }
     }
+
+    async validaterefreshToken(req:Request,res:Response):Promise<void>{
+        try {
+            const {refreshToken} = req.body;
+            const response = await this.adminService.validateRefreshToken(refreshToken);
+            res.status(200).json({message:response});
+        } catch (error) {
+            res.status(500).json({message:error})
+        }
+    }
 }
 
 export default adminController

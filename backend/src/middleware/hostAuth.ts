@@ -17,15 +17,18 @@ const hostAuthMiddleware = async (req: Request, res: Response, next: NextFunctio
     // console.log("Token found, verifying...");
 
     try {
-        // Verify the token
         const decoded = jwt.verify(token, JWT_SECRET) as hostPayload;
         // console.log("Decoded Token:", decoded);
 
         const host = await Host.findById(decoded._id);
 
         if (!host) {
-            res.status(404).json({ message: "User not found" });
+            res.status(404).json({ message: "Host not found" });
             return;
+        }
+        if(host.isBlock){
+            res.status(403).json({ message: "Host is blocked" });
+            return
         }
         // console.log('hey')
         req.customHost = decoded;

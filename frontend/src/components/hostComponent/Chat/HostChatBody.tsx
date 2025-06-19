@@ -1,63 +1,65 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Search, UserPlus, Settings, Bell, Loader2, Clock, Paperclip, Image, FileText, X, Download, Video } from 'lucide-react';
-// import { useParams } from 'react-router-dom';
+import { Send, Search, UserPlus, Settings, Bell, Loader2, Clock, Paperclip, Image, X,  Video } from 'lucide-react';
 import hostapiClient from '../../../services/hostapiClient';
 import dummy_profile from '../../../assets/dummy profile.png'
 import { LOCALHOST_URL } from '../../../constants/constants';
 import { io, Socket } from 'socket.io-client';
 import VideoCall from '../../commonComponents/VideoCall'
+import { Message } from '../../../interface/Message';
+import { User } from '../../../interface/User';
+import { Chats } from '../../../interface/Chats';
 
-type Messages = {
-  senderId: string;
-  content: string;
-  timestamp: string;
-  message: string;
-  messageType?: 'text' | 'image' | 'document';
-  fileName?: string;
-  fileSize?: number;
-  fileUrl?: string;
-  type: string
-};
+// type Messages = {
+//   senderId: string;
+//   content: string;
+//   timestamp: string;
+//   message: string;
+//   messageType?: 'text' | 'image' | 'document';
+//   fileName?: string;
+//   fileSize?: number;
+//   fileUrl?: string;
+//   type: string
+// };
 
-interface Message {
-  chatId: string;
-  message: string;
-  senderId: string;
-  receiverId: string;
-  timestamp: string;
-  isRead: boolean;
-  type?: 'text' | 'image' | 'document';
-  fileName?: string;
-  fileSize?: number;
-  fileUrl?: string;
-}
+// interface Message {
+//   chatId: string;
+//   message: string;
+//   senderId: string;
+//   receiverId: string;
+//   timestamp: string;
+//   isRead: boolean;
+//   type?: 'text' | 'image' | 'document';
+//   fileName?: string;
+//   fileSize?: number;
+//   fileUrl?: string;
+// }
 
-type User = {
-  _id: string;
-  name: string;
-  email: string;
-};
+// type User = {
+//   _id: string;
+//   name: string;
+//   email: string;
+// };
 
-type Chats = {
-  _id: string;
-  name: string;
-  participant1: User;
-  participant2: string;
-  receiverId: string;
-  latestMessage?: string;
-  updatedAt?: string;
-  unreadCount: number;
-  messages: Messages[];
-  latestMessageTime: string;
-  type: string;
-};
+// type Chats = {
+//   _id: string;
+//   name: string;
+//   participant1: User;
+//   participant2: string;
+//   receiverId: string;
+//   latestMessage?: string;
+//   updatedAt?: string;
+//   unreadCount: number;
+//   messages: Messages[];
+//   latestMessageTime: string;
+//   type: string;
+// };
 
 const socket: Socket = io('http://localhost:4000')
 
 const HostChatBody = () => {
   const [chats, setChats] = useState<Chats[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chats | null>(null);
-  const [messages, setMessages] = useState<Messages[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [hostId, setHostId] = useState<string>('')
   const [receiverId, setReceiverId] = useState<string>('')
@@ -123,21 +125,9 @@ const HostChatBody = () => {
     });
   };
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
+  
 
-  const getFileIcon = (fileName: string) => {
-    const extension = fileName.split('.').pop()?.toLowerCase();
-    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension || '')) {
-      return <Image size={16} />;
-    }
-    return <FileText size={16} />;
-  };
+  
 
 
   useEffect(() => {
@@ -194,6 +184,7 @@ const HostChatBody = () => {
   }, [])
 
   const initiateVideoCall = () => {
+    console.log(selectedChat,'chhatttt')
     if (!selectedChat || !onlineUser.includes(receiverId)) {
       console.log(selectedChat, !onlineUser.includes(receiverId))
       alert('User is not online for video call');
@@ -246,28 +237,8 @@ const HostChatBody = () => {
           console.log(chats, 'Chattt')
           // setChats(chats)
         })
-        // const newChat: Chat = {
-        //   id: res.data.data._id,
-        //   name: selectedUser.name,
-        //   lastMessage: "No messages yet",
-        //   receiverId: selectedUser._id,
-        //   lastMessageTime: "",
-        //   unreadCount: 0,
-        //   messages: [],
-        // };
-        // setChats(prev => [...prev, newChat]);
-        // setSelectedChat(newChat);
-        // setReceiverId(selectedUser._id);
-        // setShowAddChatModal(false);
-        // setSearchUsers('');
-
-        // socket.emit('join_room', newChat.id);
+       
       }
-
-
-
-
-
     } catch (error) {
       console.error('Error creating new chat:', error);
       alert('Failed to create chat. Please try again.');
@@ -278,11 +249,8 @@ const HostChatBody = () => {
     const fetchChats = async () => {
       try {
         const response = await hostapiClient.get(`${LOCALHOST_URL}/chat/getHostChat`)
-        // console.log(response.data.data)
         const chatData = Array.isArray(response.data.data) ? response.data.data : [response.data.data]
         const chatss = chatData.map((chat: Chats) => {
-          // console.log(chat, 'Daa');
-
           return {
             _id: chat._id,
             name: chat.participant1.name,
@@ -434,11 +402,7 @@ const HostChatBody = () => {
         isRead: false,
         type: messageType,
       };
-
-      // console.log('Sending message through socket:', message);
-
       socket.emit('send_message', message);
-
       setSelectedChat((prevChat) => {
         if (!prevChat) return null;
 
@@ -447,23 +411,7 @@ const HostChatBody = () => {
           messages: [...prevChat.messages, message],
         } as Chats;
       });
-
-      // setChats(prevChats =>
-      //   prevChats.map(chat => {
-      //     console.log("chat._id:", chat._id, "selectedChat._id:", selectedChat._id);
-
-      //     return chat._id === selectedChat._id
-      //       ? {
-      //         ...chat,
-      //         latestMessage: message.message,
-      //         latestMessageTime: message.timestamp,
-      //       }
-      //       : chat;
-      //   })
-      // );
-
       setChats(prevChats => {
-        // First, update the specific chat
         const updatedChats = prevChats.map(chat =>
           chat._id === selectedChat._id
             ? {
@@ -473,8 +421,6 @@ const HostChatBody = () => {
             }
             : chat
         );
-
-        // Then sort by latest lastMessageTime (newest first)
         const sortedChats = [...updatedChats].sort((a, b) => {
           const timeA = new Date(a.latestMessageTime || 0).getTime();
           const timeB = new Date(b.latestMessageTime || 0).getTime();
@@ -483,28 +429,6 @@ const HostChatBody = () => {
 
         return sortedChats;
       });
-
-      // setChats(prevChats => {
-      //   return prevChats.map(chat => {
-      //     console.log(chat._id, selectedChat._id)
-      //     console.log(message, 'Message')
-      //     if (chat._id === selectedChat._id) {
-      //       console.log(message.message, 'dfs')
-      //       const updatedChat = {
-      //         ...chat,
-      //         lastMessage: message.message,
-      //         lastMessageTime: new Date(message.timestamp).toLocaleTimeString(),
-      //       };
-      //       console.log("✅ Chat updated:", updatedChat);
-      //       return updatedChat;
-      //     } else {
-      //       console.log("⏭️ Chat not matched:", chat._id);
-      //       return chat;
-      //     }
-      //   });
-      // });
-
-      // Reset form
       setNewMessage('');
       handleRemoveFile();
       setIsUploading(false);
@@ -515,10 +439,8 @@ const HostChatBody = () => {
       setIsUploading(false);
     }
   };
-
-  const renderMessage = (msg: Messages, index: number) => {
+  const renderMessage = (msg: Message, index: number) => {
     const isOwn = msg.senderId === hostId;
-    // console.log(msg,'message')
     return (
       <div
         key={index}
@@ -530,7 +452,6 @@ const HostChatBody = () => {
             : 'bg-green-500 text-white'
             }`}
         >
-          {/* Render based on message type */}
           {msg.messageType === 'image' && msg.fileUrl ? (
             <div className="mb-2">
               <div className="relative group">
@@ -539,7 +460,6 @@ const HostChatBody = () => {
                   alt="Shared image"
                   className="max-w-full h-auto rounded-lg cursor-pointer hover:opacity-95 transition-opacity max-h-64 object-contain"
                   onClick={() => {
-                    // Create a new window to display the full image
                     const newWindow = window.open('', '_blank');
                     if (newWindow) {
                       newWindow.document.write(`
@@ -561,40 +481,8 @@ const HostChatBody = () => {
                 <p className="text-xs mt-1 opacity-75">{msg.fileName}</p>
               )}
             </div>
-          ) : msg.messageType === 'document' && msg.fileUrl ? (
-            <div className="mb-2">
-              <div
-                className={`flex items-center p-2 rounded-lg cursor-pointer transition-colors ${isOwn ? 'bg-gray-100 hover:bg-gray-200' : 'bg-green-400 hover:bg-green-300'
-                  }`}
-                onClick={() => {
-                  // Create download link for document
-                  const link = document.createElement('a');
-                  link.href = msg.fileUrl!;
-                  link.download = msg.fileName || 'document';
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                }}
-              >
-                <div className="flex-shrink-0 mr-3">
-                  {getFileIcon(msg.fileName || '')}
-                </div>
-                <div className="flex-grow min-w-0">
-                  <p className={`text-sm font-medium truncate ${isOwn ? 'text-gray-900' : 'text-white'}`}>
-                    {msg.fileName || 'Document'}
-                  </p>
-                  {msg.fileSize && (
-                    <p className={`text-xs ${isOwn ? 'text-gray-500' : 'text-green-100'}`}>
-                      {formatFileSize(msg.fileSize)}
-                    </p>
-                  )}
-                </div>
-                <Download size={16} className={`ml-2 ${isOwn ? 'text-gray-400' : 'text-white'}`} />
-              </div>
-            </div>
           ) : null}
 
-          {/* Text message */}
           {msg.message && (
             msg.type === 'image' ? (
               <img src={msg.message} alt="Message image" className="max-w-full h-auto" />
@@ -603,7 +491,6 @@ const HostChatBody = () => {
             )
           )}
 
-          {/* Timestamp */}
           <span className={`text-xs block mt-1 text-right ${isOwn ? 'text-gray-500' : 'text-green-100'
             }`}>
             {new Date(msg.timestamp).toLocaleTimeString([], {
@@ -616,12 +503,9 @@ const HostChatBody = () => {
       </div>
     );
   };
-
   return (
     <div className="flex h-screen max-h-[600px] bg-white border rounded-lg shadow-lg overflow-hidden">
-      {/* Chat List Sidebar */}
       <div className="w-1/3 border-r flex flex-col">
-        {/* Host Header */}
         <div className="bg-green-600 text-white p-4 flex justify-between items-center">
           <h2 className="font-bold text-lg">Host Messages</h2>
           <div className="flex space-x-2">
@@ -629,8 +513,6 @@ const HostChatBody = () => {
             <Settings size={20} className="cursor-pointer" />
           </div>
         </div>
-
-        {/* Search Bar */}
         <div className="p-4 border-b">
           <div className="relative">
             <input
@@ -644,12 +526,10 @@ const HostChatBody = () => {
           </div>
         </div>
 
-        {/* Chat List */}
         <div className="overflow-y-auto flex-1">
           {chats?.length > 0 ? (
             chats.map((chat: Chats) => {
               console.log(chat);
-
               return (
                 <div
                   key={chat._id}
@@ -703,8 +583,6 @@ const HostChatBody = () => {
             <div className="p-4 text-center text-gray-500">No conversations found</div>
           )}
         </div>
-
-        {/* New Chat Button */}
         <div className="p-4 border-t">
           <button
             onClick={() => setShowAddChatModal(true)}
@@ -714,19 +592,12 @@ const HostChatBody = () => {
           </button>
         </div>
       </div>
-
-      {/* Chat Area */}
       <div className="flex-1 flex flex-col">
         {selectedChat ? (
           <>
-            {/* Chat Header */}
             <div className="flex items-center p-4 bg-white border-b">
-              {/* <img src={selectedChat?.profileImage || dummy_profile} alt={selectedChat.name} className="w-10 h-10 rounded-full mr-4" /> */}
               <div>
                 <h2 className="font-semibold">{selectedChat.name}</h2>
-                {/* <p className="text-sm text-gray-500">
-                  {onlineUser.includes(selectedChat._id) ? 'Online' : 'last seen today 10:30am'}
-                </p> */}
               </div>
             </div>
             <div className="p-4 border-b flex justify-between items-center bg-white">
@@ -783,42 +654,8 @@ const HostChatBody = () => {
                 </div>
               )}
             </div>
-
-            {/* File Preview */}
-            {selectedFile && (
-              <div className="p-4 border-t bg-gray-50">
-                <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
-                  <div className="flex items-center space-x-3">
-                    {filePreview ? (
-                      <img src={filePreview} alt="Preview" className="w-12 h-12 object-cover rounded" />
-                    ) : (
-                      <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center">
-                        {getFileIcon(selectedFile.name)}
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 truncate max-w-[200px]">
-                        {selectedFile.name}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {formatFileSize(selectedFile.size)}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleRemoveFile}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X size={20} />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Message Input */}
             <div className="p-4 border-t bg-white">
               <div className="flex items-center space-x-2">
-                {/* File attachment button */}
                 <div className="relative">
                   <button
                     onClick={() => setShowFileMenu(!showFileMenu)}
@@ -827,7 +664,6 @@ const HostChatBody = () => {
                     <Paperclip size={20} />
                   </button>
 
-                  {/* File menu */}
                   {showFileMenu && (
                     <div className="absolute bottom-full mb-2 left-0 bg-white border rounded-lg shadow-lg p-2 min-w-[120px]">
                       <button
@@ -839,16 +675,6 @@ const HostChatBody = () => {
                       >
                         <Image size={16} />
                         <span>Image</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          fileInputRef.current?.click();
-                          setShowFileMenu(false);
-                        }}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100 rounded flex items-center space-x-2"
-                      >
-                        <FileText size={16} />
-                        <span>Document</span>
                       </button>
                     </div>
                   )}
@@ -880,14 +706,7 @@ const HostChatBody = () => {
               </div>
             </div>
 
-            {/* Hidden file inputs */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              onChange={handleFileSelect}
-              className="hidden"
-              accept=".pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx"
-            />
+            
             <input
               ref={imageInputRef}
               type="file"
@@ -943,9 +762,9 @@ const HostChatBody = () => {
               {filteredUsers.length === 0 ? (
                 <p className="text-gray-500 text-center py-4">No Users found</p>
               ) : (
-                filteredUsers.map((user) => (
+                filteredUsers.map((user,index) => (
                   <div
-                    key={user._id}
+                    key={index}
                     onClick={() => handleAddNewChat(user)}
                     className="flex items-center p-3 hover:bg-gray-100 cursor-pointer rounded"
                   >

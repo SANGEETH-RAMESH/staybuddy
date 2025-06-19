@@ -12,19 +12,19 @@ export interface AuthenticatedUser {
     mobile: string;
     iat: number;
     exp: number;
-    displayName?:string
+    displayName?: string
 }
 
 // Extend the Express Request interface to include the user
 declare module "express-serve-static-core" {
     interface Request {
-        user?: AuthenticatedUser; 
+        user?: AuthenticatedUser;
     }
 }
 
 const userAuthMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.header('Authorization')?.split(' ')[1];
-    console.log(token,'tokennns')
+    console.log(token, 'tokennns')
     if (!token) {
         res.status(401).json({ message: "No token found" });
         return;
@@ -34,11 +34,16 @@ const userAuthMiddleware = async (req: Request, res: Response, next: NextFunctio
         const decoded = jwt.verify(token, JWT_SECRET) as AuthenticatedUser;
 
         const user = await User.findById(decoded._id);
-        console.log(user,'usser')
+        console.log(user, 'usser')
 
         if (!user) {
             res.status(404).json({ message: "User not found" });
             return;
+        }
+
+        if (user.isBlock) {
+            res.status(403).json({ message: "User is blocked" });
+            return
         }
         req.user = decoded;
         next();

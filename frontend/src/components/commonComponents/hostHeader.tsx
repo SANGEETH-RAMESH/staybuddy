@@ -264,9 +264,9 @@ const HostHeader = () => {
                   <Bell className="w-5 h-5" />
                 )}
                 <span className="ml-2 text-sm">Notification</span>
-                {!isRead && (
+                {!isRead && readCount>0  && (
                   <span className="absolute -top-0.5 sm:-top-1 -right-0.5 sm:-right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white font-bold">
-                    <span className="text-[8px] sm:text-[10px]">{readCount}</span>
+                    <span className="text-[8px] sm:text-[10px]">{readCount>0?readCount:''}</span>
                   </span>
                 )}
               </button>

@@ -23,36 +23,36 @@ const AdminAddCategoryPage = () => {
     image: ''
   });
 
-  // Validate form fields
-  const validateForm = () => {
-    let valid = true;
-    const newErrors = {
-      name: '',
-      // description: '',
-      image: ''
-    };
+  // // Validate form fields
+  // const validateForm = () => {
+  //   let valid = true;
+  //   const newErrors = {
+  //     name: '',
+  //     // description: '',
+  //     image: ''
+  //   };
 
-    if (!name.trim()) {
-      newErrors.name = 'Category name is required';
-      valid = false;
-    } else if (name.length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
-      valid = false;
-    }
+  //   if (!name.trim()) {
+  //     newErrors.name = 'Category name is required';
+  //     valid = false;
+  //   } else if (name.length < 2) {
+  //     newErrors.name = 'Name must be at least 2 characters';
+  //     valid = false;
+  //   }
 
-    // if (description && description.length > 500) {
-    //   newErrors.description = 'Description must be less than 500 characters';
-    //   valid = false;
-    // }
+  //   // if (description && description.length > 500) {
+  //   //   newErrors.description = 'Description must be less than 500 characters';
+  //   //   valid = false;
+  //   // }
 
-    if (!imageFile) {
-      newErrors.image = 'Category image is required';
-      valid = false;
-    }
+  //   if (!imageFile) {
+  //     newErrors.image = 'Category image is required';
+  //     valid = false;
+  //   }
 
-    setErrors(newErrors);
-    return valid;
-  };
+  //   setErrors(newErrors);
+  //   return valid;
+  // };
 
   // Handle image upload
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -195,7 +195,7 @@ const AdminAddCategoryPage = () => {
           {/* Page Header with Back Button */}
           <div className="flex items-center mb-6">
             <button 
-              onClick={() => navigate('/admin/categories')}
+              onClick={() => navigate('/admin/category')}
               className="flex items-center text-gray-300 hover:text-white mr-4 transition-colors"
               aria-label="Go back"
             >
