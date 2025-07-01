@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Check, X } from 'lucide-react';
 // import axios from 'axios';
-import { LOCALHOST_URL } from '../../../constants/constants';
-import apiClient from '../../../services/apiClient';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+import createApiClient from '../../../services/apiClient';
+const userApiClient = createApiClient('user');
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
@@ -63,7 +64,7 @@ const ChangePasswordBody = () => {
     e.preventDefault();
     if (formData.newPassword === formData.confirmPassword) {
       try {
-        const response = await apiClient.patch(`${LOCALHOST_URL}/user/changepassword`, formData);
+        const response = await userApiClient.patch(`${apiUrl}/user/changepassword`, formData);
         console.log("Response",response)
         if (response.data.message === 'Current password does not match') {
           setErrors((prev) => ({ ...prev, currentPassword: 'Current password does not match' }));

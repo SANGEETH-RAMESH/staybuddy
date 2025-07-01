@@ -5,10 +5,11 @@ import { Package, ArrowLeft, Save, Loader2, ToggleLeft, ToggleRight, Info, Alert
 import AdminHeader from '../../commonComponents/adminHeader';
 import AdminSidebar from '../../commonComponents/adminSidebar';
 import adminApiClient from '../../../services/adminApiClient';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
 const AdminEditCategoryPage = () => {
     const navigate = useNavigate();
-    const { id } = useParams(); // Get category ID from URL
+    const { id } = useParams(); 
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     // Form state
@@ -20,12 +21,12 @@ const AdminEditCategoryPage = () => {
         name: ''
     });
 
-    // Fetch category data on component mount
+    
     useEffect(() => {
         const fetchCategoryData = async () => {
             try {
                 setIsLoading(true);
-                const response = await adminApiClient.get(`http://localhost:4000/admin/getCategory/${id}`);
+                const response = await adminApiClient.get(`${apiUrl}/admin/getCategory/${id}`);
                 console.log(response.data.message)
                 const categoryData = response.data.message;
 
@@ -49,31 +50,9 @@ const AdminEditCategoryPage = () => {
         }
     }, [id, navigate]);
 
-    // Validate form fields
-    // const validateForm = () => {
-    //     let valid = true;
-    //     const newErrors = {
-    //         name: ''
-    //     };
-
-    //     if (!name.trim()) {
-    //         newErrors.name = 'Category name is required';
-    //         valid = false;
-    //     } else if (name.length < 2) {
-    //         newErrors.name = 'Name must be at least 2 characters';
-    //         valid = false;
-    //     }
-
-    //     setErrors(newErrors);
-    //     return valid;
-    // };
-
+    
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-
-        // if (!validateForm()) return;
-
-        // Proceed with submission
 
         setIsSubmitting(true);
 

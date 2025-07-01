@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { Mail, Lock, ArrowRight } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { loginSuccess } from '../../../redux/userAuthSlice';
 import { LoginValues } from '../../../interface/Login';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
 // interface LoginValues {
 //     email: string;
@@ -21,54 +22,9 @@ const UserLoginBody = () => {
         password: '',
     });
 
+    const [showPassword, setShowPassword] = useState(false);
+
     const [errors, setErrors] = useState<Partial<LoginValues>>({});
-    // const [validFields, setValidFields] = useState<Partial<Record<keyof LoginValues, boolean>>>({});
-
-    // const validateEmail = (email: string): string | null => {
-    //     if (!email.trim()) {
-    //         return 'Email is required';
-    //     }
-    //     const emailRegex = /^[a-zA-Z0-9][a-zA-Z0-9._%+-]*@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    //     if (!emailRegex.test(email)) {
-    //         return 'Invalid email format';
-    //     }
-    //     return null;
-    // };
-
-    // const validatePassword = (password: string): string | null => {
-    //     if (!password) {
-    //         return 'Password is required';
-    //     }
-    //     if (password.length < 6) {
-    //         return 'Password must be at least 6 characters';
-    //     }
-    //     return null;
-    // };
-
-    // const validateForm = (values: LoginValues): Partial<LoginValues> => {
-    //     const validationErrors: Partial<LoginValues> = {};
-
-    //     const emailError = validateEmail(values.email);
-    //     if (emailError) validationErrors.email = emailError;
-
-    //     const passwordError = validatePassword(values.password);
-    //     if (passwordError) validationErrors.password = passwordError;
-
-    //     return validationErrors;
-    // };
-
-    // Helper function to get input className based on validation state
-    // const getInputClassName = (fieldName: keyof LoginValues) => {
-    //     const baseClass = "w-full pl-9 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all text-sm";
-
-    //     if (errors[fieldName]) {
-    //         return `${baseClass} border-red-300 focus:ring-red-500 bg-red-50`;
-    //     } else if (validFields[fieldName]) {
-    //         return `${baseClass} border-green-300 focus:ring-green-500 bg-green-50`;
-    //     } else {
-    //         return `${baseClass} border-gray-300 focus:ring-blue-500`;
-    //     }
-    // };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -80,45 +36,31 @@ const UserLoginBody = () => {
             delete updated[name as keyof LoginValues];
             return updated;
         });
-
-        // setValidFields(prev => ({
-        //     ...prev,
-        //     [name as keyof LoginValues]: value.trim() !== ""
-        // }));
     };
 
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         try {
-            // Validate form values using JavaScript validation
-            // const validationErrors = validateForm(formValues);
-
-            // if (Object.keys(validationErrors).length > 0) {
-            //     setErrors(validationErrors);
-            //     return;
-            // }
-
-            // // Clear errors if validation passes
-            // setErrors({});
-
-            const response = await axios.post("http://localhost:4000/user/verifylogin", { ...formValues });
+            console.log(import.meta.env);
+            console.log(apiUrl, 'api')
+            const response = await axios.post(`${apiUrl}/user/verifylogin`, { ...formValues });
             console.log(response.data.message, 'response');
 
             const { message, accessToken, refreshToken } = response.data;
             console.log(message, "MEssage")
 
             if (response.data.message === 'Invalid password') {
-                // toast.error('Invalid password', { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
-                setErrors((prev)=>({
+
+                setErrors((prev) => ({
                     ...prev,
-                    password:'Invalid password'
+                    password: 'Invalid password'
                 }))
             } else if (response.data.message === 'Invalid email') {
-                // toast.error('Invalid email', { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
-                setErrors((prev)=>({
+
+                setErrors((prev) => ({
                     ...prev,
-                    email:'Invalid email'
+                    email: 'Invalid email'
                 }))
             } else if (response.data.message === 'User is blocked') {
                 toast.error("User is blocked", { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
@@ -142,7 +84,7 @@ const UserLoginBody = () => {
                 const { message, errors } = axiosError.response.data;
 
                 if (errors) {
-                    setErrors(errors); 
+                    setErrors(errors);
 
                     return;
                 }
@@ -210,15 +152,23 @@ const UserLoginBody = () => {
                                 <div className="relative">
                                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                     <input
-                                        type="password"
+                                        type={showPassword ? "text" : "password"}
                                         name="password"
                                         value={formValues.password}
                                         onChange={handleChange}
                                         placeholder="Enter your password"
-                                        className='w-full pl-9 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all text-sm'
+                                        className="w-full pl-9 pr-10 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all text-sm"
                                     />
+                                    <div
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </div>
                                 </div>
-                                {errors.password && <div className="text-red-500 text-xs mt-1">{errors.password}</div>}
+                                {errors.password && (
+                                    <div className="text-red-500 text-xs mt-1">{errors.password}</div>
+                                )}
                             </div>
 
                             <div className="flex justify-end">

@@ -4,10 +4,10 @@ import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { OtpValues } from "../../../interface/Otp";
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
 const SignupOtpBody = () => {
   const [otp, setOtp] = useState("");
-  // const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(59); 
   const [canResend, setCanResend] = useState(false); 
@@ -19,13 +19,7 @@ const SignupOtpBody = () => {
   const mobile = location.state.mobile;
   const password = location.state.password
 
-  // useEffect(() => {
-  //   const queryParams = new URLSearchParams(window.location.search);
-  //   const emailFromUrl = queryParams.get("email");
-  //   if (emailFromUrl) {
-  //     setEmail(emailFromUrl);
-  //   }
-  // }, []);
+
 
   const [errors, setErrors] = useState<Partial<OtpValues>>({});
 
@@ -67,7 +61,7 @@ const SignupOtpBody = () => {
     try {
       const numericOtp = Number(otp);
       console.log(email, otp, "Sdfdsfs");
-      const response = await axios.post("http://localhost:4000/user/verifyotp", {
+      const response = await axios.post(`${apiUrl}/user/verifyotp`, {
         email,
         otp: numericOtp,
       });
@@ -79,22 +73,13 @@ const SignupOtpBody = () => {
           ...prev,
           otp:"Invalid OTP"
         }))
-        // toast.error("Invalid OTP. Please try again!");
+       
       } else if (response.data.message === "otp expired") {
         setErrors((prev)=>({
           ...prev,
           otp:'Otp expired'
         }))
-        // toast.error("Otp expired", {
-        //   style: { backgroundColor: "white", color: "blue" },
-        //   icon: (
-        //     <i
-        //       className="fas fa-exclamation-circle"
-        //       style={{ color: "blue" }}
-        //     />
-        //   ),
-        //   progressStyle: { backgroundColor: "blue" },
-        // });
+       
       }
     } catch (error) {
       const axiosError = error as any;

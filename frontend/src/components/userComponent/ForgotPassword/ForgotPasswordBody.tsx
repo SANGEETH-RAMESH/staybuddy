@@ -5,6 +5,9 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { forgotPasswordValues } from '../../../interface/forgotPassword';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+
+
 
 const ForgotPasswordBody = () => {
     const navigate = useNavigate();
@@ -23,7 +26,7 @@ const ForgotPasswordBody = () => {
             // await validationSchema.validate({ email: emailValue });
 
             // Send API request
-            const response = await axios.post('http://localhost:4000/user/forgotpassword', {
+            const response = await axios.post(`${apiUrl}/user/forgotpassword`, {
                 email: emailValue,
             });
 

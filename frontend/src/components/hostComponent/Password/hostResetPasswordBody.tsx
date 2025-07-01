@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import  { useEffect, useState } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import lock_icon from "../../../assets/lock.png";
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { changePasswordValues } from "../../../interface/ChangePassword";
 
 const HostResetPasswordBody = () => {
@@ -25,15 +26,13 @@ const HostResetPasswordBody = () => {
   }, [errors]);
 
   const handleSubmit = async () => {
-    // if (password === confirmPassword) {
       setLoading(true);
       try {
         const response = await axios.post(
-          "http://localhost:4000/host/resetPassword",
+          `${apiUrl}/host/resetPassword`,
           { email, password, confirmPassword }
         );
         if (response.data.message === "Same password") {
-          // toast.error("Cannot use existing password");
           setErrors((prev)=>({
             ...prev,
             newPassword:"Cannot use existing password"

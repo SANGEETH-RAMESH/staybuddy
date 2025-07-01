@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { X, Check, Heart, ShoppingCart, ArrowLeft, Trash2, Eye } from 'lucide-react';
-import apiClient from '../../../services/apiClient';
-import { LOCALHOST_URL } from '../../../constants/constants';
+import { X, Check, Heart, ArrowLeft, Trash2, Eye } from 'lucide-react';
+import createApiClient from '../../../services/apiClient';
+const userApiClient = createApiClient('user');
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
 import toast from 'react-hot-toast';
 
 export interface WishlistItem {
@@ -23,9 +23,9 @@ export default function WishlistPage() {
     const fetchWishlistData = async () => {
       try {
         setLoading(true);
-        const response = await apiClient.get(`${LOCALHOST_URL}/user/getWishlist`);
+        const response = await userApiClient.get(`${apiUrl}/wishlist/getWishlist`);
         console.log(response.data.message, "message");
-        const data = response.data.message;
+        const data = response.data.message; 
         const wishlistdata = data.map((datas: WishlistItem) => ({
           _id: datas._id,
           image: datas.image,
@@ -47,14 +47,14 @@ export default function WishlistPage() {
   const handleRemoveItem = async ({ hostel_id }: { hostel_id: string }) => {
     try {
       console.log(hostel_id, 'he');
-      const response = await apiClient.delete(`${LOCALHOST_URL}/user/removeFromWishlist/${hostel_id}`);
+      const response = await userApiClient.delete(`${apiUrl}/wishlist/removeFromWishlist/${hostel_id}`);
       console.log(response.data.message);
       if (response.data.message == 'Hostel Removed From Wishlist') {
         console.log("Removeddd");
         toast.success('Hostel Removed From Wishlist')
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+        
+        setWishlist((prev) => prev.filter(item => item.hostel_id !== hostel_id));
+
       }
     } catch (error) {
       console.log(error);
@@ -63,16 +63,14 @@ export default function WishlistPage() {
 
   const handleClearWishlist = async () => {
     try {
-      const response = await apiClient.delete(`${LOCALHOST_URL}/user/deleteWishlist`);
+      const response = await userApiClient.delete(`${apiUrl}/wishlist/deleteWishlist`);
       console.log(response.data.message);
       if (response.data.message === 'Wishlist Deleted') {
         toast.success("Wishlist Cleared", {
           style: { backgroundColor: '#FFFFFF', color: '#31AFEF' }
         });
         
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
+        setWishlist([])
       } else {
         toast.error(response.data.message, {
           style: { backgroundColor: '#FFFFFF', color: '#31AFEF' }

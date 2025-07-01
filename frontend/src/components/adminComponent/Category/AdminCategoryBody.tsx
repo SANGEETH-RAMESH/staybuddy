@@ -5,30 +5,17 @@ import Swal from 'sweetalert2';
 import { ObjectId } from 'bson';
 import { Pencil, Trash2, Search, RefreshCw, PlusCircle, PackageX, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { LOCALHOST_URL } from '../../../constants/constants';
 import { Category } from '../../../interface/Category';
 import adminApiClient from '../../../services/adminApiClient';
-// import CategoryEditModal from './CategoryEditModal';
-
-// interface Category {
-//   _id: ObjectId | string;
-//   name: string;
-//   description: string;
-//   image: string;
-//   isActive: boolean;
-//   createdAt: string;
-// }
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
 const AdminCategoryBody = () => {
   const [categories, setCategories] = useState<Category[]>([]);
-  // const [filteredCategories, setFilteredCategories] = useState<Category[]>([]);
+
   
   const [allCategories, setAllCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState<boolean>(true);
-  // const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
-  // const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  // const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const [pages, setPages] = useState<number>(0)
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -38,11 +25,6 @@ const AdminCategoryBody = () => {
 
   const navigate = useNavigate()
 
-  // For edit modal
-  //   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
-  //   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
-
-  // Handle delete category
   const handleDeleteCategory = async (categoryId: ObjectId | string) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
@@ -63,7 +45,7 @@ const AdminCategoryBody = () => {
 
         console.log(response, 'respons')
         if (response.data.message == 'Category Deleted') {
-          // Refresh the current page data after deletion
+  
           fetchCategories(currentPage);
           Swal.fire('Deleted!', 'The category has been deleted.', 'success');
 
@@ -72,17 +54,17 @@ const AdminCategoryBody = () => {
 
           let newPage = currentPage;
 
-          // If current page becomes empty after deletion, move to previous page
+      
           if (categories.length === 1 && currentPage > 1) {
             newPage = currentPage - 1;
           }
 
-          // Update states properly
+  
           setTotalCategories(newTotal);
           setTotalPages(newTotalPages);
           setCurrentPage(newPage);
 
-          // Fetch updated data
+     
           fetchCategories(newPage);
         } else {
           Swal.fire('Failed!', 'There was an issue deleting the category.', 'error');
@@ -94,51 +76,25 @@ const AdminCategoryBody = () => {
     }
   };
 
-  // Open edit modal with category data
+
   const handleEditCategory = (category: Category) => {
-    // setCurrentCategory(category);
     console.log("hiiiiii")
     console.log(category._id, "CAtegory")
     navigate(`/admin/editcategory/${category._id}`)
-    // setIsEditModalOpen(true);
+
   };
 
-  // Close edit modal
-  //   const handleCloseEditModal = () => {
-  //     setIsEditModalOpen(false);
-  //     setCurrentCategory(null);
-  //   };
 
-  // Handle successful edit
-  //   const handleCategoryUpdated = (updatedCategory: Category) => {
-  //     setCategories(prevCategories =>
-  //       prevCategories.map(category =>
-  //         category._id === updatedCategory._id ? updatedCategory : category
-  //       )
-  //     );
-  //     updateFilteredCategories();
-  //     setIsEditModalOpen(false);
-  //     toast.success('Category updated successfully');
-  //   };
-
-  // Fetch categories function with pagination
   const fetchCategories = async (page: number = 1) => {
     setLoading(true);
     try {
-      // const skip = (page - 1) * categoriesPerPage;
-      // const params = new URLSearchParams({
-      //   page: page.toString(),
-      //   limit: categoriesPerPage.toString(),
-      //   skip: skip.toString(),
-      //   ...(search && { search }),
-      //   ...(status !== 'all' && { status })
-      // });
+    
       const skip = (page - 1) * categoriesPerPage;
       const limit = categoriesPerPage;
       console.log(limit, skip, 'hee')
 
 
-      const response = await adminApiClient.get(`${LOCALHOST_URL}/admin/getAllCategory`, {
+      const response = await adminApiClient.get(`${apiUrl}/admin/getAllCategory`, {
         params: {
           skip,
           limit
@@ -168,32 +124,7 @@ const AdminCategoryBody = () => {
     }
   };
 
-  // Update filtered categories based on search and filters
-  // const updateFilteredCategories = (categoryList = categories) => {
-  //   const filtered = categoryList;
 
-
-  //   // Apply status filter (if not already applied on backend)
-  //   // if (filterStatus === 'active') {
-  //   //   filtered = filtered.filter(category => category.isActive);
-  //   // } else if (filterStatus === 'inactive') {
-  //   //   filtered = filtered.filter(category => !category.isActive);
-  //   // }
-
-  //   // Apply search filter (if not already applied on backend)
-  //   // if (searchTerm) {
-  //   //   const lowercaseSearch = searchTerm.toLowerCase();
-  //   //   filtered = filtered.filter(
-  //   //     category =>
-  //   //       category.name.toLowerCase().includes(lowercaseSearch) ||
-  //   //       category.description?.toLowerCase().includes(lowercaseSearch)
-  //   //   );
-  //   // }
-
-  //   setFilteredCategories(filtered);
-  // };
-
-  // Handle search input change
   const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const newSearchTerm = e.target.value;
     setSearchTerm(newSearchTerm);
@@ -213,7 +144,7 @@ const AdminCategoryBody = () => {
       }
 
       try {
-        const response = await adminApiClient.get(`${LOCALHOST_URL}/admin/search?name=${newSearchTerm}`);
+        const response = await adminApiClient.get(`${apiUrl}/admin/search?name=${newSearchTerm}`);
         console.log(response.data.message, 'Search Results');
         if (response.data.message.length > 0) {
           setCategories(response.data.message);
@@ -228,25 +159,9 @@ const AdminCategoryBody = () => {
         console.error('Search API error:', error);
       }
     }, 500);
-    // console.log(newSearchTerm, 'Search')
-    // setSearchTerm(newSearchTerm);
-    // console.log(categories, 'Categoires')
-    // const filteredCategories = allCategories.filter(category =>
-    //   category.name.toLowerCase().includes(newSearchTerm.toLowerCase())
-    // );
-
-    // setCategories(filteredCategories)
-    // setCurrentPage(1); // Reset to first page when searching
-
-    // // Debounce search to avoid too many API calls
-    // const timeoutId = setTimeout(() => {
-    //   fetchCategories(1, newSearchTerm, filterStatus);
-    // }, 500);
-
-    // return () => clearTimeout(timeoutId);
   };
 
-  // Handle page change
+
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
@@ -254,20 +169,6 @@ const AdminCategoryBody = () => {
     }
   };
 
-  // Handle filter change
-  // const handleFilterChange = (status: 'all' | 'active' | 'inactive') => {
-  //   setFilterStatus(status);
-  //   setCurrentPage(1); // Reset to first page when filtering
-  //   fetchCategories(1, searchTerm, status);
-  // };
-
-  // Apply filters whenever dependencies change
-  // useEffect(() => {
-  //   updateFilteredCategories();
-  // }, [categories]);
-
-
-  // Fetch categories on mount
   useEffect(() => {
     fetchCategories(currentPage);
   }, []);
@@ -344,40 +245,9 @@ const AdminCategoryBody = () => {
             />
             <Search className="absolute left-3 top-2.5 text-gray-400 h-5 w-5" />
           </div>
-
-          {/* <div className="flex gap-2">
-            <button
-              onClick={() => handleFilterChange('all')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${filterStatus === 'all'
-                ? 'bg-[#45B8F2] text-white'
-                : 'bg-[#1A202C] text-gray-300 hover:bg-[#2D394E]'
-                }`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => handleFilterChange('active')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${filterStatus === 'active'
-                ? 'bg-green-600 text-white'
-                : 'bg-[#1A202C] text-gray-300 hover:bg-[#2D394E]'
-                }`}
-            >
-              Active
-            </button>
-            <button
-              onClick={() => handleFilterChange('inactive')}
-              className={`px-3 py-1.5 rounded-md transition-colors ${filterStatus === 'inactive'
-                ? 'bg-red-600 text-white'
-                : 'bg-[#1A202C] text-gray-300 hover:bg-[#2D394E]'
-                }`}
-            >
-              Inactive
-            </button>
-          </div> */}
         </div>
       </div>
 
-      {/* Add Category Button */}
       <div className="mb-6">
         <button
           onClick={handleAddCategory}
@@ -388,35 +258,16 @@ const AdminCategoryBody = () => {
         </button>
       </div>
 
-      {/* Empty state */}
+
       {categories?.length === 0 && !loading && (
         <div className="bg-[#212936] rounded-lg shadow-lg p-8 flex flex-col items-center justify-center">
           <PackageX className="w-16 h-16 text-gray-500 mb-4" />
           <h3 className="text-xl text-white mb-2">No categories found</h3>
-          {/* <p className="text-gray-400 text-center mb-6">
-            {searchTerm || filterStatus !== 'all'
-              ? 'Try adjusting your search or filters'
-              : 'There are no categories to display'}
-          </p>
-          {(searchTerm || filterStatus !== 'all') && (
-            <div className="flex gap-4">
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  setFilterStatus('all');
-                  setCurrentPage(1);
-                  fetchCategories(1, '', 'all');
-                }}
-                className="bg-[#45B8F2] text-white px-4 py-2 rounded-md hover:bg-[#3ca1d8] transition-colors"
-              >
-                Clear Filters
-              </button>
-            </div>
-          )} */}
+    
         </div>
       )}
 
-      {/* Responsive Categories View */}
+
       {categories.length > 0 && (
         <div className="overflow-x-auto rounded-lg shadow-lg">
           <table className="min-w-full bg-[#212936] text-white table-auto sm:table-fixed">

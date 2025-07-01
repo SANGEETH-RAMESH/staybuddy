@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, User, MapPin, Calendar, CheckCircle, XCircle, Shield, Building, CreditCard, Home } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Calendar, CheckCircle, XCircle, Shield, Building, CreditCard, Home, AlertCircle } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { LOCALHOST_URL } from '../../../constants/constants';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import adminApiClient from '../../../services/adminApiClient';
 import { Host } from '../../../interface/Host'
 import { Hostel } from '../../../interface/Hostel';
@@ -10,26 +10,7 @@ import { Notification } from '../../../interface/Notification';
 import { io } from "socket.io-client";
 const socket = io("http://localhost:4000");
 
-// interface Host {
-//   _id: string;
-//   approvalRequest: string;
-//   photo: string;
-//   mobile: string;
-//   createdAt: string;
-//   address: string;
-//   documentType: string;
-//   status: string;
-//   name: string;
-//   email: string;
-// }
 
-// interface Hostel {
-//   _id: string;
-//   hostelname: string;
-//   location: string;
-//   length: string;
-//   status: string
-// }
 
 type RouteParams = {
   id: string;
@@ -42,7 +23,7 @@ const AdminHostDetailedBody = () => {
   const [showImageModal, setShowImageModal] = useState(false);
   const [host, setHost] = useState<Host>();
 
-  const {id} = useParams<RouteParams>()
+  const { id } = useParams<RouteParams>()
 
   const handleStatusChange = async (newStatus: string) => {
     setHost({ ...(host as Host), status: newStatus });
@@ -50,10 +31,10 @@ const AdminHostDetailedBody = () => {
     try {
       const finalHostId = id as string;
 
-      console.log(finalHostId,'host')
+      console.log(finalHostId, 'host')
       if (newStatus == 'approved') {
         console.log("hostId", id)
-        const response = await adminApiClient.patch(`${LOCALHOST_URL}/admin/approvehost`, { hostId:finalHostId });
+        const response = await adminApiClient.patch(`${apiUrl}/admin/approvehost`, { hostId: finalHostId });
         console.log(response)
 
         if (response.data.message == 'Approved') {
@@ -75,8 +56,8 @@ const AdminHostDetailedBody = () => {
           toast.success("Host approved");
         }
       } else if (newStatus == 'rejected') {
-        const response = await adminApiClient.patch(`${LOCALHOST_URL}/admin/rejecthost`, { hostId:finalHostId })
-          console.log(response,'rejjj')
+        const response = await adminApiClient.patch(`${apiUrl}/admin/rejecthost`, { hostId: finalHostId })
+        console.log(response, 'rejjj')
         if (response.data.message == 'Reject') {
           const newNotification: Notification = {
             receiver: finalHostId,
@@ -106,23 +87,18 @@ const AdminHostDetailedBody = () => {
   };
 
   const handleBack = () => {
-    // Navigate back to host list - would use navigation in real app
     console.log("Navigating back");
   };
 
-
-
-  // const { id } = useParams();
 
   useEffect(() => {
     const fetchHostData = async () => {
       try {
         console.log("id", id)
-        const response = await adminApiClient.get(`${LOCALHOST_URL}/admin/getUserDetails/${id}`)
-        const hostHostelData = await adminApiClient.get(`${LOCALHOST_URL}/admin/getHostHostelData/${id}`)
+        const response = await adminApiClient.get(`${apiUrl}/admin/getUserDetails/${id}`)
+        const hostHostelData = await adminApiClient.get(`${apiUrl}/admin/getHostHostelData/${id}`)
         console.log(hostHostelData.data.message, 'Hostel')
         setHostel(hostHostelData.data.message)
-        // console.log(response.data.message)
         setHost(response.data.message)
       } catch (error) {
         console.log(error)
@@ -133,7 +109,7 @@ const AdminHostDetailedBody = () => {
 
   return (
     <div className="w-full bg-gray-100 min-h-screen">
-      {/* Content area */}
+
       <div className="px-4 py-6 bg-[#2D394E]">
         {/* Back button and title */}
         <div className="flex items-center mb-6">
@@ -147,11 +123,11 @@ const AdminHostDetailedBody = () => {
           <h1 className="text-xl font-bold text-white">Host Details</h1>
         </div>
 
-        {/* Main content */}
+   
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left column - Profile */}
+        
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            {/* Profile header with ID Proof instead of profile photo */}
+           
             <div className="relative bg-gradient-to-r from-[#212936] to-[#45B8F2] p-6 flex flex-col items-center">
               <div className="mb-2">
                 <CreditCard size={32} className="text-white" />
@@ -160,7 +136,7 @@ const AdminHostDetailedBody = () => {
               <p className="text-white text-sm opacity-80">Document Type: {host?.documentType}</p>
             </div>
 
-            {/* ID Proof Display */}
+     
             <div className="p-6 flex flex-col items-center border-b border-gray-100">
               <div
                 className="w-[180px] h-[100px] bg-gray-50 p-2 rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-300"
@@ -173,7 +149,7 @@ const AdminHostDetailedBody = () => {
                 />
               </div>
 
-              {/* Status indicator */}
+            
               <div className="mt-3 flex items-center">
                 <div className={`w-2 h-2 rounded-full mr-2 ${host?.status === 'verified' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
                 <span className="text-sm font-medium">
@@ -181,11 +157,11 @@ const AdminHostDetailedBody = () => {
                 </span>
               </div>
 
-              {/* Click instruction */}
+            
               <p className="text-xs text-gray-400 mt-1">Click to view full size</p>
             </div>
 
-            {/* Image Modal */}
+          
             {showImageModal && (
               <div
                 className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
@@ -199,7 +175,7 @@ const AdminHostDetailedBody = () => {
                     onClick={(e) => e.stopPropagation()}
                   />
 
-                  {/* Close button */}
+      
                   <button
                     onClick={() => setShowImageModal(false)}
                     className="absolute top-4 right-4 bg-white bg-opacity-20 hover:bg-opacity-30 
@@ -210,19 +186,18 @@ const AdminHostDetailedBody = () => {
                     </svg>
                   </button>
 
-                  {/* Document info */}
+            
                   <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white px-3 py-2 rounded-lg">
                     <p className="text-sm font-medium">{host?.documentType} - {host?.name}</p>
                   </div>
                 </div>
               </div>
             )}
-            {/* Profile info */}
+      
             <div className="p-6 text-center">
               <h2 className="text-2xl font-bold text-gray-800">{host?.name}</h2>
               <p className="text-gray-500 text-sm mt-1">Host ID: {host?._id?.toString()}</p>
 
-              {/* Status badge */}
               <div className="mt-4">
                 <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
                 ${host?.status === 'approved' ? 'bg-green-100 text-green-800' :
@@ -237,29 +212,15 @@ const AdminHostDetailedBody = () => {
                 </div>
               </div>
 
-              {/* Host stats */}
-              {/* <div className="grid grid-cols-3 gap-2 mt-6 border-t border-gray-100 pt-6">
-              <div>
-                <p className="text-xs text-gray-500">Listings</p>
-                <p className="font-semibold text-lg">{host.totalListings}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Rating</p>
-                <p className="font-semibold text-lg">{host.averageRating}/5</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Since</p>
-                <p className="font-semibold text-lg">{new Date(host.joinDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</p>
-              </div>
-            </div> */}
+            
 
 
             </div>
           </div>
 
-          {/* Middle column - Host information */}
+
           <div className="space-y-6">
-            {/* Contact information */}
+    
             <div className="bg-white rounded-xl shadow-md p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                 <User className="text-[#45B8F2] mr-2" size={20} />
@@ -310,14 +271,14 @@ const AdminHostDetailedBody = () => {
               </div>
             </div>
 
-            {/* Verification documents */}
+
             <div className="bg-white rounded-xl shadow-md p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                 <Shield className="text-[#45B8F2] mr-2" size={20} />
                 Verification Request
               </h3>
 
-              {/* Action buttons */}
+
               {host?.approvalRequest === '2' && (
                 <div className="mt-8 space-y-3">
                   <button
@@ -347,14 +308,22 @@ const AdminHostDetailedBody = () => {
                   <p className="text-gray-500 text-sm">
                     This host verification request has been rejected.
                   </p>
-                  {/* <button
-                    onClick={() => handleStatusChange('pending')}
-                    className="mt-4 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors text-sm"
-                  >
-                    Review Again
-                  </button> */}
+                  
                 </div>
               )}
+
+              {(host?.approvalRequest === '1') && (
+                <div className="mt-6 text-center py-4">
+                  <div className="bg-yellow-50 rounded-full p-3 inline-flex mb-3">
+                    <AlertCircle size={24} className="text-yellow-500" />
+                  </div>
+                  <h4 className="text-gray-800 font-medium mb-2">No Request Sent</h4>
+                  <p className="text-gray-500 text-sm">
+                    No request has been made yet.
+                  </p>
+                </div>
+              )}
+
 
               {host?.approvalRequest === '3' && (
                 <div className="mt-6 text-center py-4">
@@ -373,7 +342,7 @@ const AdminHostDetailedBody = () => {
             </div>
           </div>
 
-          {/* Right column - Properties */}
+     
           <div className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
               <Building className="text-[#45B8F2] mr-2" size={20} />
@@ -396,11 +365,7 @@ const AdminHostDetailedBody = () => {
                           <h3 className="text-md font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">
                             {property.hostelname}
                           </h3>
-                          {/* <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs px-2 py-1 bg-blue-50 text-blue-600 rounded-full font-medium">
-                              #{index + 1}
-                            </span>
-                          </div> */}
+                         
                         </div>
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                           <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
@@ -410,9 +375,7 @@ const AdminHostDetailedBody = () => {
                   ))}
                 </div>
 
-                {/* <button className="mt-6 w-full py-2 border border-[#45B8F2] text-[#45B8F2] rounded-md hover:bg-[#45B8F2]/10 transition-colors font-medium flex items-center justify-center">
-                  View All Properties
-                </button> */}
+            
               </>
             ) : (
               <div className="text-center py-8">
@@ -427,33 +390,7 @@ const AdminHostDetailedBody = () => {
           </div>
         </div>
 
-        {/* Activity Timeline */}
-        {/* <div className="mt-6 bg-white rounded-xl shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-            <Clock className="text-[#45B8F2] mr-2" size={20} />
-            Recent Activity
-          </h3>
-
-          <div className="border-l-2 border-gray-200 ml-4 space-y-6 pl-6 py-2">
-            <div className="relative">
-              <div className="absolute -left-10 top-1 w-4 h-4 rounded-full bg-[#45B8F2]"></div>
-              <p className="text-sm text-gray-700">New property listed: <span className="font-medium">Modern Loft</span></p>
-              <p className="text-xs text-gray-500 mt-1">May 2, 2025</p>
-            </div>
-
-            <div className="relative">
-              <div className="absolute -left-10 top-1 w-4 h-4 rounded-full bg-[#45B8F2]"></div>
-              <p className="text-sm text-gray-700">Completed verification for <span className="font-medium">Address Proof</span></p>
-              <p className="text-xs text-gray-500 mt-1">March 16, 2024</p>
-            </div>
-
-            <div className="relative">
-              <div className="absolute -left-10 top-1 w-4 h-4 rounded-full bg-[#45B8F2]"></div>
-              <p className="text-sm text-gray-700">Joined StayBuddy as host</p>
-              <p className="text-xs text-gray-500 mt-1">March 15, 2024</p>
-            </div>
-          </div> */}
-        {/* </div> */}
+        
       </div>
     </div>
   );

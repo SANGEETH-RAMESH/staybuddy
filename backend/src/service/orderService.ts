@@ -7,33 +7,33 @@ import { ObjectId } from "mongodb";
 import { IReview } from "../model/reviewModel";
 
 
-interface reviewData{
-    orderId:string,
-    rating:number,
-    review:string,
-    hostelId:string,
-    userId:string
+interface reviewData {
+    orderId: string,
+    rating: number,
+    review: string,
+    hostelId: string,
+    userId: string
 }
 
 
 
-class OrderService implements IOrderService{
-    constructor(private orderRepository:IOrderRepository){ }
+class OrderService implements IOrderService {
+    constructor(private orderRepository: IOrderRepository) { }
 
 
-    async userBookings(orderData:IOrder):Promise<string>{
+    async userBookings(orderData: IOrder): Promise<string> {
         try {
             // console.log(orderData)
-            const foodRate = orderData.foodRate??0;
+            const foodRate = orderData.foodRate ?? 0;
             const amount = orderData.totalDepositAmount + orderData.totalRentAmount + foodRate;
             const response = await this.orderRepository.orderBookings(orderData);
-            await this.orderRepository.creditUserWallet(orderData.host_id,amount)
-            if(orderData.paymentMethod == 'wallet'){
+            await this.orderRepository.creditUserWallet(orderData.host_id, amount)
+            if (orderData.paymentMethod == 'wallet') {
                 // const foodRate = orderData.foodRate?orderData.foodRate : 0;
                 // const amount = orderData.totalDepositAmount + orderData.totalRentAmount + foodRate
                 const id = new ObjectId(orderData.userId)
-                await this.orderRepository.debitUserWallet(id,amount);
-                
+                await this.orderRepository.debitUserWallet(id, amount);
+
                 return response
             }
             return response
@@ -42,7 +42,7 @@ class OrderService implements IOrderService{
         }
     }
 
-    async getOrderDetails(id:Types.ObjectId):Promise<IOrder | string | null>{
+    async getOrderDetails(id: Types.ObjectId): Promise<IOrder | string | null> {
         try {
             const response = await this.orderRepository.getOrderDetails(id);
             return response
@@ -51,24 +51,24 @@ class OrderService implements IOrderService{
         }
     }
 
-    async endBooking(data:{orderId:Types.ObjectId,userId:Types.ObjectId}):Promise<string>{
+    async endBooking(data: { orderId: Types.ObjectId, userId: Types.ObjectId }): Promise<string> {
         try {
             const response = await this.orderRepository.getOrderDetails(data.orderId);
-            if(!response || typeof response === "string"){
+            if (!response || typeof response === "string") {
                 return "No order"
             }
-            console.log("Response",response)
+            console.log("Response", response)
             const hostId = response.host_id._id
             const amount = response?.totalDepositAmount
             const updateStatusOrder = await this.orderRepository.updatingOrderStatus(data.orderId)
-            const userWalletCredit = await this.orderRepository.creditUserWallet(data?.userId,amount)
-            const hostWalletDebit = await this.orderRepository.debitHostWallet(hostId,amount)
+            const userWalletCredit = await this.orderRepository.creditUserWallet(data?.userId, amount)
+            const hostWalletDebit = await this.orderRepository.debitHostWallet(hostId, amount)
             const beds = response.selectedBeds;
-            
+
             const hostelId = (response.hostel_id as any).id._id.toString();
-            console.log(hostelId,'Anuvinda',beds)
-            await this.orderRepository.updateRoom(hostelId,beds)
-            if(userWalletCredit == 'Wallet updated successfully' && hostWalletDebit =='Wallet updated successfully'){
+            console.log(hostelId, 'Anuvinda', beds)
+            await this.orderRepository.updateRoom(hostelId, beds)
+            if (userWalletCredit == 'Wallet updated successfully' && hostWalletDebit == 'Wallet updated successfully') {
                 return "Updated"
             }
             return 'Updated'
@@ -78,7 +78,7 @@ class OrderService implements IOrderService{
         }
     }
 
-    async createReview(data:reviewData):Promise<string>{
+    async createReview(data: reviewData): Promise<string> {
         try {
             const response = await this.orderRepository.createReview(data);
             return response
@@ -88,7 +88,7 @@ class OrderService implements IOrderService{
         }
     }
 
-    async getReviewDetails(orderId:Types.ObjectId):Promise<IReview[] | string | null>{
+    async getReviewDetails(orderId: Types.ObjectId): Promise<IReview[] | string | null> {
         try {
             const response = await this.orderRepository.getReviewDetails(orderId);
             return response
@@ -98,12 +98,30 @@ class OrderService implements IOrderService{
         }
     }
 
-    async getReviewDetailsByOrderId(orderId:Types.ObjectId):Promise<IReview | string | null>{
+    async getReviewDetailsByOrderId(orderId: Types.ObjectId): Promise<IReview | string | null> {
         try {
             const response = await this.orderRepository.getReviewDetailsByOrderId(orderId);
             return response
         } catch (error) {
             console.log(error)
+            return error as string
+        }
+    }
+
+    async getSavedBookings(id: Types.ObjectId, skip: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null> {
+        try {
+            const response = await this.orderRepository.getSavedBookings(id, skip, limit);
+            return response
+        } catch (error) {
+            return error as string;
+        }
+    }
+
+    async getBookings(hostId: string, skip: string, limit: string):Promise<{ bookings: IOrder[]; totalCount: number } | string | null> {
+        try {
+            const response = await this.orderRepository.getBookings(hostId, skip, limit)
+            return response
+        } catch (error) {
             return error as string
         }
     }

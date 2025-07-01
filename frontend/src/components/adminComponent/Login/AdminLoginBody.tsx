@@ -1,17 +1,15 @@
-// import React, { useState } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { loginSuccess } from '../../../redux/adminAuthSlice';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
-// import { Formik, Field, Form, ErrorMessage } from 'formik';
-// import { signInValidation } from '../../../validations/commonValidations'; // Import validation schema
 import { LoginValues } from '../../../interface/Login';
 import { useState } from 'react';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
 const AdminLoginBody = () => {
-  // const [email, setEmail] = useState('');
-  // const [password, setPassword] = useState('');
+
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -31,31 +29,24 @@ const AdminLoginBody = () => {
       delete updated[name as keyof LoginValues];
       return updated;
     });
-
-    // setValidFields(prev => ({
-    //     ...prev,
-    //     [name as keyof LoginValues]: value.trim() !== ""
-    // }));
   };
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
       console.log(formValues.email,formValues.password,'email')
-      const res = await axios.post('http://localhost:4000/admin/login', {
+      const res = await axios.post(`${apiUrl}/admin/login`, {
         email: formValues.email,
         password: formValues.password
       });
       console.log(res, 'responseeeee');
 
       if (res.data.data === 'Invalid Password') {
-        // toast.error('Invalid password', { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
         setErrors((prev) => ({
           ...prev,
           password: "Invalid Password"
         }))
       } else if (res.data.data === 'Invalid Email') {
-        // toast.error('Invalid email', { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
         setErrors((prev) => ({
           ...prev,
           email: 'Invalid Email'

@@ -4,37 +4,21 @@ import { toast } from 'react-toastify';
 import { ObjectId } from 'bson';
 import { Unlock, Lock, Trash2, RefreshCw, UserX, Users, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import adminApiClient from '../../../services/adminApiClient';
-import { LOCALHOST_URL } from '../../../constants/constants';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { User } from '../../../interface/User';
 import { PaginationInfo } from '../../../interface/PaginationInfo';
 
-// interface User {
-//   _id: ObjectId | string;
-//   name: string;
-//   email: string;
-//   location: string | null;
-//   isBlock: boolean;
-// }
-
-// interface PaginationInfo {
-//   currentPage: number;
-//   totalPages: number;
-//   totalUsers: number;
-//   hasNext: boolean;
-//   hasPrev: boolean;
-// }
 
 const AdminUserManageBody = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-  // const [allUsers, setAllUsers] = useState<User[]>([]);
+
   const [error, setError] = useState<string | null>(null);
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'blocked'>('all');
 
-  // Pagination states - Changed default itemsPerPage to 4
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(4);
   const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>({
@@ -199,7 +183,7 @@ const AdminUserManageBody = () => {
 
       try {
         const response = await adminApiClient.get(
-          `${LOCALHOST_URL}/admin/searchuser?name=${newSearchTerm}&page=1&limit=${itemsPerPage}`
+          `${apiUrl}/admin/searchuser?name=${newSearchTerm}&page=1&limit=${itemsPerPage}`
         );
         console.log("Response", response.data.message);
         const searchResults = response.data.message;

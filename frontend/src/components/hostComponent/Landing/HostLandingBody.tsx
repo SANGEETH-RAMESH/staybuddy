@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import  { useEffect } from 'react';
 import host_landing from '../../../assets/seller1.webp';
-import hostapiClient from '../../../services/hostapiClient';
-import { LOCALHOST_URL } from '../../../constants/constants';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { io } from "socket.io-client";
+import createApiClient from '../../../services/apiClient';
+const hostApiClient = createApiClient('host');
 const socket = io("http://localhost:4000");
 
 
@@ -13,7 +14,7 @@ const HostLandingBody = () => {
   const navigate = useNavigate();
 
   const handleAddNewProperty = async() =>{
-    const response = await hostapiClient.get(`${LOCALHOST_URL}/host/newHost`)
+    const response = await hostApiClient.get(`${apiUrl}/host/newHost`)
     console.log(response)
     if(response.data.message=='Not containing' || response.data.message == 'Host ID not found'){
       console.log("hello")

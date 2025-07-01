@@ -9,15 +9,15 @@ import {
   PhoneCall,
   Mail,
   CreditCard,
-  Filter,
   ClipboardX,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { LOCALHOST_URL } from '../../../constants/constants';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { useNavigate, useParams } from 'react-router-dom';
-import apiClient from '../../../services/apiClient';
+import createApiClient from '../../../services/apiClient';
+const userApiClient = createApiClient('user');
 
 // Interface definitions
 interface HostelData {
@@ -85,14 +85,13 @@ const HostBookings = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const limit = 3; // Changed to 3 as per your requirement
+  const limit = 3; 
   const { id } = useParams();
   const navigate = useNavigate();
 
   const fetchHostBookings = async (page: number = 1, statusFilter: string = 'all') => {
     setIsLoading(true);
     try {
-      // Calculate skip value based on current page
       const skip = (page - 1) * limit;
 
       const params = new URLSearchParams({
@@ -101,7 +100,7 @@ const HostBookings = () => {
         ...(statusFilter !== 'all' && { status: statusFilter })
       });
 
-      const response = await apiClient.get(`${LOCALHOST_URL}/user/getSavedBookings/${id}?${params}`);
+      const response = await userApiClient.get(`${apiUrl}/order/getSavedBookings/${id}?${params}`);
       const data = response.data.message || {};
 
       const totalCount = data.totalCount || 0;
@@ -116,6 +115,7 @@ const HostBookings = () => {
         hasNextPage: page < totalPages,
         hasPrevPage: page > 1
       });
+      
     } catch (error) {
       console.error("Error fetching bookings:", error);
       setBookings([]);
@@ -136,10 +136,6 @@ const HostBookings = () => {
     fetchHostBookings(currentPage, filter);
   }, [id, currentPage, filter]);
 
-  const handleFilterChange = (filterValue: string) => {
-    setFilter(filterValue);
-    setCurrentPage(1); // Reset to first page when filter changes
-  };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -214,7 +210,7 @@ const HostBookings = () => {
     );
   }
 
-  // No bookings UI
+
   if (paginationData.totalCount === 0) {
     return (
       <div className="max-w-7xl mx-auto p-6 bg-gray-50">
@@ -252,19 +248,7 @@ const HostBookings = () => {
             <span>Total Bookings: {paginationData.totalCount}</span>
           </div>
 
-          <div className="relative flex items-center gap-2 text-sm bg-white px-4 py-2 rounded-lg shadow-sm">
-            <Filter className="w-4 h-4 text-blue-600" />
-            <select
-              className="bg-transparent border-none focus:outline-none pr-6"
-              value={filter}
-              onChange={(e) => handleFilterChange(e.target.value)}
-            >
-              <option value="all">All Bookings</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="pending">Pending</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-          </div>
+          
         </div>
       </div>
 
@@ -293,11 +277,7 @@ const HostBookings = () => {
                     alt={booking?.hostel_id.name}
                     className="w-full h-48 object-cover"
                   />
-                  <div className="absolute top-4 right-4">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
-                      {booking.status}
-                    </span>
-                  </div>
+                  
                 </div>
 
                 <div className="p-4">
@@ -387,7 +367,7 @@ const HostBookings = () => {
             ))}
           </div>
 
-          {/* Pagination Component */}
+          
           {renderPagination()}
         </>
       )}

@@ -2,10 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Send, Search, Plus, Paperclip, Image, X, Clock, Video, ArrowLeft } from 'lucide-react';
 import dummy_profile from '../../../assets/dummy profile.png';
-import apiClient from '../../../services/apiClient';
-import { LOCALHOST_URL } from '../../../constants/constants';
+// import { LOCALHOST_URL } from '../../../constants/constants';
 import { useLocation } from 'react-router-dom';
 import VideoCall from '../../commonComponents/VideoCall'
+import createApiClient from '../../../services/apiClient';
+const userApiClient = createApiClient('user');
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+
 
 interface Message {
   chatId: string;
@@ -147,7 +150,7 @@ const ChatApplication: React.FC = () => {
 
   const fetchAvailableHosts = async () => {
     try {
-      const res = await apiClient.get(`${LOCALHOST_URL}/user/allHosts`, {
+      const res = await userApiClient.get(`${apiUrl}/user/allHosts`, {
         headers: { Authorization: `Bearer` },
       });
       console.log(res.data.message, 'ss')
@@ -176,7 +179,7 @@ const ChatApplication: React.FC = () => {
       try {
         console.log(hostId?._id, 'Hello');
         const id = hostId?._id;
-        const res = await apiClient.get(`${LOCALHOST_URL}/chat/getChat`, {
+        const res = await userApiClient.get(`${apiUrl}/chat/getChat`, {
           params: { id },
           headers: { Authorization: `Bearer` },
         });
@@ -414,7 +417,7 @@ const ChatApplication: React.FC = () => {
   const handleAddNewChat = async (selectedUser: User) => {
     try {
       console.log(selectedUser, 'Userr')
-      const res = await apiClient.post(`${LOCALHOST_URL}/chat/createchat`, {
+      const res = await userApiClient.post(`${apiUrl}/chat/createchat`, {
         ownerId: selectedUser._id
       }, {
         headers: { Authorization: `Bearer` }

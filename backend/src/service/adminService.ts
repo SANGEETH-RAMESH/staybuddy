@@ -13,10 +13,13 @@ import { IReview } from "../model/reviewModel";
 import { IOrder } from "../model/orderModel";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Jwt/jwt";
 import { adminPayload } from "../types/commonInterfaces/tokenInterface";
+import { IUserResponse } from "../dtos/UserResponse";
+import { IUserRespository } from "../interface/user/!UserRepository";
+import { IHostRepository } from "../interface/host/!HostRepository";
 
 
 class adminService implements IAdminService {
-    constructor(private adminRepository: IAdminRepository) {
+    constructor(private adminRepository: IAdminRepository,private userRepository:IUserRespository,private hostRepository:IHostRepository) {
 
     }
 
@@ -30,9 +33,9 @@ class adminService implements IAdminService {
         }
     }
 
-    async getUser(page: number, limit: number): Promise<{ users: IUser[]; totalCount: number } | string | null> {
+    async getUser(page: number, limit: number): Promise<{ users: IUserResponse[]; totalCount: number } | string | null> {
         try {
-            const getUser = await this.adminRepository.getUser(page, limit);
+            const getUser = await this.userRepository.getUser(page, limit);
             return getUser
         } catch (error) {
             console.log(error)
@@ -322,9 +325,7 @@ class adminService implements IAdminService {
                 }
                 const adminPayload: adminPayload = {
                     _id: new Types.ObjectId(response._id),
-                    name: response.name,
-                    email: response.email,
-                    mobile: response.mobile
+                    role:'admin'
                 }
 
                 const accessToken = generateAccessToken(adminPayload);

@@ -1,24 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { AlertCircle, Mail, Clock, ArrowRight, Upload, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
-import hostapiClient from '../../../services/hostapiClient';
-import { LOCALHOST_URL } from '../../../constants/constants';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Host } from '../../../interface/Host';
 import { Notification } from '../../../interface/Notification';
 import { io } from "socket.io-client";
+import createApiClient from '../../../services/apiClient';
+const hostApiClient = createApiClient('host');
 const socket = io("http://localhost:4000");
 
-// interface Host{
-//   approvalRequest:number;
-//   documentType:string;
-//   email:string;
-//   isBlock:boolean;
-//   mobile:number;
-//   password:string;
-//   photo:string;
-//   temp:boolean;
-// }
 
 const ApprovalBody = () => {
   const navigate = useNavigate();
@@ -93,13 +84,13 @@ const ApprovalBody = () => {
     console.log(selectedFile)
 
     try {
-      const response = await hostapiClient.post(`${LOCALHOST_URL}/host/approval`, formData, {
+      const response = await hostApiClient.post(`${apiUrl}/host/approval`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
 
-      const adminData = await hostapiClient.get(`${LOCALHOST_URL}/host/getAdmin`)
+      const adminData = await hostApiClient.get(`${apiUrl}/host/getAdmin`)
       const id = adminData.data.message._id;
       console.log(adminData.data.message._id, 'Admin')
 
@@ -124,7 +115,7 @@ const ApprovalBody = () => {
   useEffect(() => {
     const fetchHostData = async () => {
       try {
-        const response = await hostapiClient.get(`${LOCALHOST_URL}/host/getHost`)
+        const response = await hostApiClient.get(`${apiUrl}/host/getHost`)
         setHost(response.data.message)
 
         // Check if request was rejected

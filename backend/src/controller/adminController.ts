@@ -7,7 +7,7 @@ import uploadImage from "../cloudinary/cloudinary";
 import { signInValidation } from "../validations/commonValidations";
 import { ValidationError } from "yup";
 import { categoryValidation } from "../validations/categoryValidation";
-// const ObjectId = mongoose.Types.ObjectId;
+import {StatusCode} from '../status/statusCode'
 
 class adminController {
     constructor(private adminService: IAdminService) {
@@ -16,7 +16,7 @@ class adminController {
 
     async adminLogin(req: Request, res: Response): Promise<void> {
         try {
-            // const {admin_email,admin_password} = req.body
+
             let validationErrors: Record<string, string> = {};
             await signInValidation.validate(req.body, { abortEarly: false })
                 .catch((error: ValidationError) => {
@@ -28,7 +28,7 @@ class adminController {
                 });
 
             if (Object.keys(validationErrors).length > 0) {
-                res.status(400).json({
+                res.status(StatusCode.BAD_REQUEST).json({
                     success: false,
                     message: "Validation failed",
                     errors: validationErrors,
@@ -36,18 +36,17 @@ class adminController {
                 return;
             }
             const response = await this.adminService.adminLogin(req.body);
-            res.status(200).json({ success: true, data: response })
+            res.status(StatusCode.OK).json({ success: true, data: response })
 
         } catch (error) {
             console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
     async getUser(req: Request, res: Response): Promise<void> {
         try {
             console.log(req.query, 'eyy')
-            // const {page,limit} = req.query
-            // const pageNumber = parseInt(page, 10)
             let { page, limit } = req.query
 
             const pageNumber = parseInt(req.query.page as string) || 1;
@@ -56,7 +55,7 @@ class adminController {
             const response = await this.adminService.getUser(pageNumber, limitNumber);
             res.json({ success: true, message: response })
         } catch (error) {
-            console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -64,9 +63,9 @@ class adminController {
         try {
             const { userId } = req.body
             const response = await this.adminService.userBlock(userId);
-            res.status(200).json({ success: true, message: response })
+            res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -74,9 +73,9 @@ class adminController {
         try {
             const { userId } = req.body;
             const response = await this.adminService.userUnBlock(userId);
-            res.status(200).json({ success: true, message: response })
+            res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -85,9 +84,9 @@ class adminController {
             let { userId } = req.body;
             userId = new Types.ObjectId(userId);
             const response = await this.adminService.userDelete(userId);
-            res.status(200).json({ success: true, message: response })
+            res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -98,9 +97,9 @@ class adminController {
             const limit = parseInt(req.query.limit as string)
             const response = await this.adminService.getHost(skip, limit);
             console.log(response, 'hello')
-            res.status(200).json({ success: true, message: response })
+            res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -108,9 +107,9 @@ class adminController {
         try {
             const { hostId } = req.body
             const response = await this.adminService.hostBlock(hostId);
-            res.status(200).json({ success: true, message: response })
+            res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error);
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -118,9 +117,9 @@ class adminController {
         try {
             const { hostId } = req.body
             const response = await this.adminService.hostUnBlock(hostId);
-            res.status(200).json({ success: true, message: response })
+            res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error);
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -130,20 +129,18 @@ class adminController {
             console.log(req.params, 'hello');
             const { hostId } = req.params;
 
-            // Validate the hostId format
             if (!Types.ObjectId.isValid(hostId)) {
-                res.status(400).json({ success: false, message: 'Invalid hostId format' });
+                res.status(StatusCode.BAD_REQUEST).json({ success: false, message: 'Invalid hostId format' });
             }
 
             const objectIdHostId = new Types.ObjectId(hostId);
 
             const response = await this.adminService.hostDelete(objectIdHostId);
 
-            // Send response back
-            res.status(200).json({ success: true, message: response });
+            res.status(StatusCode.OK).json({ success: true, message: response });
         } catch (error) {
             console.log(error);
-            res.status(500).json({ success: false, message: 'Internal Server Error' });
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -154,15 +151,14 @@ class adminController {
             console.log(hostId, "body");
             console.log(typeof hostId, "type");
 
-            // Convert hostId (string) into a mongoose ObjectId
             const Id = new mongoose.Types.ObjectId(hostId);
-            // Pass the ObjectId to your service
+
             const response = await this.adminService.approveHost(Id);
 
-            res.status(200).json({ success: true, message: response });
+            res.status(StatusCode.OK).json({ success: true, message: response });
         } catch (error) {
             console.log(error);
-            res.status(500).json({ success: false, message: "Internal Server Error" });
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -172,29 +168,26 @@ class adminController {
             const Id = new mongoose.Types.ObjectId(hostId)
 
             const response = await this.adminService.rejectHost(Id);
-            res.status(200).json({ success: true, message: response })
+            res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
             console.log(error);
-            res.status(500).json({ success: false, message: "Internal Server Error" });
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
     async getAllHostels(req: Request, res: Response): Promise<void> {
         try {
-            // console.log('hello')
             console.log(req.query, "body")
             let { page, limit } = req.query
             if (!page || !limit) {
-                res.status(200).json({ message: "Page or limit is not" })
+                res.status(StatusCode.OK).json({ message: "Page or limit is not" })
             }
-
             page = page as string
             limit = limit as string
             const response = await this.adminService.getAllHostels(page, limit);
-            // console.log(response,'resposne')
-            res.status(200).json({ success: true, message: response })
+            res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -222,7 +215,7 @@ class adminController {
 
 
             if (Object.keys(validationErrors).length > 0) {
-                res.status(400).json({
+                res.status(StatusCode.BAD_REQUEST).json({
                     success: false,
                     message: 'Validation failed',
                     errors: validationErrors,
@@ -236,10 +229,10 @@ class adminController {
             }
 
             const response = await this.adminService.addCategory(name, isActive, photo);
-            res.status(200).json({ success: true, message: response });
+            res.status(StatusCode.OK).json({ success: true, message: response });
         } catch (error) {
             console.log(error)
-            res.status(400).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -249,10 +242,10 @@ class adminController {
             const skip = parseInt(req.query.skip as string);
             const limit = parseInt(req.query.limit as string);
             const response = await this.adminService.getAllCategory(skip, limit);
-            res.status(200).json({ message: response });
+            res.status(StatusCode.OK).json({ message: response });
         } catch (error) {
             console.log(error)
-            res.status(400).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -262,10 +255,10 @@ class adminController {
             console.log(req.params.id)
             const id = req.params.id
             const response = await this.adminService.getCategory(id)
-            res.status(200).json({ message: response })
+            res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
             console.log(error)
-            res.status(400).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -284,7 +277,7 @@ class adminController {
                 });
 
             if (Object.keys(validationErrors).length > 0) {
-                res.status(400).json({
+                res.status(StatusCode.BAD_REQUEST).json({
                     success: false,
                     message: 'Validation failed',
                     errors: validationErrors,
@@ -296,9 +289,9 @@ class adminController {
             console.log(name, isActive, id)
             const response = await this.adminService.updateCategory(id, name, isActive)
             console.log("Response", response)
-            res.status(200).json({ message: response })
+            res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
-            res.status(400).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -307,9 +300,9 @@ class adminController {
             console.log(req.params.id, 'heello');
             const userId = req.params.id;
             const response = await this.adminService.getUserDetails(userId)
-            res.status(200).json({ success: true, message: response })
+            res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -318,10 +311,10 @@ class adminController {
             console.log(req.params.id)
             const userId = req.params.id
             const response = await this.adminService.getHostHostelData(userId)
-            res.status(200).json({ message: response })
+            res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
             console.log(error)
-            res.status(400).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -330,13 +323,13 @@ class adminController {
             console.log(req.query)
             const hostelId = req.query.hostel_id;
             if (!hostelId || typeof hostelId !== 'string') {
-                res.status(400).json({ message: "No hostel Id" })
+                res.status(StatusCode.BAD_REQUEST).json({ message: "No hostel Id" })
                 return
             }
             const response = await this.adminService.deleteHostel(hostelId)
-            res.status(200).json({ message: response })
+            res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
-            res.status(500).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -345,9 +338,9 @@ class adminController {
             console.log(req.body, "Sagneeth")
             const categoryId = req.body.categoryId;
             const response = await this.adminService.deleteCategory(categoryId);
-            res.status(200).json({ message: response })
+            res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
-            res.status(500).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -358,11 +351,11 @@ class adminController {
             if (name) {
                 const categoryname = name.toString();
                 const response = await this.adminService.searchCategory(categoryname)
-                res.status(200).json({ message: response })
+                res.status(StatusCode.OK).json({ message: response })
             }
 
         } catch (error) {
-            res.status(500).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -371,9 +364,9 @@ class adminController {
             console.log(req.query, "QUery")
             const name = req.query.name as string;
             const response = await this.adminService.searchUser(name)
-            res.status(200).json({ message: response })
+            res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
-            res.status(500).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -382,9 +375,9 @@ class adminController {
             console.log(req.query, "Query")
             const name = req.query.name as string;
             const response = await this.adminService.searchHost(name);
-            res.status(200).json({ message: response })
+            res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
-            res.status(500).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -392,9 +385,9 @@ class adminController {
         try {
             const name = req.query.name as string;
             const response = await this.adminService.searchHostel(name);
-            res.status(200).json({ message: response })
+            res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
-            res.status(500).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -403,18 +396,18 @@ class adminController {
             console.log("Params", req.params)
             const hostelId = req.params.hostelId;
             const response = await this.adminService.getReviews(hostelId);
-            res.status(200).json({ message: response });
+            res.status(StatusCode.OK).json({ message: response });
         } catch (error) {
-            res.status(500).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
     async getSales(req: Request, res: Response): Promise<void> {
         try {
             const response = await this.adminService.getSales();
-            res.status(200).json({ message: response });
+            res.status(StatusCode.OK).json({ message: response });
         } catch (error) {
-            res.status(500).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 
@@ -422,9 +415,9 @@ class adminController {
         try {
             const {refreshToken} = req.body;
             const response = await this.adminService.validateRefreshToken(refreshToken);
-            res.status(200).json({message:response});
+            res.status(StatusCode.OK).json({message:response});
         } catch (error) {
-            res.status(500).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
         }
     }
 }

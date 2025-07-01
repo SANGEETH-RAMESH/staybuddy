@@ -5,6 +5,7 @@ import { ICategory } from "../../model/categoryModel";
 import { IWallet } from "../../model/walletModel";
 import { IOrder } from "../../model/orderModel";
 import { IUser } from "../../model/userModel";
+import { IUpdateHostelInput } from "../../dtos/HostelData";
 
 // Host data structure
 interface IHostData {
@@ -57,22 +58,14 @@ export interface IHostService {
     resetPassword(hostData: { email: string, password: string }): Promise<{ message: string }>;
     resendOtp(hostData: hostData): Promise<string | null>;
     verifyLogin(hostData: { email: string, password: string }): Promise<{ message: string, accessToken?: string, refreshToken?: string }>;
-    addHostel(hostData: HostelData): Promise<string>;
-    getHostels(email:string): Promise<IHostel[] | string>;
-    // getHost(hostEmail: string): Promise<IHost | string | null>;
     newHost(host_id: Types.ObjectId): Promise<string>,
     approvalRequest(host_id:Types.ObjectId,photo:string | undefined,documentType:string):Promise<string>,
-    getOneHostel(id:Types.ObjectId):Promise<IHostel | string>,
     hostGoogleSignUp(hostData:HostData):Promise<{ message: string; accessToken: string; refreshToken: string } | string>,
     getHost(id:Types.ObjectId):Promise<IHost | string>,
     validateRefreshToken(refreshToken:string):Promise<{  accessToken: string; refreshToken: string } | string>,
     getAllCategory(): Promise<ICategory[] | string>,
-    getWalletDetails(id:string):Promise<IWallet | string | null>,
-    getBookings(hostId: string): Promise<IOrder[] | string | null>,
-    changePassword(hostData: { email: string; currentPassword: string; newPassword: string }): Promise<string>,
-    editProfile(hostData: { email: string, name: string, mobile: string }): Promise<string>,
-    walletDeposit({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string>,
-    walletWithDraw({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string>,
+    changePassword(hostData: { hostId: Types.ObjectId; currentPassword: string; newPassword: string }): Promise<string>,
+    editProfile(hostData: { hostId: Types.ObjectId, name: string, mobile: string }): Promise<string>,
     getAllUsers(): Promise<IUser[] | string | null>,
-    getAdmin(): Promise<IUser | string | null>
+    getAdmin(): Promise<IUser | string | null>,
 }

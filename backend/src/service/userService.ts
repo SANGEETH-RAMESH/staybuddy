@@ -1,5 +1,4 @@
 import { IUserService } from "../interface/user/!UserService";
-// import { IUserRepository } from "../interface/user/!UserRepository";
 import { IUserRespository } from "../interface/user/!UserRepository";
 import { sendOtp } from "../utils/mail";
 import { IUser } from "../model/userModel";
@@ -14,19 +13,19 @@ import { IWishlist } from "../model/wishlistModel";
 import { IUserResponse } from "../dtos/UserResponse";
 import { IHost } from "../model/hostModel";
 import { INotification } from "../model/notificationModel";
-// import jwt, { decode } from "jsonwebtoken";
+import { IWalletRepository } from "../interface/wallet/!WalletRepository";
+import { IHostRepository } from "../interface/host/!HostRepository";
 
-// type UserType = InstanceType<typeof User>;
 
 interface ResetPasswordData {
     email: string;
-    password: string; // This is required
+    password: string; 
     newPassword: string;
 }
 
 interface ChangePasswordData {
     email: string;
-    currentPassword: string;  // Required field
+    currentPassword: string;  
     newPassword: string;
 }
 
@@ -41,10 +40,8 @@ function otpgenerator(): number {
 }
 
 function generateRandomMobileNumber() {
-    const firstDigit = Math.floor(Math.random() * 5) + 6; // First digit greater than 5 (6-9)
+    const firstDigit = Math.floor(Math.random() * 5) + 6; 
     let mobileNumber = firstDigit.toString();
-
-    // Generate remaining 9 digits
     for (let i = 0; i < 9; i++) {
         mobileNumber += Math.floor(Math.random() * 10).toString();
     }
@@ -74,7 +71,7 @@ function generateRandomPassword() {
 }
 
 class UserService implements IUserService {
-    constructor(private userRepository: IUserRespository) { }
+    constructor(private userRepository: IUserRespository,private walletRepository:IWalletRepository,private hostRepository:IHostRepository) { }
 
     async userSignUp(userData: IUser): Promise<string> {
         try {
@@ -103,7 +100,7 @@ class UserService implements IUserService {
             }
             const user = await this.userRepository.CreateUser(userOtp);
             if (user == 'success') {
-                await this.userRepository.createWallet(userOtp.email)
+                await this.walletRepository.createWallet(userOtp.email)
             }
             return user;
         } catch (error) {
@@ -124,9 +121,7 @@ class UserService implements IUserService {
             if (typeof checkingUser !== 'string' && checkingUser.message === 'Success') {
                 const userPayload: userPayload = {
                     _id: new Types.ObjectId(checkingUser.user._id),
-                    name: checkingUser.user.name,
-                    email: checkingUser.user.email,
-                    mobile: checkingUser.user.mobile,
+                    role:'user'
                 };
 
                 accessToken = generateAccessToken(userPayload);
@@ -170,7 +165,7 @@ class UserService implements IUserService {
             await this.userRepository.OtpGenerating(userData.email, otp);
             return {
                 email: userFind.email,
-                temp: userFind.temp
+                temp: userFind.temp?? false
             };
         } catch (error) {
             console.error(error);
@@ -239,7 +234,7 @@ class UserService implements IUserService {
         }
     }
 
-    async editUserDetail(userData: IUser): Promise<string> {
+    async editUserDetail(userData: IUserResponse): Promise<string> {
         try {
             const response = await this.userRepository.editUserDetail(userData);
             return response;
@@ -261,9 +256,7 @@ class UserService implements IUserService {
                 if (response.message === 'Success') {
                     const userPayload: userPayload = {
                         _id: new Types.ObjectId(response.user?._id),
-                        name: response.user?.name ?? '',
-                        email: response.user?.email ?? '',
-                        mobile: response.user?.mobile ?? ''
+                        role:'user'
                     };
                     const accessToken = generateAccessToken(userPayload);
                     const refreshToken = generateRefreshToken(userPayload);
@@ -271,9 +264,7 @@ class UserService implements IUserService {
                 } else if (response.message == 'Already') {
                     const userPayload: userPayload = {
                         _id: new Types.ObjectId(response.user?._id),
-                        name: response.user?.name ?? '',
-                        email: response.user?.email ?? '',
-                        mobile: response.user?.mobile ?? ''
+                        role:'user'
                     };
                     const accessToken = generateAccessToken(userPayload);
                     const refreshToken = generateRefreshToken(userPayload);
@@ -286,23 +277,6 @@ class UserService implements IUserService {
         }
     }
 
-    async getHostels(page: string, limit: string, search?: string): Promise<{ hostels: IHostel[]; totalCount: number } | string> {
-        try {
-            const response = await this.userRepository.getHostels(page, limit, search);
-            return response;
-        } catch (error) {
-            return error as string
-        }
-    }
-
-    async getSingleHostel(id: Types.ObjectId): Promise<IHostel | string> {
-        try {
-            const response = await this.userRepository.getSingleHostel(id);
-            return response
-        } catch (error) {
-            return error as string
-        }
-    }
 
     async validateRefreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | string> {
         try {
@@ -314,9 +288,7 @@ class UserService implements IUserService {
                 }
                 const userPayload: userPayload = {
                     _id: new Types.ObjectId(response._id),
-                    name: response.name,
-                    email: response.email,
-                    mobile: response.mobile
+                    role:'user'
                 }
 
                 const accessToken = generateAccessToken(userPayload);
@@ -332,92 +304,13 @@ class UserService implements IUserService {
         }
     }
 
-    async getWalletDetails(id: string): Promise<IWallet | string | null> {
-        try {
-            const response = await this.userRepository.findUserWallet(id)
-            return response
-        } catch (error) {
-            return error as string
-        }
-    }
+    
 
-    async walletDeposit({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
-        try {
-            const response = await this.userRepository.walletDeposit({ id, amount })
-            return response
-        } catch (error) {
-            console.log(error)
-            return error as string
-        }
-    }
-
-    async walletWithdraw({ id, amount }: { id: string, amount: string }): Promise<string> {
-        try {
-            const response = await this.userRepository.walletWithdraw({ id, amount })
-            return response
-        } catch (error) {
-            console.log(error)
-            return error as string
-        }
-    }
-
-    async getSavedBookings(id: Types.ObjectId, skip: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null> {
-        try {
-            const response = await this.userRepository.getSavedBookings(id, skip, limit);
-            return response
-        } catch (error) {
-            return error as string;
-        }
-    }
-
-    async addToWishlist(id: string, userId: string): Promise<string> {
-        try {
-            const response = await this.userRepository.addToWishlist(id, userId);
-            return response
-        } catch (error) {
-            return error as string
-        }
-    }
-
-    async removeFromWishlist(hostelId: string, userId: string): Promise<string> {
-        try {
-            const response = await this.userRepository.removeFromWishlist(hostelId, userId)
-            return response
-        } catch (error) {
-            return error as string
-        }
-    }
-
-    async checkWishlist(userId: string, hostelId: string): Promise<string> {
-        try {
-            const response = await this.userRepository.checkWishlist(userId, hostelId);
-            return response
-        } catch (error) {
-            return error as string
-        }
-    }
-
-    async getWishlist(userId: string): Promise<string | IWishlist[]> {
-        try {
-            const response = await this.userRepository.getWishlist(userId);
-            return response
-        } catch (error) {
-            return error as string
-        }
-    }
-
-    async deleteWishlist(userId: string): Promise<string> {
-        try {
-            const response = await this.userRepository.deleteWishlist(userId)
-            return response
-        } catch (error) {
-            return error as string
-        }
-    }
+    
 
     async allHost(): Promise<IHost[] | string | null> {
         try {
-            const response = await this.userRepository.allHost();
+            const response = await this.hostRepository.allHost();
             return response;
         } catch (error) {
             return error as string

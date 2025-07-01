@@ -16,35 +16,11 @@ import {
   ChevronRight,
   Star
 } from 'lucide-react';
-import axios from 'axios';
-// import { Host } from '../../../interface/Host';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { Hostel } from '../../../interface/Hostel';
+import createApiClient from '../../../services/apiClient';
+const hostApiClient = createApiClient('host');
 
-// interface Host {
-//   _id: string;
-//   name: string;
-//   email: string;
-//   mobile: string;
-//   isBlock: boolean;
-//   approvalRequest: string;
-//   tempExpires: string;
-// }
-
-// interface HostelDetail {
-//   advanceamount: number;
-//   bedShareRoom: number;
-//   beds: number;
-//   category: string;
-//   facilities: string[] | string;
-//   foodRate: number;
-//   host_id: Host;
-//   hostelname: string;
-//   location: string;
-//   nearbyaccess: string;
-//   phone: string;
-//   photos: string[];
-//   policies: string;
-// }
 
 const ImageGallery = ({ photos }: { photos: string[] }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -131,7 +107,7 @@ const HostelDetailPage = () => {
     const fetchHostelData = async () => {
       try {
         console.log('heyy')
-        const response = await axios.get('http://localhost:4000/host/detailhostel', {
+        const response = await hostApiClient.get(`${apiUrl}/hostel/detailhostel`, {
           params: { id },
         });
         setHostel(response.data.message);

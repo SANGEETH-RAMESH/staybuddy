@@ -5,29 +5,11 @@ import Swal from 'sweetalert2';
 import { Trash2, Lock, Unlock, Check, X, Loader, Info, Search, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import adminApiClient from '../../../services/adminApiClient';
-import { LOCALHOST_URL } from '../../../constants/constants';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { PaginationInfo} from '../../../interface/PaginationInfo'
 import { Host } from '../../../interface/Host';
 
-// interface Host {
-//   _id: ObjectId;
-//   name: string;
-//   email: string;
-//   propertyCount: number;
-//   isBlock: boolean;
-//   approvalRequest: string;
-//   isApproved: boolean;
-//   count?: string;
-//   photo: string
-// }
 
-// interface PaginationInfo {
-//   currentPage: number;
-//   totalPages: number;
-//   totalHosts: number;
-//   hasNext: boolean;
-//   hasPrev: boolean;
-// }
 
 const AdminHostManageBody = () => {
   const [hosts, setHosts] = useState<Host[]>([]);
@@ -37,7 +19,6 @@ const AdminHostManageBody = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [detailsLoading, setDetailsLoading] = useState(false);
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>({
     currentPage: 1,
@@ -77,18 +58,18 @@ const AdminHostManageBody = () => {
 
     searchTimeout.current = setTimeout(async () => {
       if (newSearchTerm.trim() === '') {
-        fetchHosts(1, itemsPerPage); // Reset to first page when clearing search
+        fetchHosts(1, itemsPerPage);
         return;
       }
 
       try {
         const response = await adminApiClient.get(
-          `${LOCALHOST_URL}/admin/searchhost?name=${newSearchTerm}`
+          `${apiUrl}/admin/searchhost?name=${newSearchTerm}`
         );
         console.log("Response", response.data.message);
         const searchResults = response.data.message;
         setHosts(searchResults);
-        // Reset pagination info for search results
+
         setPaginationInfo({
           currentPage: 1,
           totalPages: 1,
@@ -175,7 +156,7 @@ const AdminHostManageBody = () => {
           );
           if (response.data.success) {
             setHosts((prevHosts) => prevHosts.filter((host) => host._id !== hostId));
-            // Refresh current page after deletion
+
             fetchHosts(currentPage, itemsPerPage);
             Swal.fire('Deleted!', 'The host has been deleted.', 'success');
           }
@@ -221,7 +202,7 @@ const AdminHostManageBody = () => {
 
         setHosts(updatedHosts);
 
-        // Update pagination info
+
         setPaginationInfo({
           currentPage: page,
           totalPages: Math.ceil(totalCount / limit),

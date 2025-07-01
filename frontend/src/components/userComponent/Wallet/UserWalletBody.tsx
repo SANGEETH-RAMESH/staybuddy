@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { CreditCard, ArrowUpRight, ArrowDownRight, AlertCircle } from 'lucide-react';
-import apiClient from '../../../services/apiClient';
-import { LOCALHOST_URL } from '../../../constants/constants';
+import createApiClient from '../../../services/apiClient';
+const userApiClient = createApiClient('user');
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
 
 declare class Razorpay {
@@ -61,8 +62,8 @@ const WalletTracker = () => {
   useEffect(() => {
     const fetchWalletData = async () => {
       try {
-        const response = await apiClient.get(`${LOCALHOST_URL}/user/getWalletDetails`);
-        const userData = await apiClient.get(`${LOCALHOST_URL}/user/getUserDetails`);
+        const response = await userApiClient.get(`${apiUrl}/wallet/getWalletDetails`);
+        const userData = await userApiClient.get(`${apiUrl}/user/getUserDetails`);
         const user = userData.data.data;
         // const walletInfo = response.data.message;
         console.log("user", user)
@@ -73,13 +74,6 @@ const WalletTracker = () => {
         if (response.data?.message) {
           setBalance(response.data.message?.balance);
         }
-
-        // setTransactions(response.data.message.transactionHistory);
-        // if (!walletInfo) {
-        //   setBalance(0);
-        //   setTransactions(null);
-        //   return;
-        // }
       } catch (error) {
         console.log(error);
       }
@@ -98,17 +92,7 @@ const WalletTracker = () => {
     }
   }, [error]);
 
-  // const addTransaction = (type: string, value: number): void => {
-  //   const newTransaction = {
-  //     id: Date.now(),
-  //     type,
-  //     description: '',
-  //     amount: value,
-  //     date: new Date().toISOString(),
-  //   };
-
-  //   // setTransactions((prev) => [newTransaction, ...(prev || [])]);
-  // };
+  
 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
@@ -148,8 +132,8 @@ const WalletTracker = () => {
     }
 
     try {
-      const response = await apiClient.post('/order/payment', {
-        totalAmount: parseFloat(amount) * 100, // Convert to subunits
+      const response = await userApiClient.post('/order/payment', {
+        totalAmount: parseFloat(amount) * 100,
         currency: 'INR',
         receipt: 'receipt#1',
         notes: {},
@@ -158,8 +142,8 @@ const WalletTracker = () => {
       const { order_id } = response.data;
 
       const options = {
-        key: 'rzp_test_s0Bm198VJWlvQ2', // Replace with your Razorpay key_id
-        amount: parseFloat(amount) * 100, // Amount in subunits
+        key: 'rzp_test_s0Bm198VJWlvQ2',
+        amount: parseFloat(amount) * 100, 
         currency: 'INR',
         name: 'Acme Corp',
         description: 'Test Transaction',
@@ -206,11 +190,7 @@ const WalletTracker = () => {
     }
 
     const depositAmount = parseFloat(amount);
-    await apiClient.post(`${LOCALHOST_URL}/user/deposit`, { amount });
-
-    // if(response.data.message.message === 'Deposited') {
-    //   setTransactions(response.data.message.userWallet.transactionHistory);
-    // }
+    await userApiClient.post(`${apiUrl}/wallet/deposit`, { amount });
     if (depositAmount > 0) {
       setBalance((prev) => prev + depositAmount);
       setAmount('');
@@ -236,10 +216,9 @@ const WalletTracker = () => {
     const withdrawAmount = parseFloat(amount);
 
     if (withdrawAmount > 0 && withdrawAmount <= balance) {
-      const response = await apiClient.post(`${LOCALHOST_URL}/user/withdraw`, { amount });
+      const response = await userApiClient.post(`${apiUrl}/wallet/withdraw`, { amount });
       console.log(response)
       setBalance((prev) => prev - withdrawAmount);
-      // addTransaction('withdraw', withdrawAmount);
       setAmount('');
       setError('');
     } else {

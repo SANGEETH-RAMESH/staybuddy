@@ -21,6 +21,7 @@ import HostChangePasswordPage from '../pages/hostPages/hostChangePasswordPage'
 import HostEditProfilePage from '../pages/hostPages/hostEditProfilePage'
 import HostWalletPage from '../pages/hostPages/hostWalletPage'
 import HostWalletTransactionPage from '../pages/hostPages/hostWalletTransactionPage'
+import HostEditHostelPage from '../pages/hostPages/hostEditHostelPage'
 
 
 const hostRoute = () => {
@@ -46,6 +47,7 @@ const hostRoute = () => {
         <Route path='/editprofile' element={<HostLoginProtector element={<HostEditProfilePage/>}/>}  />
         <Route path='/wallet' element={<HostLoginProtector element={<HostWalletPage/>}/>}  />
         <Route path='/wallet/transactions' element={<HostLoginProtector element={<HostWalletTransactionPage/>}/>}  />
+        <Route path='/edit-hostel/:id' element={<HostLoginProtector element={<HostEditHostelPage/>}/>}  />
       </Routes>
     </div>
   )

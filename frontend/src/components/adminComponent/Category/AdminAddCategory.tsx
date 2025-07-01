@@ -5,77 +5,27 @@ import { Package, Upload, ArrowLeft, Save, Loader2, ToggleLeft, ToggleRight } fr
 import AdminHeader from '../../commonComponents/adminHeader';
 import AdminSidebar from '../../commonComponents/adminSidebar';
 import adminApiClient from '../../../services/adminApiClient';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
 const AdminAddCategoryPage = () => {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
-  // Form state
+  
   const [name, setName] = useState('');
-  // const [description, setDescription] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [imagePreview, setImagePreview] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({
     name: '',
-    // description: '',
     image: ''
   });
 
-  // // Validate form fields
-  // const validateForm = () => {
-  //   let valid = true;
-  //   const newErrors = {
-  //     name: '',
-  //     // description: '',
-  //     image: ''
-  //   };
-
-  //   if (!name.trim()) {
-  //     newErrors.name = 'Category name is required';
-  //     valid = false;
-  //   } else if (name.length < 2) {
-  //     newErrors.name = 'Name must be at least 2 characters';
-  //     valid = false;
-  //   }
-
-  //   // if (description && description.length > 500) {
-  //   //   newErrors.description = 'Description must be less than 500 characters';
-  //   //   valid = false;
-  //   // }
-
-  //   if (!imageFile) {
-  //     newErrors.image = 'Category image is required';
-  //     valid = false;
-  //   }
-
-  //   setErrors(newErrors);
-  //   return valid;
-  // };
-
-  // Handle image upload
+ 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // // Check file type
-    // if (!file.type.match(/image\/(jpeg|jpg|png|webp)/i)) {
-    //   setErrors({
-    //     ...errors,
-    //     image: 'Please select a valid image file (JPG, PNG, WEBP)'
-    //   });
-    //   return;
-    // }
-
-    // // Check file size (limit to 2MB)
-    // if (file.size > 2 * 1024 * 1024) {
-    //   setErrors({
-    //     ...errors,
-    //     image: 'Image size must be less than 2MB'
-    //   });
-    //   return;
-    // }
 
     setImageFile(file);
     setErrors({
@@ -95,19 +45,13 @@ const AdminAddCategoryPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // if (!validateForm()) return;
 
     setIsSubmitting(true);
 
     try {
       const formData = new FormData();
       console.log(name,imageFile)
-      // const data = {
-      //   name,
-      //   image:imageFile
-      // }
       formData.append('name', name);
-      // formData.append('description', description);
       formData.append('isActive', String(isActive));
        
       if (imageFile) {
@@ -115,7 +59,7 @@ const AdminAddCategoryPage = () => {
       }
       console.log(formData,'formData')
       const response = await adminApiClient.post(
-        'http://localhost:4000/admin/addCategory',
+        `${apiUrl}/admin/addCategory`,
         formData,
         {
           headers: {

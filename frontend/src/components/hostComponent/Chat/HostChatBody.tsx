@@ -1,58 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Search, UserPlus, Settings, Bell, Loader2, Clock, Paperclip, Image, X,  Video } from 'lucide-react';
-import hostapiClient from '../../../services/hostapiClient';
+import { Send, Search, UserPlus, Loader2, Clock, Paperclip, Image, X,  Video } from 'lucide-react';
 import dummy_profile from '../../../assets/dummy profile.png'
-import { LOCALHOST_URL } from '../../../constants/constants';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { io, Socket } from 'socket.io-client';
 import VideoCall from '../../commonComponents/VideoCall'
 import { Message } from '../../../interface/Message';
 import { User } from '../../../interface/User';
 import { Chats } from '../../../interface/Chats';
-
-// type Messages = {
-//   senderId: string;
-//   content: string;
-//   timestamp: string;
-//   message: string;
-//   messageType?: 'text' | 'image' | 'document';
-//   fileName?: string;
-//   fileSize?: number;
-//   fileUrl?: string;
-//   type: string
-// };
-
-// interface Message {
-//   chatId: string;
-//   message: string;
-//   senderId: string;
-//   receiverId: string;
-//   timestamp: string;
-//   isRead: boolean;
-//   type?: 'text' | 'image' | 'document';
-//   fileName?: string;
-//   fileSize?: number;
-//   fileUrl?: string;
-// }
-
-// type User = {
-//   _id: string;
-//   name: string;
-//   email: string;
-// };
-
-// type Chats = {
-//   _id: string;
-//   name: string;
-//   participant1: User;
-//   participant2: string;
-//   receiverId: string;
-//   latestMessage?: string;
-//   updatedAt?: string;
-//   unreadCount: number;
-//   messages: Messages[];
-//   latestMessageTime: string;
-//   type: string;
-// };
+import createApiClient from '../../../services/apiClient';
+const hostApiClient = createApiClient('host');
 
 const socket: Socket = io('http://localhost:4000')
 
@@ -153,10 +109,10 @@ const HostChatBody = () => {
     socket.on('incoming_call', ({ callerId, callerName, chatId }) => {
       console.log('Incoming call from:', callerName);
       console.log(selectedChat,selectedChat?._id,chatId)
-      if (selectedChat && selectedChat._id === chatId) {
+     
         setIsCallActive(true);
         setIsCallInitiator(false);
-      }
+      
     });
 
     return () => {
@@ -206,7 +162,7 @@ const HostChatBody = () => {
     try {
       // Create new chat with selected user
       console.log(selectedUser, 'Userr')
-      const res = await hostapiClient.post(`${LOCALHOST_URL}/chat/hostChat`, {
+      const res = await hostApiClient.post(`${apiUrl}/chat/hostChat`, {
         userId: selectedUser._id
       }, {
         headers: { Authorization: `Bearer` }
@@ -248,7 +204,7 @@ const HostChatBody = () => {
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        const response = await hostapiClient.get(`${LOCALHOST_URL}/chat/getHostChat`)
+        const response = await hostApiClient.get(`${apiUrl}/chat/getHostChat`)
         const chatData = Array.isArray(response.data.data) ? response.data.data : [response.data.data]
         const chatss = chatData.map((chat: Chats) => {
           return {
@@ -278,8 +234,7 @@ const HostChatBody = () => {
 
   const fetchAvailableUsers = async () => {
     try {
-      const response = await hostapiClient.get(`${LOCALHOST_URL}/host/allUsers`);
-      // console.log(response.data.message,'Data')
+      const response = await hostApiClient.get(`${apiUrl}/host/allUsers`);
       const users = response.data.message
       setAvailableUsers(users)
     } catch (error) {
@@ -289,18 +244,12 @@ const HostChatBody = () => {
 
   useEffect(() => {
     socket.on('receive_old_messages', ({ chatId, messages }) => {
-      // console.log("Received old messages in Host Side:", messages);
-
       setSelectedChat(prevChat => {
         if (!prevChat || prevChat._id !== chatId) return prevChat;
         const updatedChat = { ...prevChat, messages };
         setMessages(messages)
-        // console.log(messages, 'Changuu');
-
         return updatedChat;
       });
-
-      // console.log(messages, 'changu')
       setTimeout(scrollToBottom, 100);
     });
 
@@ -376,7 +325,6 @@ const HostChatBody = () => {
       // let fileName = '';
       // let fileSize = 0;
 
-      // Convert file to base64 if selected
       if (selectedFile) {
         fileData = await convertFileToBase64(selectedFile);
         messageType = selectedFile.type.startsWith('image/') ? 'image' : 'document';
@@ -384,7 +332,6 @@ const HostChatBody = () => {
         // fileSize = selectedFile.size;
       }
 
-      // Don't send if no message and no file
       if (!newMessage.trim() && !selectedFile) {
         setIsUploading(false);
         return;
@@ -506,13 +453,13 @@ const HostChatBody = () => {
   return (
     <div className="flex h-screen max-h-[600px] bg-white border rounded-lg shadow-lg overflow-hidden">
       <div className="w-1/3 border-r flex flex-col">
-        <div className="bg-green-600 text-white p-4 flex justify-between items-center">
+        {/* <div className="bg-green-600 text-white p-4 flex justify-between items-center">
           <h2 className="font-bold text-lg">Host Messages</h2>
           <div className="flex space-x-2">
             <Bell size={20} className="cursor-pointer" />
             <Settings size={20} className="cursor-pointer" />
           </div>
-        </div>
+        </div> */}
         <div className="p-4 border-b">
           <div className="relative">
             <input
@@ -595,11 +542,11 @@ const HostChatBody = () => {
       <div className="flex-1 flex flex-col">
         {selectedChat ? (
           <>
-            <div className="flex items-center p-4 bg-white border-b">
+            {/* <div className="flex items-center p-4 bg-white border-b">
               <div>
                 <h2 className="font-semibold">{selectedChat.name}</h2>
               </div>
-            </div>
+            </div> */}
             <div className="p-4 border-b flex justify-between items-center bg-white">
               <div className="flex items-center">
                 <img src={dummy_profile} alt={selectedChat.name} className="w-10 h-10 rounded-full mr-4" />

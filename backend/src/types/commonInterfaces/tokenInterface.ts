@@ -1,26 +1,16 @@
-import { Types} from 'mongoose';
+import { Types } from "mongoose";
 
 export interface userPayload {
-    _id: Types.ObjectId;
-    name: string;
-    email: string;
-    mobile: string;
-    iat?: number;
-    exp?: number;
-  }
-
-export interface adminPayload {
-    _id: Types.ObjectId;
-    name: string;
-    email: string;
-    mobile: string;
-    iat?: number;
-    exp?: number;
+  _id: Types.ObjectId;
+  role: 'user';
 }
 
 export interface hostPayload {
-    _id:Types.ObjectId;
-    name:string;
-    email:string;
-    mobile:string;
+  _id:  Types.ObjectId;
+  role: 'host';
+}
+
+export interface adminPayload {
+  _id:  Types.ObjectId;
+  role: 'admin';
 }

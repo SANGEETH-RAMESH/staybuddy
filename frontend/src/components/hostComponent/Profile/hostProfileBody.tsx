@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LOCALHOST_URL } from '../../../constants/constants';
-import hostapiClient from '../../../services/hostapiClient';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+import createApiClient from '../../../services/apiClient';
+const hostApiClient = createApiClient('host');
 
 const UserProfileBody = () => {
 
@@ -14,8 +15,8 @@ const UserProfileBody = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await hostapiClient.get(`${LOCALHOST_URL}/host/getHost`);
-        const walletDetails = await hostapiClient.get(`${LOCALHOST_URL}/host/getWalletDetails`);
+        const response = await hostApiClient.get(`${apiUrl}/host/getHost`);
+        const walletDetails = await hostApiClient.get(`${apiUrl}/wallet/getWalletDetails`);
         console.log(walletDetails.data.message,'hello')
 
         setId(response.data.message._id)

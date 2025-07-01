@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Phone, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
 interface SignupValues {
     name: string;
@@ -22,105 +23,9 @@ const UserSignUpBody = () => {
     });
 
     const [errors, setErrors] = useState<Partial<SignupValues>>({});
-    const [validFields, setValidFields] = useState<Partial<Record<keyof SignupValues, boolean>>>({});
+
     const navigate = useNavigate();
 
-    // const validateName = (name: string): string | null => {
-    //     const trimmed = name.trim();
-
-    //     if (!trimmed) {
-    //         return 'Name is required';
-    //     }
-    //     if (trimmed.length < 2) {
-    //         return 'Name must be at least 2 characters';
-    //     }
-    //     // Regex: Only letters and single spaces between words
-    //     // ^[A-Za-z]+( [A-Za-z]+)*$ means:
-    //     // Starts with letters, then zero or more groups of (single space + letters)
-    //     const validNameRegex = /^[A-Za-z]+( [A-Za-z]+)*$/;
-
-    //     if (!validNameRegex.test(trimmed)) {
-    //         return 'Name can only contain letters and single spaces between words';
-    //     }
-    //     return null;
-    // };
-    // const validateEmail = (email: string): string | null => {
-    //     if (!email.trim()) {
-    //         return 'Email is required';
-    //     }
-    //     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    //     if (!emailRegex.test(email)) {
-    //         return 'Invalid email';
-    //     }
-    //     return null;
-    // };
-
-    // const validatePassword = (password: string): string | null => {
-    //     if (!password) {
-    //         return 'Password is required';
-    //     }
-    //     if (password.length < 6) {
-    //         return 'Password must be at least 6 characters';
-    //     }
-    //     return null;
-    // };
-
-    // const validateMobile = (mobile: string): string | null => {
-    //     if (!mobile.trim()) {
-    //         return 'Mobile number is required';
-    //     }
-
-    //     // Check if mobile number is exactly 10 digits
-    //     const mobileRegex = /^\d{10}$/;
-    //     if (!mobileRegex.test(mobile)) {
-    //         return 'Mobile number must be exactly 10 digits';
-    //     }
-
-    //     // Check if first digit is greater than 5
-    //     const firstDigit = parseInt(mobile[0], 10);
-    //     if (firstDigit <= 5) {
-    //         return 'First digit must be greater than 5';
-    //     }
-
-    //     // Check if mobile number has at most five 0s
-    //     const zeroCount = (mobile.match(/0/g) || []).length;
-    //     if (zeroCount > 5) {
-    //         return 'Mobile number can have at most five 0s';
-    //     }
-
-    //     return null;
-    // };
-
-    // const validateForm = (values: SignupValues): Partial<SignupValues> => {
-    //     const validationErrors: Partial<SignupValues> = {};
-
-    //     const nameError = validateName(values.name);
-    //     if (nameError) validationErrors.name = nameError;
-
-    //     const emailError = validateEmail(values.email);
-    //     if (emailError) validationErrors.email = emailError;
-
-    //     const passwordError = validatePassword(values.password);
-    //     if (passwordError) validationErrors.password = passwordError;
-
-    //     const mobileError = validateMobile(values.mobile);
-    //     if (mobileError) validationErrors.mobile = mobileError;
-
-    //     return validationErrors;
-    // };
-
-    // Helper function to get input className based on validation state
-    // const getInputClassName = (fieldName: keyof SignupValues) => {
-    //     const baseClass = "w-full pl-9 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all text-sm";
-
-    //     if (errors[fieldName]) {
-    //         return `${baseClass} border-red-300 focus:ring-red-500 bg-red-50`;
-    //     } else if (validFields[fieldName]) {
-    //         return `${baseClass} border-green-300 focus:ring-green-500 bg-green-50`;
-    //     } else {
-    //         return `${baseClass} border-gray-300 focus:ring-blue-500`;
-    //     }
-    // };
 
      const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
             const { name, value } = e.target;
@@ -132,30 +37,15 @@ const UserSignUpBody = () => {
                 delete updated[name as keyof SignupValues];
                 return updated;
             });
-    
-            // setValidFields(prev => ({
-            //     ...prev,
-            //     [name as keyof SignupValues]: value.trim() !== ""
-            // }));
+
         };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         try {
-            // // Validate form values using JavaScript validation
-            // const validationErrors = validateForm(formValues);
-
-            // if (Object.keys(validationErrors).length > 0) {
-            //     setErrors(validationErrors);
-            //     return;
-            // }
-
-            // // Clear errors if validation passes
-            // setErrors({});
-
-            // Call API
-            const res = await axios.post('http://localhost:4000/user/signup', formValues);
+           
+            const res = await axios.post(`${apiUrl}/user/signup`, formValues);
             console.log(res, 'hello');
             const {message} = res.data;
 

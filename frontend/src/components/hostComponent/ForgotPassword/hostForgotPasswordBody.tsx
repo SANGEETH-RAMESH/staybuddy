@@ -5,6 +5,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { forgotPasswordValues } from '../../../interface/forgotPassword';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
 const HostForgotPasswordBody = () => {
     const [emailInput, setEmailInput] = useState('');
@@ -15,7 +16,7 @@ const HostForgotPasswordBody = () => {
         e.preventDefault();
 
         try {
-            const response = await axios.post('http://localhost:4000/host/forgotpassword', { email: emailInput });
+            const response = await axios.post(`${apiUrl}/host/forgotpassword`, { email: emailInput });
             console.log("Res",response.data.message)
             if (response.data.message === 'Host found') {
                 navigate('/host/forgotpasswordotp', { state: { email:emailInput } });

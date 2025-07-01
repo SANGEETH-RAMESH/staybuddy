@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, CreditCard, Users, TrendingUp, ChevronUp } from 'lucide-react';
+import { Home, CreditCard, Users, TrendingUp } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import adminApiClient from '../../../services/adminApiClient';
-import { LOCALHOST_URL } from '../../../constants/constants';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { Order } from '../../../interface/Order';
 import { User } from '../../../interface/User';
 
@@ -58,8 +58,8 @@ const AdminDashboardBody = () => {
 
   useEffect(() => {
     const fetchSales = async () => {
-      const response = await adminApiClient.get(`${LOCALHOST_URL}/admin/sales`)
-      const fetchUsers = await adminApiClient.get(`${LOCALHOST_URL}/admin/getUser`)
+      const response = await adminApiClient.get(`${apiUrl}/admin/sales`)
+      const fetchUsers = await adminApiClient.get(`${apiUrl}/admin/getUser`)
 
       console.log(fetchUsers.data.message)
       const bookings = response.data.message;

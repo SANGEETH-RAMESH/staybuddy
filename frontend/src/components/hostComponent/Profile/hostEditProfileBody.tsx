@@ -1,9 +1,10 @@
 import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { User, Phone, Loader2, CheckCircle } from 'lucide-react';
-import { LOCALHOST_URL } from '../../../constants/constants';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-import hostapiClient from '../../../services/hostapiClient';
+import createApiClient from '../../../services/apiClient';
+const hostApiClient = createApiClient('host');
 
 interface FormData {
   name: string;
@@ -64,7 +65,7 @@ const HostEditProfileBody: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await hostapiClient.get(`${LOCALHOST_URL}/host/getHost`);
+        const response = await hostApiClient.get(`${apiUrl}/host/getHost`);
         setFormData({
           name: response.data.message.name,
           mobile: response.data.message.mobile,
@@ -83,7 +84,7 @@ const HostEditProfileBody: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await hostapiClient.patch(`${LOCALHOST_URL}/host/editprofile`, formData);
+      const response = await hostApiClient.patch(`${apiUrl}/host/editprofile`, formData);
       if (response.data.message === "Not updated") {
         toast.error("Host details not updated");
       } else if (response.data.message === "Host details updated") {

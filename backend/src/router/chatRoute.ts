@@ -7,7 +7,7 @@ import hostAuthMiddleware from "../middleware/hostAuth";
 
 
 const chat_route = Router()
-const chatRepository = new ChatRepository();
+const chatRepository = new ChatRepository(); 
 const chatService = new ChatService(chatRepository)
 const chatController = new ChatController(chatService)
 

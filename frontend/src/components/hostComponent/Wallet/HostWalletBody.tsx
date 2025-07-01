@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { CreditCard, ArrowUpRight, ArrowDownRight, AlertCircle } from 'lucide-react';
 // import apiClient from '../../../services/apiClient';
-import { LOCALHOST_URL } from '../../../constants/constants';
-import hostapiClient from '../../../services/hostapiClient';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+import createApiClient from '../../../services/apiClient';
+const hostApiClient = createApiClient('host');
 
 
 declare class Razorpay {
@@ -44,40 +45,24 @@ interface RazorpayResponse {
 
 const WalletTracker = () => {
   const [balance, setBalance] = useState(0);
-  // const [transactions, setTransactions] = useState<{ 
-  //   id: number; 
-  //   type: string;
-  //   description: string; 
-  //   amount: number;
-  //   date: string;
-  // }[] | null>([]);
   const [amount, setAmount] = useState('');
   const [error, setError] = useState('');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
 
-  // No longer need pagination states
 
   useEffect(() => {
     const fetchWalletData = async () => {
       try {
-        const response = await hostapiClient.get(`${LOCALHOST_URL}/host/getWalletDetails`);
-        const hostData = await hostapiClient.get(`${LOCALHOST_URL}/host/getHost`);
+        const response = await hostApiClient.get(`${apiUrl}/wallet/getWalletDetails`);
+        const hostData = await hostApiClient.get(`${apiUrl}/host/getHost`);
         const host = hostData.data.message;
-        // const walletInfo = response.data.message;
-        // console.log("user", response)
         setEmail(host.email)
         setName(host.name)
         setMobile(host.mobile)
         console.log(response.data)
         setBalance(response.data.message?.balance);
-        // setTransactions(response.data.message.transactionHistory);
-        // if (!walletInfo) {
-        //   setBalance(0);
-        //   setTransactions(null);
-        //   return;
-        // }
       } catch (error) {
         console.log(error);
       }
@@ -141,8 +126,8 @@ const WalletTracker = () => {
     }
 
     try {
-      const response = await hostapiClient.post('/order/payment', {
-        totalAmount: parseFloat(amount) * 100, // Convert to subunits
+      const response = await hostApiClient.post('/order/payment', {
+        totalAmount: parseFloat(amount) * 100, 
         currency: 'INR',
         receipt: 'receipt#1',
         notes: {},
@@ -184,7 +169,6 @@ const WalletTracker = () => {
 
 
   const handleDeposit = async () => {
-    // Check for empty input
     if (!amount || amount.trim() === '') {
       setError('Please enter an amount to deposit.');
       return;
@@ -192,11 +176,7 @@ const WalletTracker = () => {
 
     const depositAmount = parseFloat(amount);
     console.log(depositAmount, 'heelo')
-    await hostapiClient.post(`${LOCALHOST_URL}/host/deposit`, { amount: depositAmount });
-
-    // if(response.data.message.message === 'Deposited') {
-    //   setTransactions(response.data.message.userWallet.transactionHistory);
-    // }
+    await hostApiClient.post(`${apiUrl}/wallet/deposit`, { amount: depositAmount });
     if (depositAmount > 0) {
       setBalance((prev) => prev + depositAmount);
       setAmount('');
@@ -222,10 +202,9 @@ const WalletTracker = () => {
     const withdrawAmount = parseFloat(amount);
 
     if (withdrawAmount > 0 && withdrawAmount <= balance) {
-      const response = await hostapiClient.post(`${LOCALHOST_URL}/host/withdraw`, { amount });
+      const response = await hostApiClient.post(`${apiUrl}/wallet/withdraw`, { amount });
       console.log(response)
       setBalance((prev) => prev - withdrawAmount);
-      // addTransaction('withdraw', withdrawAmount);
       setAmount('');
       setError('');
     } else {

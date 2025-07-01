@@ -4,29 +4,24 @@ import { IBaseRepository } from "../interface/user/IBaseRepository";
 class baseRepository<T> implements IBaseRepository<T> {
     private model: Model<T>;
 
-   
+
     constructor(model: Model<T>) {
         this.model = model;
     }
 
-    
-    async findByEmail(filter: object): Promise<T | null> {
+
+    async findByEmail(filter: object, projection?: any): Promise<T | null> {
         try {
-            const data = await this.model.findOne(filter).exec();
-            // const d = await this.model.find();
-            // console.log(d)
-            // console.log(data,email,"data")
-            return data;
+            return await this.model.findOne(filter, projection).exec();
         } catch (error) {
             console.error(error);
             return null;
         }
     }
 
-    
+
     async findById(id: Types.ObjectId): Promise<T | null> {
         try {
-            // console.log("hey")
             const data = await this.model.findById(id).exec();
             return data;
         } catch (error) {
@@ -35,18 +30,17 @@ class baseRepository<T> implements IBaseRepository<T> {
         }
     }
 
-    
+
     async findAll(): Promise<T[]> {
         try {
-            const data = await this.model.find().exec();
-            return data;
+            return await this.model.find().exec();
         } catch (error) {
             console.error(error);
             return [];
         }
     }
 
-   
+
     async deleteById(id: Types.ObjectId): Promise<string> {
         try {
             const result = await this.model.findByIdAndDelete(id).exec();
@@ -60,7 +54,7 @@ class baseRepository<T> implements IBaseRepository<T> {
         }
     }
 
-    
+
     async deleteAll(): Promise<boolean> {
         try {
             const result = await this.model.deleteMany({}).exec();

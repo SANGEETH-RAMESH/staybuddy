@@ -14,6 +14,8 @@ import { ICategory } from "../model/categoryModel";
 import { IWallet } from "../model/walletModel";
 import { IOrder } from "../model/orderModel";
 import { IUser } from "../model/userModel";
+import { IUpdateHostelInput } from "../dtos/HostelData";
+import { IWalletRepository } from "../interface/wallet/!WalletRepository";
 
 function otpgenerator() {
     return Math.floor(1000 + Math.random() * 9000);
@@ -41,7 +43,7 @@ function generateRandomPassword() {
 }
 
 function generateRandomMobileNumber() {
-    const firstDigit = Math.floor(Math.random() * 5) + 6; // First digit greater than 5 (6-9)
+    const firstDigit = Math.floor(Math.random() * 5) + 6; 
     let mobileNumber = firstDigit.toString();
 
     // Generate remaining 9 digits
@@ -87,7 +89,7 @@ interface otpData {
 // }
 
 class hostService implements IHostService {
-    constructor(private hostRepository: IHostRepository) { }
+    constructor(private hostRepository: IHostRepository,private walletRepository:IWalletRepository) { }
 
     async SignUp(hostData: hostData): Promise<string> {
         try {
@@ -129,7 +131,7 @@ class hostService implements IHostService {
             }
             const creatingHost = await this.hostRepository.CreateHost({ email: hostOtp.email })
             if (creatingHost == 'success') {
-                await this.hostRepository.createWallet(hostOtp?.email)
+                await this.walletRepository.createWallet(hostOtp?.email)
             }
             return creatingHost;
         } catch (error) {
@@ -174,34 +176,8 @@ class hostService implements IHostService {
         }
     }
 
-    async addHostel(hostData: HostelData): Promise<string> {
-        try {
-            // console.log(hostData,'service')
 
-            const response = await this.hostRepository.addHostel(hostData)
-
-            console.log(response, 'service')
-            return response
-        } catch (error) {
-            console.log(error);
-            return error as string
-        }
-    }
-
-    async getHostels(email: string): Promise<IHostel[] | string> {
-        try {
-            const getHost = await this.hostRepository.FindHostByEmail(email);
-            if (!getHost) {
-                return "Not host"
-            }
-            const hostId = getHost._id as ObjectId;
-            const response = await this.hostRepository.getHostels(hostId);
-            return response
-        } catch (error) {
-            console.log(error);
-            return error as string
-        }
-    }
+    
 
     async newHost(host_id: Types.ObjectId): Promise<string> {
         try {
@@ -234,16 +210,7 @@ class hostService implements IHostService {
         }
     }
 
-    async getOneHostel(id: Types.ObjectId): Promise<IHostel | string> {
-        try {
-            // console.log(req.query.id);
-            const response = await this.hostRepository.getOneHostel(id)
-            return response;
-        } catch (error) {
-            console.log(error)
-            return error as string
-        }
-    }
+   
 
     async hostGoogleSignUp(hostData: hostData): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
         try {
@@ -258,9 +225,7 @@ class hostService implements IHostService {
                 if (response.message === 'Success') {
                     const hostPayload: hostPayload = {
                         _id: response.host?._id as Types.ObjectId,
-                        name: response.host?.name ?? '',
-                        email: response.host?.email ?? '',
-                        mobile: String(response.host?.mobile ?? '')
+                        role: 'host'
                     }
                     const accessToken = generateAccessToken(hostPayload);
                     const refreshToken = generateAccessToken(hostPayload);
@@ -268,9 +233,7 @@ class hostService implements IHostService {
                 } else if (response.message == 'Already') {
                     const hostPayload: hostPayload = {
                         _id: response.host?._id as Types.ObjectId,
-                        name: response.host?.name ?? '',
-                        email: response.host?.email ?? '',
-                        mobile: String(response.host?.mobile ?? '')
+                        role: 'host'
                     }
                     const accessToken = generateAccessToken(hostPayload);
                     const refreshToken = generateRefreshToken(hostPayload);
@@ -312,9 +275,7 @@ class hostService implements IHostService {
 
                 const hostPayload: hostPayload = {
                     _id: response._id as Types.ObjectId,
-                    name: response.name,
-                    email: response.email,
-                    mobile: response.mobile.toString()
+                    role: 'host'
                 }
 
                 const accessToken = generateAccessToken(hostPayload);
@@ -338,25 +299,7 @@ class hostService implements IHostService {
         }
     }
 
-    async getWalletDetails(id: string): Promise<IWallet | string | null> {
-        try {
-            const response = await this.hostRepository.findHostWallet(id)
-            return response
-        } catch (error) {
-            return error as string
-        }
-    }
-
-    async getBookings(hostId: string): Promise<IOrder[] | string | null> {
-        try {
-            const response = await this.hostRepository.getBookings(hostId)
-            return response
-        } catch (error) {
-            return error as string
-        }
-    }
-
-    async changePassword(hostData: { email: string; currentPassword: string; newPassword: string }): Promise<string> {
+    async changePassword(hostData: { hostId: Types.ObjectId; currentPassword: string; newPassword: string }): Promise<string> {
         try {
             const response = await this.hostRepository.changePassword(hostData);
             console.log(response, 'Res')
@@ -366,7 +309,7 @@ class hostService implements IHostService {
         }
     }
 
-    async editProfile(hostData: { email: string, name: string, mobile: string }): Promise<string> {
+    async editProfile(hostData: { hostId: Types.ObjectId, name: string, mobile: string }): Promise<string> {
         try {
             const response = await this.hostRepository.editProfile(hostData);
             return response
@@ -375,23 +318,23 @@ class hostService implements IHostService {
         }
     }
 
-    async walletDeposit({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
-        try {
-            const response = await this.hostRepository.walletDeposit({ id, amount });
-            return response
-        } catch (error) {
-            return error as string
-        }
-    }
+    // async walletDeposit({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
+    //     try {
+    //         const response = await this.hostRepository.walletDeposit({ id, amount });
+    //         return response
+    //     } catch (error) {
+    //         return error as string
+    //     }
+    // }
 
-    async walletWithDraw({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
-        try {
-            const response = await this.hostRepository.walletWithDraw({ id, amount });
-            return response
-        } catch (error) {
-            return error as string
-        }
-    }
+    // async walletWithDraw({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
+    //     try {
+    //         const response = await this.hostRepository.walletWithDraw({ id, amount });
+    //         return response
+    //     } catch (error) {
+    //         return error as string
+    //     }
+    // }
 
     async getAllUsers(): Promise<IUser[] | string | null> {
         try {

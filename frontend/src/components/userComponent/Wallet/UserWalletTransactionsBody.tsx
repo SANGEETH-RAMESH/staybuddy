@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import apiClient from '../../../services/apiClient';
-import { LOCALHOST_URL } from '../../../constants/constants';
+import createApiClient from '../../../services/apiClient';
+const userApiClient = createApiClient('user');
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
 interface Transaction {
   type: 'deposit' | 'withdraw';
@@ -23,7 +24,7 @@ const TransactionHistory = () => {
     const fetchTransactions = async () => {
       setIsLoading(true);
       try {
-        const response = await apiClient.get(`${LOCALHOST_URL}/user/getWalletDetails`);
+        const response = await userApiClient.get(`${apiUrl}/wallet/getWalletDetails`);
         console.log(response.data.message,'heee')
         if (response.data && response.data.message) {
           setTransactions(response.data.message.transactionHistory);
@@ -80,12 +81,6 @@ const TransactionHistory = () => {
             </button>
             <h1 className="text-2xl font-bold text-gray-900">Transaction History</h1>
           </div>
-          {/* <button
-            onClick={handleExportCSV}
-            className="flex items-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
-          >
-            <Download className="mr-2" size={16} /> Export CSV
-          </button> */}
         </div>
 
         <div className="bg-white shadow rounded-lg overflow-hidden">
@@ -234,7 +229,6 @@ const TransactionHistory = () => {
                           <span className="sr-only">Previous</span>
                           <ChevronLeft className="h-5 w-5" aria-hidden="true" />
                         </button>
-                        {/* Page numbers would go here */}
                         <button
                           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                           disabled={currentPage === totalPages}

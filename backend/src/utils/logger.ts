@@ -1,4 +1,4 @@
-import { createLogger, format, transports, config } from 'winston';
+import { createLogger, format, transports } from 'winston';
 import path from 'path';
 
 

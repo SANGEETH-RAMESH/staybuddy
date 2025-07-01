@@ -1,16 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Building2, Bed, MapPin, Image, Wifi, ShowerHead, UtensilsCrossed, Users, Info, BadgeDollarSign, Phone } from 'lucide-react';
-import axios from 'axios';
 import { toast } from 'react-toastify';
-import { LOCALHOST_URL } from '../../../constants/constants';
-import hostapiClient from '../../../services/hostapiClient';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { useNavigate } from 'react-router-dom';
 import { Category } from '../../../interface/Category';
-
-// interface Category {
-//   name: string;
-//   isActive: boolean;
-// }
+import createApiClient from '../../../services/apiClient';
+const hostApiClient = createApiClient('host');
 
 
 const HostelForm = () => {
@@ -112,8 +107,8 @@ const HostelForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await hostapiClient.get(`${LOCALHOST_URL}/host/getHost`);
-        const categorySet = await hostapiClient.get(`${LOCALHOST_URL}/host/getAllCategory`)
+        const response = await hostApiClient.get(`${apiUrl}/host/getHost`);
+        const categorySet = await hostApiClient.get(`${apiUrl}/host/getAllCategory`)
         const categorydata = categorySet.data.message
         setCategories(categorydata)
         console.log("Category",categorySet)
@@ -336,7 +331,7 @@ const HostelForm = () => {
         });
       }
       console.log(formData, 'hello')
-      const response = await axios.post(`${LOCALHOST_URL}/host/addhostel`, dataToSend, {
+      const response = await hostApiClient.post(`${apiUrl}/hostel/addhostel`, dataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -431,8 +426,11 @@ const HostelForm = () => {
             className={`w-full px-3 py-2 border ${errors.bedsPerRoom ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#31AFEF] bg-white`}
           >
             <option value="">Select beds per room</option>
+            <option value="1">1 Bed</option>
             <option value="2">2 Bed</option>
+            <option value="3">3 Bed</option>
             <option value="4">4 Bed</option>
+            <option value="5">5 Bed</option>
             <option value="6">6 Bed</option>
           </select>
           {errors.bedsPerRoom && <p className="text-red-500 text-xs mt-1">{errors.bedsPerRoom}</p>}

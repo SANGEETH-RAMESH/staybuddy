@@ -14,15 +14,25 @@ import Category, { ICategory } from "../model/categoryModel";
 import baseRepository from "./baseRespository";
 import Review, { IReview } from "../model/reviewModel";
 import Order, { IOrder } from "../model/orderModel";
+import { IUserResponse } from "../dtos/UserResponse";
 
 class adminRespository extends baseRepository<IUser> implements IAdminRepository {
     constructor() {
         super(User)
     }
 
-    async FindAdminByEmail(email: string): Promise<IUser | null> {
+    async FindAdminByEmail(email: string): Promise<IUserResponse | null> {
         try {
-            const admin = await this.findByEmail({ email, isAdmin: true })
+            const projection = {
+                email: 1,
+                _id: 1,
+                name: 1,
+                mobile: 1,
+                wallet_id: 1,
+                isAdmin: 1,
+                isBlock: 1
+            }
+            const admin = await this.findByEmail({ email, isAdmin: true },projection)
             return admin
         } catch (error) {
             console.log(error)
@@ -38,9 +48,7 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
                 if (isAdmin) {
                     const adminPayload: adminPayload = {
                         _id: checkAdmin._id as Types.ObjectId,
-                        email: checkAdmin.email,
-                        name: checkAdmin.name,
-                        mobile: checkAdmin.mobile
+                       role:'admin'
                     }
                     const accessToken = generateAccessToken(adminPayload);
                     const refreshToken = generateRefreshToken(adminPayload)
@@ -57,11 +65,20 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
         }
     }
 
-    async getUser(page: number, limit: number): Promise<{ users: IUser[]; totalCount: number } | string | null> {
+    async getUser(page: number, limit: number): Promise<{ users: IUserResponse[]; totalCount: number } | string | null> {
         try {
             const skipCount = (page - 1) * limit;
 
-            const users = await User.find({ isAdmin: false })
+            const projection ={
+                _id:1,
+                name:1,
+                mobile:1,
+                isAdmin:1,
+                isBlock:1,
+                email:1
+            }
+
+            const users = await User.find({ isAdmin: false },projection)
                 .skip(skipCount)
                 .limit(limit);
 
@@ -103,7 +120,6 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
     async userDelete(userId: Types.ObjectId): Promise<string> {
         try {
             console.log("hey")
-            // await User.findByIdAndDelete({ _id: userId })
             await this.deleteById(userId)
             return "user deleted"
         } catch (error) {
@@ -114,10 +130,8 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
 
     async getHost(skip: number, limit: number): Promise<{ hosts: IHost[]; totalCount: number } | null> {
         try {
-            const [hosts, totalCount] = await Promise.all([
-                Host.find().skip(skip).limit(limit),
-                Host.countDocuments()
-            ]);
+            const hosts = await Host.find().skip(skip).limit(limit)
+            const totalCount = await Host.countDocuments()
 
             return { hosts, totalCount };
         } catch (error) {

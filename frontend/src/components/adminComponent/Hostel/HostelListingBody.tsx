@@ -12,57 +12,14 @@ import {
   ChevronRight,
   Search
 } from 'lucide-react';
-import { LOCALHOST_URL } from '../../../constants/constants';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { toast } from 'react-toastify';
 import { Review } from '../../../types/Review';
 import { Hostel } from '../../../types/Hostel';
 import { HostelData } from '../../../types/Order';
 import adminApiClient from '../../../services/adminApiClient';
 
-// type Review = {
-//   userId: string;
-//   rating: number;
-//   comment: string;
-//   createdAt: string;
-// };
 
-// type Hostel = {
-//   id: string;
-//   hostName: string;
-//   hostelName: string;
-//   location: string;
-//   image: string;
-//   averageRating: number;
-//   reviews: Review[];
-// };
-
-// type Host = {
-//   _id: string;
-//   name: string;
-//   email: string;
-//   mobile: string;
-//   isBlock: boolean;
-//   approvalRequest: string;
-//   tempExpires: string;
-// };
-
-// type HostelData = {
-//   _id: string;
-//   hostelname: string;
-//   location: string;
-//   nearbyaccess: string;
-//   beds: number;
-//   policies: string;
-//   category: string;
-//   advanceamount: number;
-//   photos: string[];
-//   facilities: string[];
-//   bedShareRoom: number;
-//   foodRate: number;
-//   phone: string;
-//   host_id: Host; // Populated host details
-//   reviews: Review[];
-// };
 
 const HostelListings = () => {
   const [hostels, setHostels] = useState<Hostel[]>([]);
@@ -87,7 +44,7 @@ const HostelListings = () => {
   const fetchHostels = async (page: number) => {
     try {
       setIsLoading(true);
-      const response = await adminApiClient.get(`${LOCALHOST_URL}/admin/getHostel`, {
+      const response = await adminApiClient.get(`${apiUrl}/admin/getHostel`, {
         params: { page, limit: itemsPerPage },
       });
       console.log(response.data.message, 'response');
@@ -111,7 +68,6 @@ const HostelListings = () => {
 
       setHostels(data);
       setTotalItems(response.data.message.totalCount || data.length);
-      // setTotalPages(Math.ceil((response.data.message.totalCount || data.length) / itemsPerPage));
       setIsLoading(false);
     } catch (error) {
       console.log(error);
@@ -119,11 +75,11 @@ const HostelListings = () => {
     }
   };
 
-  // New function to fetch reviews for a specific hostel
+
   const fetchHostelReviews = async (hostelId: string) => {
     try {
       setIsLoadingReviews(true);
-      const response = await adminApiClient.get(`${LOCALHOST_URL}/admin/reviews/${hostelId}`);
+      const response = await adminApiClient.get(`${apiUrl}/admin/reviews/${hostelId}`);
       console.log("Response", response.data.message)
       const reviews = response.data.message;
       const result = reviews.map((review: Review) => ({
@@ -169,7 +125,7 @@ const HostelListings = () => {
 
         try {
           const response = await adminApiClient.get(
-            `${LOCALHOST_URL}/admin/searchhostel?name=${searchTerm}`
+            `${apiUrl}/admin/searchhostel?name=${searchTerm}`
           );
           console.log("Response", response.data.message);
           const searchResults = response.data.message;
@@ -219,7 +175,7 @@ const HostelListings = () => {
 
         console.log("heeyy")
         console.log(hostelToDelete, 'delete')
-        const response = await adminApiClient.delete(`${LOCALHOST_URL}/admin/hostel`, {
+        const response = await adminApiClient.delete(`${apiUrl}/admin/hostel`, {
           params: { hostel_id: hostelToDelete }
         });
         console.log(response, "reponse")
@@ -230,11 +186,9 @@ const HostelListings = () => {
           }, 1000);
         }
 
-        // Close the modal
-        // setShowDeleteModal(false);
         setHostelToDelete(null);
 
-        // Refetch the current page if we deleted the last item on a page
+
         if (hostels.length === 1 && currentPage > 1) {
           setCurrentPage(currentPage - 1);
         } else {

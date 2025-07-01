@@ -4,12 +4,14 @@ import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../../../redux/userAuthSlice';
 import { ArrowRight, Shield, Zap, Users, MapPin } from 'lucide-react';
 import landing_1 from '../../../assets/landing_1.jpg'
-import apiClient from '../../../services/apiClient';
-import { LOCALHOST_URL } from '../../../constants/constants';
+import createApiClient from '../../../services/apiClient';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { jwtDecode } from 'jwt-decode';
 import { io } from "socket.io-client";
 const socket = io("http://localhost:4000");
 import {Hostel} from '../../../interface/Hostel'
+
+const userApiClient = createApiClient('user');
 
 
 // interface Room {
@@ -57,7 +59,7 @@ const UserLandingBody = () => {
   useEffect(() => {
     const fetchHostel = async () => {
       try {
-        const response = await apiClient.get(`${LOCALHOST_URL}/user/getHostels`)
+        const response = await userApiClient.get(`${apiUrl}/user/getHostels`)
         console.log(response.data.response.hostels, "Response")
         const hostelData = (response.data.response.hostels).slice(0, 3);
         setHostel(

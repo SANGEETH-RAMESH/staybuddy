@@ -5,7 +5,7 @@ import { logout } from '../../redux/hostAuthSlice';
 import { MessageCircle, Building2, User, LogOut, Menu, X, Bell, BellRing } from 'lucide-react';
 import hostapiClient from '../../services/hostapiClient';
 import { formatDistanceToNow } from 'date-fns';
-import { LOCALHOST_URL } from '../../constants/constants';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 // import { Notification } from '../../interface/Notification';
 import { Notification } from '../../interface/Notification';
 
@@ -79,7 +79,7 @@ const HostHeader = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await hostapiClient.get(`${LOCALHOST_URL}/host/getHost`);
+        const response = await hostapiClient.get(`${apiUrl}/host/getHost`);
         setHostId(response.data.message._id);
         setName(response.data.message.name);
 

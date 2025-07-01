@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import OTPInput from "react-otp-input";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { toast } from "react-toastify";
 import { OtpValues } from "../../../interface/Otp";
 
@@ -37,7 +38,7 @@ const HostForgotPasswordOtpBody = () => {
       setLoading(true);
       try {
         const response = await axios.post(
-          "http://localhost:4000/host/verifyforgotpasswordotp",
+          `${apiUrl}/host/verifyforgotpasswordotp`,
           { email, otp: numericOtp }
         );
         if (response.data.message === "success") {

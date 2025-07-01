@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Wallet, CreditCard, AlertCircle, AlertTriangle } from 'lucide-react';
-import apiClient from '../../../services/apiClient';
-import { LOCALHOST_URL } from '../../../constants/constants';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { toast } from 'react-toastify';
 import { Notification } from '../../../interface/Notification';
 import { io } from "socket.io-client";
 const socket = io("http://localhost:4000");
+import createApiClient from '../../../services/apiClient';
+const userApiClient = createApiClient('user');
 
 declare class Razorpay {
   constructor(options: RazorpayOptions);
@@ -178,9 +179,9 @@ const BookingForm = () => {
     const fetchData = async () => {
       try {
         const [hostelResponse, userResponse, walletResponse] = await Promise.all([
-          apiClient.get(`${LOCALHOST_URL}/user/getsingleHostel/${id}`),
-          apiClient.get(`${LOCALHOST_URL}/user/getUserDetails`),
-          apiClient.get(`${LOCALHOST_URL}/user/getWalletDetails`)
+          userApiClient.get(`${apiUrl}/hostel/getsingleHostel/${id}`),
+          userApiClient.get(`${apiUrl}/user/getUserDetails`),
+          userApiClient.get(`${apiUrl}/wallet/getWalletDetails`)
         ]);
 
         const hostelData = hostelResponse.data.message;
@@ -282,7 +283,7 @@ const BookingForm = () => {
     };
 
     try {
-      const response = await apiClient.post(`${LOCALHOST_URL}/order/bookings`, bookingDetails);
+      const response = await userApiClient.post(`${apiUrl}/order/bookings`, bookingDetails);
       console.log(response)
       if (response.data.message === 'Hostel Booked') {
         const newNotification: Notification = {
@@ -322,7 +323,7 @@ const BookingForm = () => {
 
     setLoading(true);
     try {
-      const response = await apiClient.post('/order/payment', {
+      const response = await userApiClient.post('/order/payment', {
         totalAmount: totalAmount * 100,
         currency: 'INR',
         receipt: `receipt_${Date.now()}`,
@@ -392,7 +393,7 @@ const BookingForm = () => {
     };
 
     try {
-      const response = await apiClient.post(`${LOCALHOST_URL}/order/bookings`, bookingDetails);
+      const response = await userApiClient.post(`${apiUrl}/order/bookings`, bookingDetails);
       if (response.data.message === 'Hostel Booked') {
         const newNotification: Notification = {
           receiver: userId,

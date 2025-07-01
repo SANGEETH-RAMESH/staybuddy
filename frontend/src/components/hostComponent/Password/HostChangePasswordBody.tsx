@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Check, X } from 'lucide-react';
-import hostapiClient from '../../../services/hostapiClient';
-import { LOCALHOST_URL } from '../../../constants/constants';
+import createApiClient from '../../../services/apiClient';
+const hostApiClient = createApiClient('host');
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
@@ -63,7 +64,7 @@ const HostChangePasswordBody = () => {
     
     try {
       // Make API call to change password
-      const response = await hostapiClient.patch(`${LOCALHOST_URL}/host/changepassword`, {formData});
+      const response = await hostApiClient.patch(`${apiUrl}/host/changepassword`, {formData});
       console.log(response.data, "Response");
       
       if(response.data.message === 'Password Changed'){

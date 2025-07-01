@@ -6,10 +6,11 @@ import { IHostel } from "../../model/hostelModel";
 import { ICategory } from "../../model/categoryModel";
 import { IReview } from "../../model/reviewModel";
 import { IOrder } from "../../model/orderModel";
+import { IUserResponse } from "../../dtos/UserResponse";
 
 export interface IAdminService{
     adminLogin(adminData: { email: string,password: string }): Promise<{ message: string; accessToken: string; refreshToken: string } | string>,
-    getUser(page: number, limit: number): Promise<{ users: IUser[]; totalCount: number } | string | null>,
+    getUser(page: number, limit: number): Promise<{ users: IUserResponse[]; totalCount: number } | string | null>,
     userBlock(userId:ObjectId):Promise<string>,
     userUnBlock(userId: Types.ObjectId): Promise<{ message: string; userUnBlock: IUser | null; error?: string }>,
     userDelete(userId:object):Promise<string>,

@@ -3,12 +3,13 @@ import { Menu, X, Heart, MessageCircle, Bell, User, LogOut } from 'lucide-react'
 import { useDispatch } from 'react-redux';
 import { logout } from '../../redux/userAuthSlice';
 import { useNavigate } from 'react-router-dom';
-import apiClient from '../../services/apiClient';
-import { LOCALHOST_URL } from '../../constants/constants';
+import createApiClient from '../../services/apiClient';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { Notification } from '../../interface/Notification';
 import { formatDistanceToNow } from 'date-fns';
 import { io } from "socket.io-client";
 const socket = io("http://localhost:4000");
+const userApiClient = createApiClient('user');
 
 export const UserHeader: React.FC = () => {
   const dispatch = useDispatch();
@@ -18,7 +19,6 @@ export const UserHeader: React.FC = () => {
   const [notification, setNotification] = useState<Notification[]>([])
   const [isRead, setIsRead] = useState<boolean>(false)
   const [readCount, setReadCount] = useState<number>(0)
-  // const []
 
   const handleLogout = () => {
     dispatch(logout({ isLoggedIn: false }));
@@ -73,7 +73,7 @@ export const UserHeader: React.FC = () => {
     if (userId) {
       try {
         console.log('heee')
-        const response = await apiClient.put(`${LOCALHOST_URL}/user/mark-all-read`);
+        const response = await userApiClient.put(`${apiUrl}/user/mark-all-read`);
         console.log(response,'Mm')
         if (response.data.message == 'Updated') {
           setNotification((prev) =>
@@ -90,70 +90,6 @@ export const UserHeader: React.FC = () => {
       }
     }
   }
-
-
-  // const notifications = [
-  //   {
-  //     id: 1,
-  //     title: "Booking Confirmed",
-  //     message: "Your booking at Ocean View Resort has been confirmed for Dec 25-28",
-  //     time: "2 minutes ago",
-  //     type: "success",
-  //     read: false
-  //   },
-  //   {
-  //     id: 2,
-  //     title: "New Message",
-  //     message: "You have received a new message from John regarding your property inquiry",
-  //     time: "1 hour ago",
-  //     type: "message",
-  //     read: false
-  //   },
-  //   {
-  //     id: 3,
-  //     title: "Payment Reminder",
-  //     message: "Your payment for Mountain Cabin booking is due in 2 days",
-  //     time: "3 hours ago",
-  //     type: "warning",
-  //     read: true
-  //   },
-  //   {
-  //     id: 4,
-  //     title: "Special Offer",
-  //     message: "Get 20% off on your next booking! Limited time offer ending soon",
-  //     time: "1 day ago",
-  //     type: "info",
-  //     read: true
-  //   },
-  //   {
-  //     id: 5,
-  //     title: "Review Request",
-  //     message: "Please share your experience about your recent stay at Beach Villa",
-  //     time: "2 days ago",
-  //     type: "info",
-  //     read: true
-  //   },
-  //   {
-  //     id: 6,
-  //     title: "Booking Cancelled",
-  //     message: "Your booking at City Hotel has been cancelled. Refund will be processed within 3-5 days",
-  //     time: "3 days ago",
-  //     type: "error",
-  //     read: true
-  //   },
-  //   {
-  //     id: 7,
-  //     title: "Welcome to StayBuddy",
-  //     message: "Thank you for joining StayBuddy! Explore amazing properties and start your journey",
-  //     time: "1 week ago",
-  //     type: "info",
-  //     read: true
-  //   }
-  // ];
-
-  // setNotification(notifications)
-
-
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -173,7 +109,7 @@ export const UserHeader: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await apiClient.get(`${LOCALHOST_URL}/user/getUserDetails`);
+        const response = await userApiClient.get(`${apiUrl}/user/getUserDetails`);
         console.log(response.data, 'data')
         setUserId(response?.data.data._id)
         setName(response?.data?.data.name)

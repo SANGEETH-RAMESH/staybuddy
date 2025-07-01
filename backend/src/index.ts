@@ -49,6 +49,9 @@ import {user_route} from './router/userRoute';
 import host_route from './router/hostRoute';
 import order_route from './router/orderRoute';
 import chat_route from './router/chatRoute';
+import hostel_route from './router/hostelRoute';
+import wallet_route from './router/walletRoute';
+import wishlist_route from './router/wishlistRoute';
 import chatService from './service/chatService';
 import chatRepository from './respository/chatRepository';
 
@@ -57,6 +60,9 @@ app.use('/user', user_route);
 app.use('/host', host_route);
 app.use('/order', order_route);
 app.use('/chat', chat_route);
+app.use('/hostel',hostel_route);
+app.use('/wallet',wallet_route);
+app.use('/wishlist',wishlist_route);
 
 
 const ChatRepository = new chatRepository

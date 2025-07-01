@@ -5,11 +5,15 @@ import AdminController from '../controller/adminController';
 // import hostController from '../controller/hostController';
 import adminAuthMiddleware from '../middleware/adminAuth';
 import upload from '../cloudinary/multer'
+import UserRepository from '../respository/userRepository';
+import HostRepository from '../respository/hostRepository';
 const admin_route = Router();
 
 
 const adminRespository = new AdminRepository();
-const adminService = new AdminService(adminRespository); 
+const userRepository = new UserRepository()
+const hostRepository = new HostRepository()
+const adminService = new AdminService(adminRespository,userRepository,hostRepository); 
 const adminController = new AdminController(adminService)
 
 admin_route.post('/login',adminController.adminLogin.bind(adminController))

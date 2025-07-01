@@ -4,18 +4,15 @@ import { JWT_SECRET } from "../config/middlewareConfig";
 // import { userPayload } from "../types/commonInterfaces/tokenInterface";
 import User from "../model/userModel";
 
-// Define the AuthenticatedUser interface
 export interface AuthenticatedUser {
     _id: string;
-    name: string;
-    email: string;
-    mobile: string;
+    role: 'user' | 'host' | 'admin';
     iat: number;
     exp: number;
-    displayName?: string
+    displayName?: string;
+    email?: string;
 }
 
-// Extend the Express Request interface to include the user
 declare module "express-serve-static-core" {
     interface Request {
         user?: AuthenticatedUser;
@@ -32,6 +29,11 @@ const userAuthMiddleware = async (req: Request, res: Response, next: NextFunctio
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET) as AuthenticatedUser;
+
+        if (decoded.role !== 'user') {
+            res.status(403).json({ messag: 'Access denied:Not a user' });
+            return
+        }
 
         const user = await User.findById(decoded._id);
         console.log(user, 'usser')

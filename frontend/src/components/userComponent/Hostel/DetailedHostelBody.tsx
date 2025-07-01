@@ -18,9 +18,11 @@ import {
     Star,
     MessageCircle
 } from 'lucide-react';
-import apiClient from '../../../services/apiClient';
-import { LOCALHOST_URL } from '../../../constants/constants';
+// import { LOCALHOST_URL } from '../../../constants/constants';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { toast } from 'react-toastify';
+import createApiClient from '../../../services/apiClient';
+const userApiClient = createApiClient('user');
 
 interface Host {
     _id: string;
@@ -142,7 +144,7 @@ const HostelDetailPage = () => {
     useEffect(() => {
         const fetchHostelDetails = async () => {
             try {
-                const response = await apiClient.get(`${LOCALHOST_URL}/user/getsingleHostel/${id}`);
+                const response = await userApiClient.get(`${apiUrl}/hostel/getsingleHostel/${id}`);
                 setHostel(response.data.message);
                 setLoading(false);
             } catch (err) {
@@ -170,7 +172,7 @@ const HostelDetailPage = () => {
         if (hostel?.host_id?._id) {
             console.log(ownerId,'Owner id')
             console.log(hostel?.host_id._id,"Hosttt")
-            const response = await apiClient.post(`${LOCALHOST_URL}/chat/createchat`, { ownerId })
+            const response = await userApiClient.post(`${apiUrl}/chat/createchat`, { ownerId })
             if(response.data.success){
                 console.log('Initiating chat with hostel owner:', hostel.host_id._id);
                 navigate(`/user/chat/${hostel.host_id._id}`, {

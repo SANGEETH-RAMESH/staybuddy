@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Wifi, RefreshCw, ArrowLeft, Search, Home, UtensilsCrossed, Shirt, MapPin, Star, Users, Phone, Heart, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 // import axios from 'axios';
-import { LOCALHOST_URL } from '../../../constants/constants';
-import apiClient from '../../../services/apiClient';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import toast from 'react-hot-toast';
+import createApiClient from '../../../services/apiClient';
+const userApiClient = createApiClient('user');
 
-// Type definitions
 interface Facilities {
   wifi: boolean;
   food: boolean;
@@ -108,7 +108,6 @@ const SearchBar: React.FC<SearchBarProps> = ({ searchTerm, onSearchChange, total
   );
 };
 
-// Pagination Component
 const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPageChange }) => {
   const generatePageNumbers = () => {
     const pages = [];
@@ -228,7 +227,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
   const checkWishlist = async ({ hostelId }: { hostelId: string }, e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     try {
-      const response = await apiClient.get(`${LOCALHOST_URL}/user/checkWishlist/${hostelId}`)
+      const response = await userApiClient.get(`${apiUrl}/wishlist/checkWishlist/${hostelId}`)
       console.log(response.data.message)
       if (response.data.message == 'Already Exist') {
         setIsLiked(true)
@@ -241,7 +240,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
 
   useEffect(() => {
     const checkWishlist = async () => {
-      const response = await apiClient.get(`${LOCALHOST_URL}/user/checkWishlist/${hostel.id}`)
+      const response = await userApiClient.get(`${apiUrl}/wishlist/checkWishlist/${hostel.id}`)
       console.log(response.data.message)
       if (response.data.message == 'Already Exist') {
         setIsLiked(true)
@@ -255,7 +254,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
     console.log("Liked:", isLiked)
     if (!isLiked) {
       try {
-        const response = await apiClient.post(`${LOCALHOST_URL}/user/addToWishlist/${hostel.id}`);
+        const response = await userApiClient.post(`${apiUrl}/wishlist/addToWishlist/${hostel.id}`);
         console.log(response.data.message);
 
         if (response.data.message === 'Added to wishlist') {
@@ -267,7 +266,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
       }
     } else {
       try {
-        const response = await apiClient.delete(`${LOCALHOST_URL}/user/removeFromWishlist/${hostel.id}`);
+        const response = await userApiClient.delete(`${apiUrl}/wishlist/removeFromWishlist/${hostel.id}`);
         console.log(response.data.message, 'removed');
 
         if (response.data.message === 'Hostel Removed From Wishlist') {
@@ -469,7 +468,6 @@ const HostelCardGrid: React.FC = () => {
 
   const ITEMS_PER_PAGE = 6;
 
-  // Debounce function for search
   const useDebounce = (value: string, delay: number) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -486,16 +484,15 @@ const HostelCardGrid: React.FC = () => {
     return debouncedValue;
   };
 
-  const debouncedSearchTerm = useDebounce(searchTerm, 300); // 300ms delay
+  const debouncedSearchTerm = useDebounce(searchTerm, 300); 
 
   const fetchHostels = async (page: number = 1, limit: number = ITEMS_PER_PAGE, search: string = '') => {
     try {
-      setLoading(page === 1); // Only show full loading on first page
+      setLoading(page === 1); 
       if (search) {
         setIsSearching(true);
       }
 
-      // Build query parameters
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
@@ -505,7 +502,7 @@ const HostelCardGrid: React.FC = () => {
         params.append('search', search.trim());
       }
 
-      const response = await apiClient.get(`${LOCALHOST_URL}/user/getHostels?${params.toString()}`);
+      const response = await userApiClient.get(`${apiUrl}/hostel/getHostels?${params.toString()}`);
       const data = response.data.response;
 
       const hostelData = data.hostels;
@@ -557,16 +554,16 @@ const HostelCardGrid: React.FC = () => {
     }
   };
 
-  // Initial fetch
+ 
   useEffect(() => {
     fetchHostels(1, ITEMS_PER_PAGE);
   }, []);
 
   // Search effect
   useEffect(() => {
-    if (debouncedSearchTerm !== searchTerm) return; // Prevent duplicate calls
+    if (debouncedSearchTerm !== searchTerm) return;
     
-    // Reset to page 1 when searching
+  
     fetchHostels(1, ITEMS_PER_PAGE, debouncedSearchTerm);
   }, [debouncedSearchTerm]);
 
@@ -579,7 +576,7 @@ const HostelCardGrid: React.FC = () => {
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
-    // Reset current page when search changes
+   
     setCurrentPage(1);
   };
 
@@ -587,9 +584,9 @@ const HostelCardGrid: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="relative w-16 h-16">
-          {/* Outer circle */}
+       
           <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
-          {/* Spinning arc */}
+        
           <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
         </div>
       </div>

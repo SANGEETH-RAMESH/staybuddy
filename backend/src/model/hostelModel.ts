@@ -13,7 +13,7 @@ export interface IHostel extends Document {
     bedShareRoom: number;
     foodRate?: number;
     phone: string;
-    host_id: mongoose.Types.ObjectId; 
+    host_id: mongoose.Types.ObjectId;
 }
 
 const hostelModel: Schema = new Schema(
@@ -66,12 +66,12 @@ const hostelModel: Schema = new Schema(
             required: true,
         },
         host_id: {
-            type: mongoose.Schema.Types.ObjectId, 
+            type: mongoose.Schema.Types.ObjectId,
             ref: 'Host',
             required: true,
-        },
-        
-    }
+        }
+    },
+    { timestamps: true }
 );
 
 const Hostel = mongoose.model<IHostel>('Hostel', hostelModel);

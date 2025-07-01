@@ -4,6 +4,7 @@ import OrderService from "../service/orderService";
 import OrderController from "../controller/orderController";
 import { makeOrder } from "../utils/razor_pay";
 import userAuthMiddleware from '../middleware/userAuth'
+import hostAuthMiddleware from "../middleware/hostAuth";
 
 const order_route= Router()
 
@@ -19,6 +20,8 @@ order_route.post('/endBooking/:id',userAuthMiddleware,orderController.endBooking
 order_route.post('/submitReview',userAuthMiddleware,orderController.submitReview.bind(orderController))
 order_route.get('/getReviewDetails/:id',userAuthMiddleware,orderController.getReviewDetails.bind(orderController))
 order_route.get('/getReviewDetailsByOrderId/:id',userAuthMiddleware,orderController.getReviewDetailsByOrderid.bind(orderController))
+order_route.get('/getSavedBookings/:id',userAuthMiddleware,orderController.getSavedBookings.bind(orderController))
+order_route.get('/getBookings/:id',hostAuthMiddleware,orderController.getBookings.bind(orderController))
 
 
 

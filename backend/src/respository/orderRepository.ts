@@ -71,10 +71,10 @@ class orderRepository implements IOrderRepository {
                 paymentMethod: paymentMethod,
                 active: true
             });
-            if(addBookings){
+            if (addBookings) {
                 await Hostel.updateOne(
-                    {_id:hostelid},
-                    {$inc:{beds:-orderData.selectedBeds}}
+                    { _id: hostelid },
+                    { $inc: { beds: -orderData.selectedBeds } }
                 )
             }
             console.log(addBookings, 'dsfsdf')
@@ -111,9 +111,9 @@ class orderRepository implements IOrderRepository {
 
     async getOrderDetails(id: Types.ObjectId): Promise<IOrder | string | null> {
         try {
-            console.log("id",id)
+            console.log("id", id)
             const findOrder = await Order.findOne({ _id: id }).populate('hostel_id.id').populate('host_id');
-            console.log(findOrder,'Orderrr')
+            console.log(findOrder, 'Orderrr')
             return findOrder
         } catch (error) {
             return error as string
@@ -122,7 +122,7 @@ class orderRepository implements IOrderRepository {
 
     async creditUserWallet(id: Types.ObjectId, amount: number): Promise<string> {
         try {
-            console.log('heeeeello',id,amount)
+            console.log('heeeeello', id, amount)
             console.log(id, 'id', amount)
             await Wallet.updateOne(
                 { userOrHostId: id },
@@ -228,12 +228,57 @@ class orderRepository implements IOrderRepository {
     async updateRoom(hostelId: string, bedCount: number): Promise<string> {
         try {
             console.log("Sangee")
-            console.log(hostelId,bedCount)
+            console.log(hostelId, bedCount)
             const updatingRoom = await Hostel.updateOne(
                 { _id: hostelId },
                 { $inc: { beds: bedCount } }
             )
             return "Room Updated"
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getSavedBookings(id: Types.ObjectId, skip: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null> {
+        try {
+            const skipnumber = parseInt(skip, 0);
+            const limitNumber = parseInt(limit, 10);
+            if (isNaN(skipnumber) || isNaN(limitNumber)) {
+                return 'Invalid pagination values';
+            }
+            const totalCount = await Order.countDocuments({ userId: id });
+            const bookings = await Order.find({ userId: id })
+                .populate('hostel_id.id')
+                .populate('host_id')
+                .populate('userId')
+                .sort({ updatedAt: -1 })
+                .skip(skipnumber)
+                .limit(limitNumber);
+
+            return { bookings, totalCount };
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getBookings(hostId: string, skip: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null> {
+        try {
+            console.log(skip,limit,'daaaaa')
+            const skipnumber = parseInt(skip, 0);
+            const limitNumber = parseInt(limit, 10);
+            console.log(typeof skipnumber,typeof limitNumber)
+            if (isNaN(skipnumber) || isNaN(limitNumber)) {
+                return 'Invalid pagination values';
+            }
+            const getBookings = await Order.find({ host_id: hostId })
+                .sort({ updatedAt: -1 })
+                .skip(skipnumber)
+                .limit(limitNumber)
+                .populate("host_id")
+                .populate("userId")
+                .populate("hostel_id.id");
+            const totalCount = await Order.countDocuments({ host_id: hostId });
+            return  { bookings:getBookings, totalCount };
         } catch (error) {
             return error as string
         }

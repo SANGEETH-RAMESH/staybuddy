@@ -4,13 +4,14 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
 const ForgotPasswordOtpBody = () => {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(59);
   const [canResend, setCanResend] = useState(false);
-  const [error, setError] = useState(""); // Added error state
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const location = useLocation();
@@ -38,7 +39,7 @@ const ForgotPasswordOtpBody = () => {
       setLoading(true);
       try {
         const response = await axios.post(
-          "http://localhost:4000/user/verifyforgotpasswordotp",
+          `${apiUrl}/user/verifyforgotpasswordotp`,
           { email, otp: numericOtp }
         );
         console.log(response.data.message, "sd");

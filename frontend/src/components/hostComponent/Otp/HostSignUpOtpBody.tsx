@@ -4,6 +4,7 @@ import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { OtpValues } from "../../../interface/Otp";
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
 const HostSignUpOtpBody = () => {
   const [otp, setOtp] = useState("");
@@ -45,7 +46,7 @@ const HostSignUpOtpBody = () => {
     setCanResend(false);
     setTimer(59);
     try {
-      const response = await axios.post("http://localhost:4000/host/resendotp", {
+      const response = await axios.post(`${apiUrl}/host/resendotp`, {
         email,
         name,
         password,
