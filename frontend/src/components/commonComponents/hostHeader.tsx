@@ -3,14 +3,13 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../redux/hostAuthSlice';
 import { MessageCircle, Building2, User, LogOut, Menu, X, Bell, BellRing } from 'lucide-react';
-import hostapiClient from '../../services/hostapiClient';
 import { formatDistanceToNow } from 'date-fns';
 const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
-// import { Notification } from '../../interface/Notification';
 import { Notification } from '../../interface/Notification';
 
 import { io } from "socket.io-client";
-const socket = io("http://localhost:4000");
+import { getHost } from '../../hooks/hostHooks';
+const socket = io(`${apiUrl}`);
 
 const HostHeader = () => {
   const [name, setName] = useState('');
@@ -23,69 +22,14 @@ const HostHeader = () => {
   const [readCount, setReadCount] = useState<number>(0)
   const notificationRef = useRef<HTMLDivElement | null>(null);
 
-  // Dummy notifications data
-  // const dummyNotifications = [
-  //   {
-  //     id: 1,
-  //     title: "New Booking Request",
-  //     message: "You have received a new booking request for Room A101",
-  //     time: "2 minutes ago",
-  //     isRead: false,
-  //   },
-  //   {
-  //     id: 2,
-  //     title: "Payment Received",
-  //     message: "Payment of ₹5000 has been received from John Doe",
-  //     time: "1 hour ago",
-  //     isRead: false,
-  //   },
-  //   {
-  //     id: 3,
-  //     title: "Property Approved",
-  //     message: "Your property 'Green View Hostel' has been approved and is now live",
-  //     time: "3 hours ago",
-  //     isRead: true,
-  //   },
-  //   {
-  //     id: 4,
-  //     title: "Guest Check-in",
-  //     message: "Guest Sarah Wilson has checked into Room B205",
-  //     time: "5 hours ago",
-  //     isRead: true,
-  //   },
-  //   {
-  //     id: 5,
-  //     title: "Maintenance Request",
-  //     message: "Room C301 has a maintenance request for AC repair",
-  //     time: "1 day ago",
-  //     isRead: false,
-  //   },
-  //   {
-  //     id: 6,
-  //     title: "Review Received",
-  //     message: "You received a 5-star review from Michael Brown",
-  //     time: "2 days ago",
-  //     isRead: true,
-  //   },
-  //   {
-  //     id: 7,
-  //     title: "Booking Cancelled",
-  //     message: "Booking for Room A102 has been cancelled by the guest",
-  //     time: "3 days ago",
-  //     isRead: true,
-  //   }
-  // ];
+  
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await hostapiClient.get(`${apiUrl}/host/getHost`);
+        const response = await getHost();
         setHostId(response.data.message._id);
         setName(response.data.message.name);
-
-        // // Load dummy notifications (replace with actual API call)
-        // setNotifications(dummyNotifications);
-        // setHasUnreadNotifications(dummyNotifications.some(notif => !notif.isRead));
       } catch (error) {
         console.error("Error fetching user details:", error);
       }

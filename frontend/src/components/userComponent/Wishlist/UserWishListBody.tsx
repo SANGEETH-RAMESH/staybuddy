@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { X, Check, Heart, ArrowLeft, Trash2, Eye } from 'lucide-react';
-import createApiClient from '../../../services/apiClient';
-const userApiClient = createApiClient('user');
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { deleteWishlist, deleteWishlists, getWishlist, removeFromWishlist } from '../../../hooks/userHooks';
 
 export interface WishlistItem {
   _id: string;
@@ -23,7 +21,7 @@ export default function WishlistPage() {
     const fetchWishlistData = async () => {
       try {
         setLoading(true);
-        const response = await userApiClient.get(`${apiUrl}/wishlist/getWishlist`);
+        const response = await getWishlist();
         console.log(response.data.message, "message");
         const data = response.data.message; 
         const wishlistdata = data.map((datas: WishlistItem) => ({
@@ -47,7 +45,7 @@ export default function WishlistPage() {
   const handleRemoveItem = async ({ hostel_id }: { hostel_id: string }) => {
     try {
       console.log(hostel_id, 'he');
-      const response = await userApiClient.delete(`${apiUrl}/wishlist/removeFromWishlist/${hostel_id}`);
+      const response = await removeFromWishlist(hostel_id);
       console.log(response.data.message);
       if (response.data.message == 'Hostel Removed From Wishlist') {
         console.log("Removeddd");
@@ -63,7 +61,7 @@ export default function WishlistPage() {
 
   const handleClearWishlist = async () => {
     try {
-      const response = await userApiClient.delete(`${apiUrl}/wishlist/deleteWishlist`);
+      const response = await deleteWishlists();
       console.log(response.data.message);
       if (response.data.message === 'Wishlist Deleted') {
         toast.success("Wishlist Cleared", {

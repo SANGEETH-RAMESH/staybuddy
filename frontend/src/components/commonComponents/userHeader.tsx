@@ -8,7 +8,8 @@ const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { Notification } from '../../interface/Notification';
 import { formatDistanceToNow } from 'date-fns';
 import { io } from "socket.io-client";
-const socket = io("http://localhost:4000");
+import { getUserDetails } from '../../hooks/userHooks';
+const socket = io(`${apiUrl}`);
 const userApiClient = createApiClient('user');
 
 export const UserHeader: React.FC = () => {
@@ -109,7 +110,7 @@ export const UserHeader: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await userApiClient.get(`${apiUrl}/user/getUserDetails`);
+        const response = await getUserDetails()
         console.log(response.data, 'data')
         setUserId(response?.data.data._id)
         setName(response?.data?.data.name)

@@ -16,10 +16,10 @@ import {
   ChevronRight,
   Star
 } from 'lucide-react';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+
 import { Hostel } from '../../../interface/Hostel';
-import createApiClient from '../../../services/apiClient';
-const hostApiClient = createApiClient('host');
+import { getSingleHostel } from '../../../hooks/hostHooks';
+
 
 
 const ImageGallery = ({ photos }: { photos: string[] }) => {
@@ -106,10 +106,8 @@ const HostelDetailPage = () => {
   useEffect(() => {
     const fetchHostelData = async () => {
       try {
-        console.log('heyy')
-        const response = await hostApiClient.get(`${apiUrl}/hostel/detailhostel`, {
-          params: { id },
-        });
+        if(!id) return;
+        const response = await getSingleHostel(id);
         setHostel(response.data.message);
         setLoading(false);
       } catch (error) {

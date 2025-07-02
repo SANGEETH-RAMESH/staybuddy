@@ -10,6 +10,7 @@ import { IUserResponse } from "../../dtos/UserResponse";
 
 export interface IAdminRepository {
     FindAdminByEmail(email: string): Promise<IUserResponse | null>,
+    FindAdminById(id:Types.ObjectId):Promise<IUserResponse | null | string>,
     AdminVerifyLogin(adminData: { email: string, password: string }): Promise<{ message: string; accessToken: string; refreshToken: string } | string> ,
     getUser(page: number, limit: number): Promise<{ users: IUserResponse[]; totalCount: number } | string | null>,
     userBlock(userId: ObjectId): Promise<string>,
@@ -28,7 +29,7 @@ export interface IAdminRepository {
     findCategoryByName(name:string):Promise<string>,
     getCategory(id:string):Promise<ICategory | string>,
     updateCategory(id: string, name: string, isActive: boolean): Promise<string>,
-    getUserDetails(userId:string):Promise<string | IHost | null>,
+    getHostDetails(userId:string):Promise<string | IHost | null>,
     getHostHostelData(hostId:string): Promise<IHostel[] | string | null>,
     getHostels(): Promise<IHostel[] | string | null>,
     deleteHostel(hostelId: string): Promise<string>,

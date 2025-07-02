@@ -13,10 +13,9 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+
 import { useNavigate, useParams } from 'react-router-dom';
-import createApiClient from '../../../services/apiClient';
-const hostApiClient = createApiClient('host');
+import { getBookings } from '../../../hooks/hostHooks';
 
 interface HostelData {
   advanceAmount: number;
@@ -86,14 +85,13 @@ const HostBookings = () => {
     const fetchHostBookings = async (page: number = 1) => {
       setIsLoading(true);
       try {
-        console.log(id)
+        if (!id) return;
         const skip = (page - 1) * limit;
-
-      const params = new URLSearchParams({
-        skip: skip.toString(),
-        limit: limit.toString()
-      });
-        const response = await hostApiClient.get(`${apiUrl}/order/getBookings/${id}?${params}`);
+        const params = new URLSearchParams({
+          skip: skip.toString(),
+          limit: limit.toString()
+        });
+        const response = await getBookings(id, params)
         console.log(response.data.message, 'hdfsd')
         const data = response.data.message;
         const totalCount = data.totalCount || 0;
@@ -126,18 +124,18 @@ const HostBookings = () => {
     navigate(`/host/booking-details/${bookingId}`);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Confirmed':
-        return 'bg-green-100 text-green-700';
-      case 'Pending':
-        return 'bg-yellow-100 text-yellow-700';
-      case 'Cancelled':
-        return 'bg-red-100 text-red-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
-  };
+  // const getStatusColor = (status: string) => {
+  //   switch (status) {
+  //     case 'Confirmed':
+  //       return 'bg-green-100 text-green-700';
+  //     case 'Pending':
+  //       return 'bg-yellow-100 text-yellow-700';
+  //     case 'Cancelled':
+  //       return 'bg-red-100 text-red-700';
+  //     default:
+  //       return 'bg-gray-100 text-gray-700';
+  //   }
+  // };
 
   const renderPagination = () => {
     if (paginationData.totalPages <= 1) return null;
@@ -171,7 +169,7 @@ const HostBookings = () => {
           return buttons;
         })()}
 
-        
+
         <button
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={!paginationData.hasNextPage}

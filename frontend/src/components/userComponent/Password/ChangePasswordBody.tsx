@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Check, X } from 'lucide-react';
-// import axios from 'axios';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
-import createApiClient from '../../../services/apiClient';
-const userApiClient = createApiClient('user');
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { changePassword } from '../../../hooks/userHooks';
 
 const ChangePasswordBody = () => {
   const [formData, setFormData] = useState({
@@ -64,7 +61,7 @@ const ChangePasswordBody = () => {
     e.preventDefault();
     if (formData.newPassword === formData.confirmPassword) {
       try {
-        const response = await userApiClient.patch(`${apiUrl}/user/changepassword`, formData);
+        const response = await changePassword(formData)
         console.log("Response",response)
         if (response.data.message === 'Current password does not match') {
           setErrors((prev) => ({ ...prev, currentPassword: 'Current password does not match' }));

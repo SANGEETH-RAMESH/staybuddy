@@ -281,8 +281,8 @@ class UserService implements IUserService {
     async validateRefreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | string> {
         try {
             const decoded = verifyToken(refreshToken)
-            if (typeof decoded === 'object' && decoded !== null && 'email' in decoded) {
-                const response = await this.userRepository.FindUserByEmail(decoded.email);
+            if (typeof decoded === 'object' && decoded !== null) {
+                const response = await this.userRepository.FindUserById(decoded._id);
                 if (!response) {
                     return "No User";
                 }
@@ -293,7 +293,6 @@ class UserService implements IUserService {
 
                 const accessToken = generateAccessToken(userPayload);
                 const newRefreshToken = generateRefreshToken(userPayload);
-
                 return { accessToken, refreshToken: newRefreshToken };
             }
 

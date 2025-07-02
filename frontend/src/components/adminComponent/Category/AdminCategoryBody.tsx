@@ -1,18 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
-// import axios from 'axios';
-// import { toast } from 'react-toastify';
 import { ObjectId } from 'bson';
 import { Pencil, Trash2, Search, RefreshCw, PlusCircle, PackageX, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Category } from '../../../interface/Category';
-import adminApiClient from '../../../services/adminApiClient';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+import { deleteCategory, getAllCategory, searchCategory } from '../../../hooks/categoryHooks';
 
 const AdminCategoryBody = () => {
   const [categories, setCategories] = useState<Category[]>([]);
 
-  
+
   const [allCategories, setAllCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -38,14 +35,15 @@ const AdminCategoryBody = () => {
 
     if (result.isConfirmed) {
       try {
+        if (!categoryId) return
         console.log(categoryId, 'heedsf')
-        const response = await adminApiClient.delete('http://localhost:4000/admin/category', {
-          data: { categoryId },
-        });
+
+        const id = categoryId.toString()
+        const response = await deleteCategory(id);
 
         console.log(response, 'respons')
         if (response.data.message == 'Category Deleted') {
-  
+
           fetchCategories(currentPage);
           Swal.fire('Deleted!', 'The category has been deleted.', 'success');
 
@@ -54,17 +52,17 @@ const AdminCategoryBody = () => {
 
           let newPage = currentPage;
 
-      
+
           if (categories.length === 1 && currentPage > 1) {
             newPage = currentPage - 1;
           }
 
-  
+
           setTotalCategories(newTotal);
           setTotalPages(newTotalPages);
           setCurrentPage(newPage);
 
-     
+
           fetchCategories(newPage);
         } else {
           Swal.fire('Failed!', 'There was an issue deleting the category.', 'error');
@@ -88,30 +86,17 @@ const AdminCategoryBody = () => {
   const fetchCategories = async (page: number = 1) => {
     setLoading(true);
     try {
-    
+
       const skip = (page - 1) * categoriesPerPage;
       const limit = categoriesPerPage;
-      console.log(limit, skip, 'hee')
-
-
-      const response = await adminApiClient.get(`${apiUrl}/admin/getAllCategory`, {
-        params: {
-          skip,
-          limit
-        }
-      });
-      console.log(response.data.message, 'response')
+      const response = await getAllCategory(skip,limit)
       const data = response.data.message.getCategories;
-
       if (data) {
         setCategories(data || []);
         setAllCategories(data || [])
         const totalCount = response.data.message.totalCount || 0;
         setTotalCategories(totalCount);
-
-        // Fix 3: Calculate total pages correctly
         const totalPages = Math.ceil(totalCount / limit);
-        console.log(totalPages, 'hee')
         setTotalPages(totalPages);
       }
     } catch (error) {
@@ -144,13 +129,13 @@ const AdminCategoryBody = () => {
       }
 
       try {
-        const response = await adminApiClient.get(`${apiUrl}/admin/search?name=${newSearchTerm}`);
+        const response = await searchCategory(newSearchTerm);
         console.log(response.data.message, 'Search Results');
         if (response.data.message.length > 0) {
           setCategories(response.data.message);
           setPages(totalPages)
           setTotalPages(1)
-        }else if(response.data.message.length==0){
+        } else if (response.data.message.length == 0) {
           setCategories([])
         }
         console.log(response.data.message.length)
@@ -263,7 +248,7 @@ const AdminCategoryBody = () => {
         <div className="bg-[#212936] rounded-lg shadow-lg p-8 flex flex-col items-center justify-center">
           <PackageX className="w-16 h-16 text-gray-500 mb-4" />
           <h3 className="text-xl text-white mb-2">No categories found</h3>
-    
+
         </div>
       )}
 
@@ -292,7 +277,7 @@ const AdminCategoryBody = () => {
                     <span className="inline-block sm:hidden font-semibold text-gray-400 text-xs mb-1">ID: </span>
                     {(currentPage - 1) * categoriesPerPage + index + 1}
                   </td>
-                  
+
                   <td className="py-2 px-2 sm:py-4 sm:px-6 block sm:table-cell">
                     <div className="flex items-center sm:block">
                       <span className="inline-block sm:hidden font-semibold text-gray-400 text-xs mr-3 min-w-[60px]">Image:</span>
@@ -311,12 +296,12 @@ const AdminCategoryBody = () => {
                       </div>
                     </div>
                   </td>
-                  
+
                   <td className="py-2 px-2 sm:py-4 sm:px-6 font-medium block sm:table-cell">
                     <span className="inline-block sm:hidden font-semibold text-gray-400 text-xs mb-1">Name: </span>
                     <span className="text-sm sm:text-base">{category.name}</span>
                   </td>
-                  
+
                   <td className="py-2 px-2 sm:py-4 sm:px-6 block sm:table-cell sm:text-center">
                     <div className="flex items-center sm:justify-center">
                       <span className="inline-block sm:hidden font-semibold text-gray-400 text-xs mr-3 min-w-[60px]">Status:</span>
@@ -330,12 +315,12 @@ const AdminCategoryBody = () => {
                       </span>
                     </div>
                   </td>
-                  
+
                   <td className="py-2 px-2 sm:py-4 sm:px-6 text-xs sm:text-sm text-gray-300 block sm:table-cell md:table-cell hidden sm:block">
                     <span className="inline-block sm:hidden font-semibold text-gray-400 text-xs mb-1">Created: </span>
                     {formatDate(category.createdAt)}
                   </td>
-                  
+
                   <td className="py-2 px-2 sm:py-4 sm:px-6 block sm:table-cell">
                     <div className="flex items-center justify-start sm:justify-end space-x-2 sm:space-x-3 mt-3 sm:mt-0 pt-3 sm:pt-0 border-t border-gray-700 sm:border-t-0">
                       <span className="inline-block sm:hidden font-semibold text-gray-400 text-xs mr-2">Actions:</span>

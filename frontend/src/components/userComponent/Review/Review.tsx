@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { Star, StarHalf, ClipboardX } from "lucide-react";
 import { useParams } from "react-router-dom";
-import createApiClient from '../../../services/apiClient';
-const userApiClient = createApiClient('user');
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+import { getReviewDetails } from "../../../hooks/userHooks";
+
 
 interface IReview {
   id: string;
@@ -31,7 +30,8 @@ const UserReviews = () => {
   useEffect(() => {
     const fetchReviewData = async () => {
       try {
-        const response = await userApiClient.get(`${apiUrl}/order/getReviewDetails/${id}`);
+        if(!id) return;
+        const response = await getReviewDetails(id);
         const data = response.data.message;
         setLoading(false)
         setReviews(data);

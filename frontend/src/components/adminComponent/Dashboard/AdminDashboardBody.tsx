@@ -9,10 +9,12 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from 'recharts';
-import adminApiClient from '../../../services/adminApiClient';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+// import createApiClient from '../../../services/apiClient';
+// const AdminApiClient = createApiClient('admin');
+// const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { Order } from '../../../interface/Order';
 import { User } from '../../../interface/User';
+import { getSales, getUser } from '../../../hooks/adminHooks';
 
 const AdminDashboardBody = () => {
   // Sample data - replace with actual API calls
@@ -58,8 +60,8 @@ const AdminDashboardBody = () => {
 
   useEffect(() => {
     const fetchSales = async () => {
-      const response = await adminApiClient.get(`${apiUrl}/admin/sales`)
-      const fetchUsers = await adminApiClient.get(`${apiUrl}/admin/getUser`)
+      const response = await getSales();
+      const fetchUsers = await getUser();
 
       console.log(fetchUsers.data.message)
       const bookings = response.data.message;

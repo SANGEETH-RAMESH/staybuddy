@@ -14,10 +14,9 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { useNavigate, useParams } from 'react-router-dom';
-import createApiClient from '../../../services/apiClient';
-const userApiClient = createApiClient('user');
+import { getSavedBookings } from '../../../hooks/userHooks';
+
 
 // Interface definitions
 interface HostelData {
@@ -92,6 +91,7 @@ const HostBookings = () => {
   const fetchHostBookings = async (page: number = 1, statusFilter: string = 'all') => {
     setIsLoading(true);
     try {
+      if(!id) return;
       const skip = (page - 1) * limit;
 
       const params = new URLSearchParams({
@@ -100,7 +100,7 @@ const HostBookings = () => {
         ...(statusFilter !== 'all' && { status: statusFilter })
       });
 
-      const response = await userApiClient.get(`${apiUrl}/order/getSavedBookings/${id}?${params}`);
+      const response = await getSavedBookings(id,params)
       const data = response.data.message || {};
 
       const totalCount = data.totalCount || 0;
@@ -145,18 +145,18 @@ const HostBookings = () => {
     navigate(`/user/detailbookings/${orderId}`);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Confirmed':
-        return 'bg-green-100 text-green-700';
-      case 'Pending':
-        return 'bg-yellow-100 text-yellow-700';
-      case 'Cancelled':
-        return 'bg-red-100 text-red-700';
-      default:
-        return 'bg-gray-100 text-gray-700';
-    }
-  };
+  // const getStatusColor = (status: string) => {
+  //   switch (status) {
+  //     case 'Confirmed':
+  //       return 'bg-green-100 text-green-700';
+  //     case 'Pending':
+  //       return 'bg-yellow-100 text-yellow-700';
+  //     case 'Cancelled':
+  //       return 'bg-red-100 text-red-700';
+  //     default:
+  //       return 'bg-gray-100 text-gray-700';
+  //   }
+  // };
 
   const renderPagination = () => {
     if (paginationData.totalPages <= 1) return null;

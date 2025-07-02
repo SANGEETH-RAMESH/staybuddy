@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import createApiClient from '../../../services/apiClient';
-const userApiClient = createApiClient('user');
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+import { getWalletDetails } from '../../../hooks/userHooks';
+
 
 interface Transaction {
   type: 'deposit' | 'withdraw';
@@ -24,7 +23,7 @@ const TransactionHistory = () => {
     const fetchTransactions = async () => {
       setIsLoading(true);
       try {
-        const response = await userApiClient.get(`${apiUrl}/wallet/getWalletDetails`);
+        const response = await getWalletDetails();
         console.log(response.data.message,'heee')
         if (response.data && response.data.message) {
           setTransactions(response.data.message.transactionHistory);

@@ -17,11 +17,9 @@ import {
     Bed,
 } from 'lucide-react';
 import { useEffect } from 'react';
-import createApiClient from '../../../services/apiClient';
-const userApiClient = createApiClient('user');
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { endBooking, getOrderDetails, getReviewByOrderId, submitReview } from '../../../hooks/userHooks';
 
 
 interface HosetlNestedData {
@@ -109,19 +107,14 @@ const SavedDetailHostel = () => {
     useEffect(() => {
         const fetchHostelDetails = async () => {
             try {
-                console.log("id", id)
-                const response = await userApiClient.get(`${apiUrl}/order/getOrderDetails/${id}`);
+                if(!id) return;
+                const response = await getOrderDetails(id)
                 const orderData = response.data.message;
-                console.log(orderData, 'heelo')
                 setOrderId(orderData._id);
                 setBooking(orderData);
                 setBookingEnded(!orderData.active);
-                // setLoading(false)
-                // Fetch review data
                 const o_id = orderData._id;
-                console.log(o_id, 'he')
-                const reviewData = await userApiClient.get(`${apiUrl}/order/getReviewDetailsByOrderId/${o_id}`);
-                console.log(reviewData.data.message, 'hee')
+                const reviewData = await getReviewByOrderId(o_id)
                 setLoading(false)
 
                 if (reviewData.data.message) {
@@ -130,7 +123,6 @@ const SavedDetailHostel = () => {
                         review: reviewData.data.message.review
                     });
                 }
-                console.log(existingReview, 'review')
 
             } catch (error) {
                 console.log(error);
@@ -144,14 +136,11 @@ const SavedDetailHostel = () => {
         setShowAlert(false);
         setIsEndingBooking(true);
         try {
-            const response = await userApiClient.post(`${apiUrl}/order/endBooking/${orderId}`);
+            const response = await endBooking(orderId);
             if (response.data.message == 'Updated') {
                 setBookingEnded(true);
-                // setShowReviewModal(true);
             }
-            console.log("Eres", response)
             setLoading(false)
-            // alert('Booking ended successfully');
         } catch (error) {
             console.error('Error ending booking:', error);
             alert('Failed to end booking. Please try again.');
@@ -181,14 +170,9 @@ const SavedDetailHostel = () => {
         }
 
         setIsSubmittingReview(true);
-
         try {
-            const response = await userApiClient.post(`${apiUrl}/order/submitReview`, {
-                orderId,
-                rating,
-                review,
-                hostelId: booking?.hostel_id.id._id
-            });
+            if(!booking?.hostel_id.id._id) return
+            const response = await submitReview(orderId,rating,review,booking?.hostel_id.id._id)
             console.log(response.data.message, 'Sangggg')
             if (response.data.message === 'Review Created') {
                 toast.success('Review Added');

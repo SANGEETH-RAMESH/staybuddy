@@ -12,12 +12,12 @@ import {
   ChevronRight,
   Search
 } from 'lucide-react';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { toast } from 'react-toastify';
 import { Review } from '../../../types/Review';
 import { Hostel } from '../../../types/Hostel';
 import { HostelData } from '../../../types/Order';
-import adminApiClient from '../../../services/adminApiClient';
+import { deleteHostel, getHostel, getReviews, searchHostel } from '../../../hooks/adminHooks';
+
 
 
 
@@ -44,9 +44,7 @@ const HostelListings = () => {
   const fetchHostels = async (page: number) => {
     try {
       setIsLoading(true);
-      const response = await adminApiClient.get(`${apiUrl}/admin/getHostel`, {
-        params: { page, limit: itemsPerPage },
-      });
+      const response = await getHostel(page,itemsPerPage)
       console.log(response.data.message, 'response');
       const totalCount = response.data.message.totalCount
       setTotalItems(totalCount)
@@ -79,8 +77,7 @@ const HostelListings = () => {
   const fetchHostelReviews = async (hostelId: string) => {
     try {
       setIsLoadingReviews(true);
-      const response = await adminApiClient.get(`${apiUrl}/admin/reviews/${hostelId}`);
-      console.log("Response", response.data.message)
+      const response = await getReviews(hostelId);
       const reviews = response.data.message;
       const result = reviews.map((review: Review) => ({
         userId: review.userId,
@@ -124,9 +121,7 @@ const HostelListings = () => {
         }
 
         try {
-          const response = await adminApiClient.get(
-            `${apiUrl}/admin/searchhostel?name=${searchTerm}`
-          );
+          const response = await searchHostel(searchTerm)
           console.log("Response", response.data.message);
           const searchResults = response.data.message;
           const data: Hostel[] = searchResults.map((item: HostelData) => {
@@ -170,25 +165,15 @@ const HostelListings = () => {
   const handleDelete = async () => {
     if (hostelToDelete) {
       try {
-
         setShowDeleteModal(false)
-
-        console.log("heeyy")
-        console.log(hostelToDelete, 'delete')
-        const response = await adminApiClient.delete(`${apiUrl}/admin/hostel`, {
-          params: { hostel_id: hostelToDelete }
-        });
-        console.log(response, "reponse")
+        const response = await deleteHostel(hostelToDelete)
         if (response.data.message == 'Hostel Deleted') {
           toast.success("Hostel Deleted")
           setTimeout(() => {
             setHostels(hostels.filter(hostel => hostel.id !== hostelToDelete));
           }, 1000);
         }
-
         setHostelToDelete(null);
-
-
         if (hostels.length === 1 && currentPage > 1) {
           setCurrentPage(currentPage - 1);
         } else {

@@ -223,9 +223,9 @@ class adminService implements IAdminService {
         }
     }
 
-    async getUserDetails(userId: string): Promise<string | IHost | null> {
+    async getHostDetails(userId: string): Promise<string | IHost | null> {
         try {
-            const response = await this.adminRepository.getUserDetails(userId)
+            const response = await this.adminRepository.getHostDetails(userId)
             return response;
         } catch (error) {
             return error as string
@@ -316,13 +316,13 @@ class adminService implements IAdminService {
 
     async validateRefreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | string> {
         try {
-
+            console.log('heyeeeheh')
             const decoded = verifyToken(refreshToken)
-            if (typeof decoded === 'object' && decoded !== null && 'email' in decoded) {
-                const response = await this.adminRepository.FindAdminByEmail(decoded.email);
-                if (!response) {
-                    return "No User";
-                }
+            if (typeof decoded === 'object' && decoded !== null) {
+                const response = await this.adminRepository.FindAdminById(decoded._id);
+                if (!response || typeof response === 'string') {
+                return "No User";
+            }
                 const adminPayload: adminPayload = {
                     _id: new Types.ObjectId(response._id),
                     role:'admin'

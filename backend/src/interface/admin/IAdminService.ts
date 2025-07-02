@@ -25,7 +25,7 @@ export interface IAdminService{
     getAllCategory(skip:number,limit:number):Promise<{getCategories:ICategory[],totalCount:number} | string>,
     getCategory(id:string):Promise<ICategory | string>,
     updateCategory(id: string, name: string, isActive: boolean): Promise<string>,
-    getUserDetails(userId:string):Promise<string | IHost | null>,
+    getHostDetails(userId:string):Promise<string | IHost | null>,
     getHostHostelData(hostId:string): Promise<IHostel[] | string | null>,
     deleteHostel(hostelId: string): Promise<string>,
     deleteCategory(id: string): Promise<string | null>,

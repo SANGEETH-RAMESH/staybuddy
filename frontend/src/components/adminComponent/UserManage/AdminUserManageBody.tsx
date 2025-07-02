@@ -3,10 +3,9 @@ import Swal from 'sweetalert2';
 import { toast } from 'react-toastify';
 import { ObjectId } from 'bson';
 import { Unlock, Lock, Trash2, RefreshCw, UserX, Users, Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import adminApiClient from '../../../services/adminApiClient';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { User } from '../../../interface/User';
 import { PaginationInfo } from '../../../interface/PaginationInfo';
+import { blockUser, deleteUser, fetchUser, searchUser, unblockUser } from '../../../hooks/adminHooks';
 
 
 const AdminUserManageBody = () => {
@@ -32,7 +31,7 @@ const AdminUserManageBody = () => {
   // Handle block user
   const handleBlockUser = async (userId: ObjectId | string) => {
     try {
-      const response = await adminApiClient.patch('http://localhost:4000/admin/userblock', { userId });
+      const response = await blockUser(userId);
       if (response.data.message === 'User blocked') {
         localStorage.removeItem('userRefreshToken');
         localStorage.removeItem('userAccessToken');
@@ -53,7 +52,7 @@ const AdminUserManageBody = () => {
   // Handle unblock user
   const handleUnblockUser = async (userId: ObjectId | string) => {
     try {
-      const response = await adminApiClient.patch('http://localhost:4000/admin/userunblock', { userId });
+      const response = await unblockUser(userId);
       if (response.data.message.message === 'unblocked') {
         setUsers(prevUsers =>
           prevUsers.map(user =>
@@ -83,9 +82,7 @@ const AdminUserManageBody = () => {
 
     if (result.isConfirmed) {
       try {
-        const response = await adminApiClient.delete('http://localhost:4000/admin/deleteuser', {
-          data: { userId },
-        });
+        const response = await deleteUser(userId);
 
         if (response.data.success) {
           // Refresh the current page after deletion
@@ -105,9 +102,7 @@ const AdminUserManageBody = () => {
   const fetchUsers = async (page: number = 1, limit: number = 4) => {
     setIsRefreshing(true);
     try {
-      const response = await adminApiClient.get(
-        `http://localhost:4000/admin/getUser?page=${page}&limit=${limit}`
-      );
+      const response = await fetchUser(page,limit);
 
       if (response.data.success) {
         const { totalCount, users: fetchedUsers } = response.data.message;
@@ -182,9 +177,7 @@ const AdminUserManageBody = () => {
       }
 
       try {
-        const response = await adminApiClient.get(
-          `${apiUrl}/admin/searchuser?name=${newSearchTerm}&page=1&limit=${itemsPerPage}`
-        );
+        const response = await searchUser(newSearchTerm,itemsPerPage)
         console.log("Response", response.data.message);
         const searchResults = response.data.message;
         setUsers(searchResults);

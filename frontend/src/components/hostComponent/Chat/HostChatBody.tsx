@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Search, UserPlus, Loader2, Clock, Paperclip, Image, X,  Video } from 'lucide-react';
 import dummy_profile from '../../../assets/dummy profile.png'
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { io, Socket } from 'socket.io-client';
 import VideoCall from '../../commonComponents/VideoCall'
 import { Message } from '../../../interface/Message';
 import { User } from '../../../interface/User';
 import { Chats } from '../../../interface/Chats';
-import createApiClient from '../../../services/apiClient';
-const hostApiClient = createApiClient('host');
+import { getAllUsers, getChat, getHostChat } from '../../../hooks/hostHooks';
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
-const socket: Socket = io('http://localhost:4000')
+const socket: Socket = io(`${apiUrl}`)
 
 const HostChatBody = () => {
   const [chats, setChats] = useState<Chats[]>([]);
@@ -162,11 +161,8 @@ const HostChatBody = () => {
     try {
       // Create new chat with selected user
       console.log(selectedUser, 'Userr')
-      const res = await hostApiClient.post(`${apiUrl}/chat/hostChat`, {
-        userId: selectedUser._id
-      }, {
-        headers: { Authorization: `Bearer` }
-      });
+      if(!selectedChat?._id) return;
+      const res = await getChat(selectedChat?._id);
       console.log(res.data, "Response")
       if (res.data.message == 'Chat Created') {
         setShowAddChatModal(false)
@@ -204,7 +200,7 @@ const HostChatBody = () => {
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        const response = await hostApiClient.get(`${apiUrl}/chat/getHostChat`)
+        const response = await getHostChat();
         const chatData = Array.isArray(response.data.data) ? response.data.data : [response.data.data]
         const chatss = chatData.map((chat: Chats) => {
           return {
@@ -234,7 +230,7 @@ const HostChatBody = () => {
 
   const fetchAvailableUsers = async () => {
     try {
-      const response = await hostApiClient.get(`${apiUrl}/host/allUsers`);
+      const response = await getAllUsers();
       const users = response.data.message
       setAvailableUsers(users)
     } catch (error) {

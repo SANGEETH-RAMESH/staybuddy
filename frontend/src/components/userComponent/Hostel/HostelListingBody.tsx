@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Wifi, RefreshCw, ArrowLeft, Search, Home, UtensilsCrossed, Shirt, MapPin, Star, Users, Phone, Heart, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-// import axios from 'axios';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import toast from 'react-hot-toast';
-import createApiClient from '../../../services/apiClient';
-const userApiClient = createApiClient('user');
+import { addToWishlist, checkWishlists, deleteWishlist, getHostels } from '../../../hooks/userHooks';
+
 
 interface Facilities {
   wifi: boolean;
@@ -227,7 +225,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
   const checkWishlist = async ({ hostelId }: { hostelId: string }, e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     try {
-      const response = await userApiClient.get(`${apiUrl}/wishlist/checkWishlist/${hostelId}`)
+      const response = await checkWishlists(hostelId);
       console.log(response.data.message)
       if (response.data.message == 'Already Exist') {
         setIsLiked(true)
@@ -240,7 +238,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
 
   useEffect(() => {
     const checkWishlist = async () => {
-      const response = await userApiClient.get(`${apiUrl}/wishlist/checkWishlist/${hostel.id}`)
+      const response = await checkWishlists(hostel.id)
       console.log(response.data.message)
       if (response.data.message == 'Already Exist') {
         setIsLiked(true)
@@ -254,7 +252,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
     console.log("Liked:", isLiked)
     if (!isLiked) {
       try {
-        const response = await userApiClient.post(`${apiUrl}/wishlist/addToWishlist/${hostel.id}`);
+        const response = await addToWishlist(hostel.id);
         console.log(response.data.message);
 
         if (response.data.message === 'Added to wishlist') {
@@ -266,7 +264,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
       }
     } else {
       try {
-        const response = await userApiClient.delete(`${apiUrl}/wishlist/removeFromWishlist/${hostel.id}`);
+        const response = await deleteWishlist(hostel.id);
         console.log(response.data.message, 'removed');
 
         if (response.data.message === 'Hostel Removed From Wishlist') {
@@ -502,7 +500,7 @@ const HostelCardGrid: React.FC = () => {
         params.append('search', search.trim());
       }
 
-      const response = await userApiClient.get(`${apiUrl}/hostel/getHostels?${params.toString()}`);
+      const response = await getHostels(params)
       const data = response.data.response;
 
       const hostelData = data.hostels;

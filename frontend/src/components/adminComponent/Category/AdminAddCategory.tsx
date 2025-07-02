@@ -4,8 +4,8 @@ import { toast } from 'react-toastify';
 import { Package, Upload, ArrowLeft, Save, Loader2, ToggleLeft, ToggleRight } from 'lucide-react';
 import AdminHeader from '../../commonComponents/adminHeader';
 import AdminSidebar from '../../commonComponents/adminSidebar';
-import adminApiClient from '../../../services/adminApiClient';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+import { addCategory } from '../../../hooks/categoryHooks';
+
 
 const AdminAddCategoryPage = () => {
   const navigate = useNavigate();
@@ -58,19 +58,11 @@ const AdminAddCategoryPage = () => {
         formData.append('photos', imageFile);
       }
       console.log(formData,'formData')
-      const response = await adminApiClient.post(
-        `${apiUrl}/admin/addCategory`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
+      const response = await addCategory(formData);
       console.log(response,"Reponse")
       if (response.data.message == 'Added') {
         toast.success('Category added successfully');
-        // Navigate back to category list
+
         navigate('/admin/category');
       }else if(response.data.message == 'Category Already Exist'){
         toast.error("Category Already Exist")

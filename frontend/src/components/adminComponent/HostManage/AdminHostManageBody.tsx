@@ -4,10 +4,9 @@ import { ObjectId } from 'bson';
 import Swal from 'sweetalert2';
 import { Trash2, Lock, Unlock, Check, X, Loader, Info, Search, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import adminApiClient from '../../../services/adminApiClient';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { PaginationInfo} from '../../../interface/PaginationInfo'
 import { Host } from '../../../interface/Host';
+import { approveHost, blockHost, deleteHost, fetchHost, rejectHost, searchHost, unblockHost } from '../../../hooks/adminHooks';
 
 
 
@@ -33,7 +32,7 @@ const AdminHostManageBody = () => {
 
   const handleApprove = async (hostId: ObjectId) => {
     try {
-      const response = await adminApiClient.patch('http://localhost:4000/admin/approvehost', { hostId });
+      const response = await approveHost(hostId);
       if (response.data.success) {
         setHosts(prevHosts =>
           prevHosts.map(host =>
@@ -63,9 +62,7 @@ const AdminHostManageBody = () => {
       }
 
       try {
-        const response = await adminApiClient.get(
-          `${apiUrl}/admin/searchhost?name=${newSearchTerm}`
-        );
+        const response = await searchHost(newSearchTerm);
         console.log("Response", response.data.message);
         const searchResults = response.data.message;
         setHosts(searchResults);
@@ -86,7 +83,7 @@ const AdminHostManageBody = () => {
 
   const handleReject = async (hostId: ObjectId) => {
     try {
-      const response = await adminApiClient.patch('http://localhost:4000/admin/rejecthost', { hostId });
+      const response = await rejectHost(hostId);
       if (response.data.success) {
         setHosts(prevHosts =>
           prevHosts.map(host =>
@@ -103,7 +100,7 @@ const AdminHostManageBody = () => {
 
   const handleBlockHost = async (hostId: ObjectId) => {
     try {
-      const response = await adminApiClient.patch('http://localhost:4000/admin/hostblock', { hostId });
+      const response = await blockHost(hostId);
       if (response.data.success) {
         localStorage.removeItem('hostRefreshToken');
         localStorage.removeItem('hostAccessToken')
@@ -123,7 +120,7 @@ const AdminHostManageBody = () => {
   const handleUnblockHost = async (hostId: ObjectId) => {
     try {
       console.log(hostId)
-      const response = await adminApiClient.patch('http://localhost:4000/admin/hostunblock', { hostId });
+      const response = await unblockHost(hostId);
       if (response.data.success) {
         setHosts(prevHosts =>
           prevHosts.map(host =>
@@ -151,9 +148,7 @@ const AdminHostManageBody = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await adminApiClient.delete<{ success: boolean }>(
-            `http://localhost:4000/admin/deletehost/${hostId}`
-          );
+          const response = await deleteHost(hostId);
           if (response.data.success) {
             setHosts((prevHosts) => prevHosts.filter((host) => host._id !== hostId));
 
@@ -184,9 +179,7 @@ const AdminHostManageBody = () => {
     try {
       setLoading(true);
       const skip = (page - 1) * limit;
-      const response = await adminApiClient.get(
-        `http://localhost:4000/admin/getHosts?skip=${skip}&limit=${limit}`
-      );
+      const response = await fetchHost(skip,limit)
       console.log(response.data.message, 'message');
 
       if (response.data.success) {

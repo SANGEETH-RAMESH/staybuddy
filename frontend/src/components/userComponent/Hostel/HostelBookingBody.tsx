@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Wallet, CreditCard, AlertCircle, AlertTriangle } from 'lucide-react';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+
 import { toast } from 'react-toastify';
 import { Notification } from '../../../interface/Notification';
 import { io } from "socket.io-client";
+import { getSingleHostel, getUserDetails, getWalletDetails, orderDetails, payment } from '../../../hooks/userHooks';
 const socket = io("http://localhost:4000");
-import createApiClient from '../../../services/apiClient';
-const userApiClient = createApiClient('user');
 
 declare class Razorpay {
   constructor(options: RazorpayOptions);
@@ -178,10 +177,11 @@ const BookingForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        if(!id) return ;
         const [hostelResponse, userResponse, walletResponse] = await Promise.all([
-          userApiClient.get(`${apiUrl}/hostel/getsingleHostel/${id}`),
-          userApiClient.get(`${apiUrl}/user/getUserDetails`),
-          userApiClient.get(`${apiUrl}/wallet/getWalletDetails`)
+          getSingleHostel(id),
+          getUserDetails(),
+          getWalletDetails()
         ]);
 
         const hostelData = hostelResponse.data.message;
@@ -283,7 +283,7 @@ const BookingForm = () => {
     };
 
     try {
-      const response = await userApiClient.post(`${apiUrl}/order/bookings`, bookingDetails);
+      const response = await orderDetails(bookingDetails);
       console.log(response)
       if (response.data.message === 'Hostel Booked') {
         const newNotification: Notification = {
@@ -323,12 +323,7 @@ const BookingForm = () => {
 
     setLoading(true);
     try {
-      const response = await userApiClient.post('/order/payment', {
-        totalAmount: totalAmount * 100,
-        currency: 'INR',
-        receipt: `receipt_${Date.now()}`,
-        notes: {},
-      });
+      const response = await payment(totalAmount)
 
       const { order_id } = response.data;
 
@@ -393,7 +388,7 @@ const BookingForm = () => {
     };
 
     try {
-      const response = await userApiClient.post(`${apiUrl}/order/bookings`, bookingDetails);
+      const response = await orderDetails(bookingDetails);
       if (response.data.message === 'Hostel Booked') {
         const newNotification: Notification = {
           receiver: userId,

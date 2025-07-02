@@ -40,6 +40,14 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
         }
     }
 
+    async FindAdminById(id:Types.ObjectId):Promise<IUserResponse | null | string>{
+        try {
+            return await this.findById(id);
+        } catch (error) {
+            return error as string;
+        }
+    }
+
     async AdminVerifyLogin(adminData: { email: string, password: string }): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
         try {
             const checkAdmin = await User.findOne({ email: adminData.email, isAdmin: true });
@@ -266,7 +274,7 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
 
     async getAllCategory(skip: number, limit: number): Promise<{ getCategories: ICategory[], totalCount: number } | string> {
         try {
-            const getCategories = await Category.find().skip(skip).limit(limit);
+            const getCategories = await Category.find().sort({updatedAt:-1}).skip(skip).limit(limit);
             const totalCount = await Category.countDocuments();
             return { getCategories, totalCount }
         } catch (error) {
@@ -321,7 +329,7 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
         }
     }
 
-    async getUserDetails(userId: string): Promise<string | IHost | null> {
+    async getHostDetails(userId: string): Promise<string | IHost | null> {
         try {
             const getUserData = await Host.findOne({ _id: userId });
             return getUserData;

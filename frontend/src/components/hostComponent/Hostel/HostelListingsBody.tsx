@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Search, ArrowLeft, RefreshCw, Wifi, UtensilsCrossed, Shirt, MapPin, Star, Users, Phone, Heart, Home, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+
 import { useNavigate } from 'react-router-dom';
-import createApiClient from '../../../services/apiClient';
-const hostApiClient = createApiClient('host');
+import { deleteHostel, getAllHostels } from '../../../hooks/hostHooks';
 
-// Constants
-const ITEMS_PER_PAGE = 6; // Adjust as needed
 
-// Type definitions
+
+const ITEMS_PER_PAGE = 6; 
+
+
 type Facilities = {
   wifi: boolean;
   food: boolean;
@@ -359,23 +359,8 @@ const HostelCardGrid: React.FC = () => {
     try {
       setIsLoading(true);
       const skip = (page - 1) * limit;
-
-      const response = await hostApiClient.get(`${apiUrl}/hostel/hostels`, {
-        params: {
-          limit,
-          skip,
-          page
-        }
-      });
-
-      console.log(response.data.message, 'response');
-
+      const response = await getAllHostels(limit,skip,page);
       const data = response.data.message;
-
-      console.log(data, 'data')
-      console.log(page)
-      console.log(Math.ceil((data.totalCount || 0) / limit), 'hey')
-
       const hostels = data.hostels.map((item: HostelData) => {
         let facilitiesArray: string[] = [];
         if (Array.isArray(item.facilities) && item.facilities.length === 1) {
@@ -421,27 +406,17 @@ const HostelCardGrid: React.FC = () => {
 
   const handleDeleteHostel = async (id: string) => {
     try {
-      console.log('Deleting hostel with id:', id);
-      const response = await hostApiClient.delete(`${apiUrl}/hostel/hostel/${id}`);
-      console.log("Delete response:", response);
-      
+      const response = await deleteHostel(id);
       if (response.data.message === 'Hostel updated successfully' || response.status === 200) {
-     
         const remainingItemsOnCurrentPage = hostels.length - 1;
         let pageToFetch = currentPage;
-        
         if (remainingItemsOnCurrentPage === 0 && currentPage > 1) {
           pageToFetch = currentPage - 1;
         }
-        
-        // Refetch hostels with current pagination settings
         await fetchHostels(pageToFetch, ITEMS_PER_PAGE);
-        
-        console.log('Hostel deleted successfully');
       }
     } catch (error) {
       console.error('Error deleting hostel:', error);
-      // You can add error notification here
     }
   };
 

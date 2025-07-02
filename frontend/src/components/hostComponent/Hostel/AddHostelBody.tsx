@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Building2, Bed, MapPin, Image, Wifi, ShowerHead, UtensilsCrossed, Users, Info, BadgeDollarSign, Phone } from 'lucide-react';
 import { toast } from 'react-toastify';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { useNavigate } from 'react-router-dom';
 import { Category } from '../../../interface/Category';
-import createApiClient from '../../../services/apiClient';
-const hostApiClient = createApiClient('host');
+import { addHostel, getAllCategory, getHost } from '../../../hooks/hostHooks';
+
 
 
 const HostelForm = () => {
@@ -107,8 +106,8 @@ const HostelForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await hostApiClient.get(`${apiUrl}/host/getHost`);
-        const categorySet = await hostApiClient.get(`${apiUrl}/host/getAllCategory`)
+        const response = await getHost();
+        const categorySet = await getAllCategory();
         const categorydata = categorySet.data.message
         setCategories(categorydata)
         console.log("Category",categorySet)
@@ -331,11 +330,7 @@ const HostelForm = () => {
         });
       }
       console.log(formData, 'hello')
-      const response = await hostApiClient.post(`${apiUrl}/hostel/addhostel`, dataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await addHostel(dataToSend)
       console.log(response, 'sfhsdf')
 
       if (response.data.message === 'Hostel added') {

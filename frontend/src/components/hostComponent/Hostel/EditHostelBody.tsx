@@ -2,11 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Building2, Bed, MapPin, Image, Wifi, ShowerHead, UtensilsCrossed, Users, Info, BadgeDollarSign, Phone } from 'lucide-react';
 // import axios from 'axios';
 import { toast } from 'react-toastify';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { useNavigate, useParams } from 'react-router-dom';
 import { Category } from '../../../interface/Category';
-import createApiClient from '../../../services/apiClient';
-const hostApiClient = createApiClient('host');
+import { editHostel, getAllCategory, getHost, getSingleHostel } from '../../../hooks/hostHooks';
+
 
 const HostelEditForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -110,24 +109,17 @@ const HostelEditForm = () => {
   ];
 
   useEffect(() => {
-    console.log('.m')
     const fetchData = async () => {
       try {
-        console.log('hey')
+        if(!id) return;
         setLoading(false);
-
-        const categoryResponse = await hostApiClient.get(`${apiUrl}/host/getAllCategory`);
+        const categoryResponse = await getAllCategory();
         const categoryData = categoryResponse.data.message;
         setCategories(categoryData);
-
-        const hostResponse = await hostApiClient.get(`${apiUrl}/host/getHost`);
-        console.log(hostResponse, 're')
+        const hostResponse = await getHost();
         const hostData = hostResponse.data.message
-        const hostelResponse = await hostApiClient.get(`${apiUrl}/hostel/detailhostel?id=${id}`);
-        console.log(hostelResponse.data.message, 'response')
+        const hostelResponse = await getSingleHostel(id);
         const hostelData = hostelResponse.data.message;
-        console.log('hostel', hostelData.beds)
-
         const facilitiesArray = Array.isArray(hostelData.facilities) ? hostelData.facilities[0]?.split(',') || [] : [];
         const facilitiesObj = {
           wifi: facilitiesArray.includes('wifi'),
@@ -391,6 +383,7 @@ const HostelEditForm = () => {
         return;
       }
 
+      if(!id) return ;
       const dataToSend = new FormData();
 
       (Object.keys(formData) as (keyof FormDataType)[]).forEach((key) => {
@@ -422,11 +415,7 @@ const HostelEditForm = () => {
       }
 
 
-      const response = await hostApiClient.put(`${apiUrl}/hostel/updatehostel/${id}`, dataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await editHostel(id,dataToSend);
 
       if (response.data.message === 'Hostel updated successfully') {
         toast.success("Hostel updated successfully");

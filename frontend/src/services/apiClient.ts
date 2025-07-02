@@ -148,10 +148,13 @@ const createApiClient = (role: Role) => {
 
   instance.interceptors.request.use(
     (req) => {
-      const state = store.getState();
-      const authState = state[`${role}Auth` as keyof typeof state] as AuthState;
-      const accessToken = authState?.accessToken || localStorage.getItem(config.accessTokenKey);
-
+      // const state = store.getState();
+      // const authState = state[`${role}Auth` as keyof typeof state] as AuthState;
+      const accessToken = localStorage.getItem(config.accessTokenKey);
+      // console.log(localStorage.getItem('adminAccessToken'))
+      // console.log(authState.accessToken,'heee')
+      // console.log(config.accessTokenKey,'aa')
+      // console.log(accessToken,'tokennnnn')
       if (accessToken) {
         req.headers.Authorization = `Bearer ${accessToken}`;
       }
@@ -164,22 +167,22 @@ const createApiClient = (role: Role) => {
   instance.interceptors.response.use(
     (response) => response,
     async (error) => {
+      // console.log("oooi")
       const originalRequest = error.config;
 
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
         try {
-          const state = store.getState();
-          const authState = state[`${role}Auth` as keyof typeof state] as AuthState;
-          const refreshToken =
-            authState?.refreshToken || localStorage.getItem(config.refreshTokenKey);
+          // const state = store.getState();
+          // const authState = state[`${role}Auth` as keyof typeof state] as AuthState;
+          const refreshToken =localStorage.getItem(config.refreshTokenKey);
 
           if (!refreshToken) throw new Error('Refresh token missing');
-
           const { data } = await axios.post(
             `http://localhost:4000${config.refreshEndpoint}`,
             { refreshToken }
           );
+          console.log(data,'heyy')
 
           const { accessToken, refreshToken: newRefresh } = data.message;
 
@@ -198,7 +201,7 @@ const createApiClient = (role: Role) => {
           store.dispatch(config.slice.logout({ isLoggedIn: false }));
           localStorage.removeItem(config.accessTokenKey);
           localStorage.removeItem(config.refreshTokenKey);
-          window.location.href = config.loginRedirect;
+          // window.location.href = config.loginRedirect;
         }
       }
 
@@ -207,7 +210,7 @@ const createApiClient = (role: Role) => {
         store.dispatch(config.slice.logout({ isLoggedIn: false }));
         localStorage.removeItem(config.accessTokenKey);
         localStorage.removeItem(config.refreshTokenKey);
-        window.location.href = config.loginRedirect;
+        // window.location.href = config.loginRedirect;
       }
 
       return Promise.reject(error);

@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Check, X } from 'lucide-react';
-import createApiClient from '../../../services/apiClient';
-const hostApiClient = createApiClient('host');
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { changePassword } from '../../../hooks/hostHooks';
 
 const HostChangePasswordBody = () => {
   const [formData, setFormData] = useState({
@@ -43,7 +41,6 @@ const HostChangePasswordBody = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Clear errors while typing
     if (name === 'currentPassword' || name === 'newPassword') {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
@@ -63,8 +60,8 @@ const HostChangePasswordBody = () => {
     setIsSubmitting(true);
     
     try {
-      // Make API call to change password
-      const response = await hostApiClient.patch(`${apiUrl}/host/changepassword`, {formData});
+      
+      const response = await changePassword(formData)
       console.log(response.data, "Response");
       
       if(response.data.message === 'Password Changed'){

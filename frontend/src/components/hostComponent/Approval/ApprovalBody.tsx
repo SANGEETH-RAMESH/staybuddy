@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { AlertCircle, Mail, Clock, ArrowRight, Upload, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Host } from '../../../interface/Host';
 import { Notification } from '../../../interface/Notification';
 import { io } from "socket.io-client";
-import createApiClient from '../../../services/apiClient';
-const hostApiClient = createApiClient('host');
+import { getAdmin, getHost, submitHostApproval } from '../../../hooks/hostHooks';
 const socket = io("http://localhost:4000");
 
 
@@ -84,13 +83,9 @@ const ApprovalBody = () => {
     console.log(selectedFile)
 
     try {
-      const response = await hostApiClient.post(`${apiUrl}/host/approval`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await submitHostApproval(formData);
 
-      const adminData = await hostApiClient.get(`${apiUrl}/host/getAdmin`)
+      const adminData = await getAdmin();
       const id = adminData.data.message._id;
       console.log(adminData.data.message._id, 'Admin')
 
@@ -115,22 +110,15 @@ const ApprovalBody = () => {
   useEffect(() => {
     const fetchHostData = async () => {
       try {
-        const response = await hostApiClient.get(`${apiUrl}/host/getHost`)
+        const response = await getHost();
         setHost(response.data.message)
-
-        // Check if request was rejected
-
         if (response.data.message.photo && Number(response.data.message.approvalRequest) === 1) {
           setIsRejected(true);
           return
         }
-
-        // Check if request already sent and not rejected
         if (response.data.message.photo && response.data.message.documentType && response.data.message.approvalRequest !== 1) {
           setRequestAlreadySent(true);
         }
-
-
       } catch (error) {
         console.log(error)
       }
@@ -138,7 +126,6 @@ const ApprovalBody = () => {
     fetchHostData()
   }, [])
 
-  // If request was rejected, show rejection UI with option to resubmit
   if (isRejected) {
     return (
       <div className="min-h-screen bg-gray-50 pt-20 px-4">

@@ -32,7 +32,7 @@ admin_route.post('/addCategory',adminAuthMiddleware,upload.single('photos'),admi
 admin_route.get('/getAllCategory',adminAuthMiddleware,adminController.getAllCategory.bind(adminController))
 admin_route.get('/getCategory/:id',adminAuthMiddleware,adminController.getCategory.bind(adminController))
 admin_route.put('/updateCategory/:id',adminAuthMiddleware,adminController.updateCategory.bind(adminController))
-admin_route.get('/getUserDetails/:id',adminAuthMiddleware,adminController.getUserDetails.bind(adminController))
+admin_route.get('/getHostDetails/:id',adminAuthMiddleware,adminController.getHostDetails.bind(adminController))
 admin_route.get('/getHostHostelData/:id',adminAuthMiddleware,adminController.getHostHostelData.bind(adminController))
 admin_route.delete('/hostel',adminAuthMiddleware,adminController.deleteHostel.bind(adminController))
 admin_route.delete('/category',adminAuthMiddleware,adminController.deleteCategory.bind(adminController))

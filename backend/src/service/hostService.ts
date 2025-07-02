@@ -43,7 +43,7 @@ function generateRandomPassword() {
 }
 
 function generateRandomMobileNumber() {
-    const firstDigit = Math.floor(Math.random() * 5) + 6; 
+    const firstDigit = Math.floor(Math.random() * 5) + 6;
     let mobileNumber = firstDigit.toString();
 
     // Generate remaining 9 digits
@@ -89,7 +89,7 @@ interface otpData {
 // }
 
 class hostService implements IHostService {
-    constructor(private hostRepository: IHostRepository,private walletRepository:IWalletRepository) { }
+    constructor(private hostRepository: IHostRepository, private walletRepository: IWalletRepository) { }
 
     async SignUp(hostData: hostData): Promise<string> {
         try {
@@ -177,7 +177,7 @@ class hostService implements IHostService {
     }
 
 
-    
+
 
     async newHost(host_id: Types.ObjectId): Promise<string> {
         try {
@@ -210,7 +210,7 @@ class hostService implements IHostService {
         }
     }
 
-   
+
 
     async hostGoogleSignUp(hostData: hostData): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
         try {
@@ -266,11 +266,11 @@ class hostService implements IHostService {
                 console.log("Token is expired")
             }
 
-            if (typeof decoded == 'object' && decoded !== null && 'email' in decoded) {
-                const response = await this.hostRepository.FindHostByEmail(decoded.email)
+            if (typeof decoded == 'object' && decoded !== null) {
+                const response = await this.hostRepository.findHostById(decoded._id)
 
-                if (!response) {
-                    return "No Host"
+                if (!response || typeof response === 'string') {
+                    return "No Host";
                 }
 
                 const hostPayload: hostPayload = {

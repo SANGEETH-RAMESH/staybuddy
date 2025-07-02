@@ -276,13 +276,6 @@ class UserController {
         }
     }
 
-    
-
-
-    
-
-    
-
     async getHost(req: Request, res: Response): Promise<void> {
         try {
             const response = await this.userService.allHost();

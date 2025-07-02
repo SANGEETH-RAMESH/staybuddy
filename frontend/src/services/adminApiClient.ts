@@ -27,7 +27,7 @@ adminApiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-
+    console.log("hello")
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {

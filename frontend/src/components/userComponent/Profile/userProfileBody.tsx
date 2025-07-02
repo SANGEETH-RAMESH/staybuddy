@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import createApiClient from '../../../services/apiClient';
-const userApiClient = createApiClient('user');
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+import { getUserDetails, getWalletDetails } from '../../../hooks/userHooks';
+
 
 const UserProfileBody = () => {
 
@@ -15,10 +14,8 @@ const UserProfileBody = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log('hsdf')
-        console.log(apiUrl, 'url')
-        const response = await userApiClient.get(`${apiUrl}/user/getUserDetails`);
-        const walletDetails = await userApiClient.get(`${apiUrl}/wallet/getWalletDetails`);
+        const response = await getUserDetails();
+        const walletDetails = await getWalletDetails();
         console.log("User details:", response.data.data.name);
         console.log("walllet", walletDetails.data.message)
         setId(response.data.data._id)

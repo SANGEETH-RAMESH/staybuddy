@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CreditCard, ArrowUpRight, ArrowDownRight, AlertCircle } from 'lucide-react';
-import createApiClient from '../../../services/apiClient';
-const userApiClient = createApiClient('user');
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+import { deposit, getUserDetails, getWalletDetails, payment, withdrew } from '../../../hooks/userHooks';
+
 
 
 declare class Razorpay {
@@ -62,8 +61,8 @@ const WalletTracker = () => {
   useEffect(() => {
     const fetchWalletData = async () => {
       try {
-        const response = await userApiClient.get(`${apiUrl}/wallet/getWalletDetails`);
-        const userData = await userApiClient.get(`${apiUrl}/user/getUserDetails`);
+        const response = await getWalletDetails();
+        const userData = await getUserDetails();
         const user = userData.data.data;
         // const walletInfo = response.data.message;
         console.log("user", user)
@@ -132,12 +131,8 @@ const WalletTracker = () => {
     }
 
     try {
-      const response = await userApiClient.post('/order/payment', {
-        totalAmount: parseFloat(amount) * 100,
-        currency: 'INR',
-        receipt: 'receipt#1',
-        notes: {},
-      });
+      const totalAmount = parseFloat(amount);
+      const response = await payment(totalAmount);
 
       const { order_id } = response.data;
 
@@ -190,7 +185,7 @@ const WalletTracker = () => {
     }
 
     const depositAmount = parseFloat(amount);
-    await userApiClient.post(`${apiUrl}/wallet/deposit`, { amount });
+    await deposit(depositAmount)
     if (depositAmount > 0) {
       setBalance((prev) => prev + depositAmount);
       setAmount('');
@@ -216,7 +211,7 @@ const WalletTracker = () => {
     const withdrawAmount = parseFloat(amount);
 
     if (withdrawAmount > 0 && withdrawAmount <= balance) {
-      const response = await userApiClient.post(`${apiUrl}/wallet/withdraw`, { amount });
+      const response = await withdrew(withdrawAmount)
       console.log(response)
       setBalance((prev) => prev - withdrawAmount);
       setAmount('');

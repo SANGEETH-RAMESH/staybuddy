@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, User, MapPin, Calendar, CheckCircle, XCircle, Shield, Building, CreditCard, Home, AlertCircle } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
-import adminApiClient from '../../../services/adminApiClient';
 import { Host } from '../../../interface/Host'
 import { Hostel } from '../../../interface/Hostel';
 import { Notification } from '../../../interface/Notification';
 import { io } from "socket.io-client";
+import { approveHost, getHostHostelData, getUserDetails, rejectHost } from '../../../hooks/adminHooks';
 const socket = io("http://localhost:4000");
 
 
@@ -34,7 +33,7 @@ const AdminHostDetailedBody = () => {
       console.log(finalHostId, 'host')
       if (newStatus == 'approved') {
         console.log("hostId", id)
-        const response = await adminApiClient.patch(`${apiUrl}/admin/approvehost`, { hostId: finalHostId });
+        const response = await approveHost(finalHostId)
         console.log(response)
 
         if (response.data.message == 'Approved') {
@@ -56,8 +55,7 @@ const AdminHostDetailedBody = () => {
           toast.success("Host approved");
         }
       } else if (newStatus == 'rejected') {
-        const response = await adminApiClient.patch(`${apiUrl}/admin/rejecthost`, { hostId: finalHostId })
-        console.log(response, 'rejjj')
+        const response = await rejectHost(finalHostId);
         if (response.data.message == 'Reject') {
           const newNotification: Notification = {
             receiver: finalHostId,
@@ -94,10 +92,9 @@ const AdminHostDetailedBody = () => {
   useEffect(() => {
     const fetchHostData = async () => {
       try {
-        console.log("id", id)
-        const response = await adminApiClient.get(`${apiUrl}/admin/getUserDetails/${id}`)
-        const hostHostelData = await adminApiClient.get(`${apiUrl}/admin/getHostHostelData/${id}`)
-        console.log(hostHostelData.data.message, 'Hostel')
+        if (!id) return; 
+        const response = await getUserDetails(id);
+        const hostHostelData = await getHostHostelData(id);
         setHostel(hostHostelData.data.message)
         setHost(response.data.message)
       } catch (error) {

@@ -2,11 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Send, Search, Plus, Paperclip, Image, X, Clock, Video, ArrowLeft } from 'lucide-react';
 import dummy_profile from '../../../assets/dummy profile.png';
-// import { LOCALHOST_URL } from '../../../constants/constants';
 import { useLocation } from 'react-router-dom';
 import VideoCall from '../../commonComponents/VideoCall'
-import createApiClient from '../../../services/apiClient';
-const userApiClient = createApiClient('user');
+import { createChat, getAllHosts, getChat } from '../../../hooks/userHooks';
 const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
 
@@ -64,7 +62,7 @@ interface Chat {
   receiverId: string;
 }
 
-const socket: Socket = io('http://localhost:4000');
+const socket: Socket = io(`${apiUrl}`);
 
 const ChatApplication: React.FC = () => {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
@@ -150,9 +148,7 @@ const ChatApplication: React.FC = () => {
 
   const fetchAvailableHosts = async () => {
     try {
-      const res = await userApiClient.get(`${apiUrl}/user/allHosts`, {
-        headers: { Authorization: `Bearer` },
-      });
+      const res = await getAllHosts();
       console.log(res.data.message, 'ss')
       setAvailableHosts(res.data.message || []);
     } catch (error) {
@@ -177,13 +173,8 @@ const ChatApplication: React.FC = () => {
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        console.log(hostId?._id, 'Hello');
         const id = hostId?._id;
-        const res = await userApiClient.get(`${apiUrl}/chat/getChat`, {
-          params: { id },
-          headers: { Authorization: `Bearer` },
-        });
-        console.log(res.data.data)
+        const res = await getChat(id);
         const chatData = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
         
         const formattedChats = chatData.map((chat: Chats) => ({
@@ -416,12 +407,8 @@ const ChatApplication: React.FC = () => {
 
   const handleAddNewChat = async (selectedUser: User) => {
     try {
-      console.log(selectedUser, 'Userr')
-      const res = await userApiClient.post(`${apiUrl}/chat/createchat`, {
-        ownerId: selectedUser._id
-      }, {
-        headers: { Authorization: `Bearer` }
-      });
+      // if(!selectedChat._id)
+      const res = await createChat(selectedUser?._id)
       console.log(res.data, "Response")
       if (res.data.chat == 'Chat Created') {
         setShowAddChatModal(false)

@@ -1,10 +1,8 @@
 import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { User, Phone, Loader2, CheckCircle } from 'lucide-react';
-import createApiClient from '../../../services/apiClient';
-const userApiClient = createApiClient('user');
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
+import { editProfile, getUserDetails } from '../../../hooks/userHooks';
 
 interface FormData {
   name: string;
@@ -61,7 +59,7 @@ const UserEditProfileBody: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await userApiClient.get(`${apiUrl}/user/getUserDetails`);
+        const response = await getUserDetails();
         setFormData({
           name: response.data.data.name,
           mobile: response.data.data.mobile,
@@ -82,7 +80,7 @@ const UserEditProfileBody: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await userApiClient.patch(`${apiUrl}/user/editprofile`, formData);
+      const response = await editProfile(formData);
       console.log(response.data.message);
       if (response.data.message == "Not updated") {
         toast.error("User details not updated")

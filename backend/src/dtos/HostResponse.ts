@@ -9,4 +9,5 @@ export interface IHostResponse {
     approvalRequest: string;
     photo?: string | null;
     documentType?: string | null;
+    wallet_id?: Types.ObjectId | null;
 }

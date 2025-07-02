@@ -4,8 +4,8 @@ import { toast } from 'react-toastify';
 import { Package, ArrowLeft, Save, Loader2, ToggleLeft, ToggleRight, Info, AlertCircle } from 'lucide-react';
 import AdminHeader from '../../commonComponents/adminHeader';
 import AdminSidebar from '../../commonComponents/adminSidebar';
-import adminApiClient from '../../../services/adminApiClient';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+import { getCategory, updateCategory } from '../../../hooks/categoryHooks';
+
 
 const AdminEditCategoryPage = () => {
     const navigate = useNavigate();
@@ -26,7 +26,8 @@ const AdminEditCategoryPage = () => {
         const fetchCategoryData = async () => {
             try {
                 setIsLoading(true);
-                const response = await adminApiClient.get(`${apiUrl}/admin/getCategory/${id}`);
+                if(!id) return;
+                const response = await getCategory(id);
                 console.log(response.data.message)
                 const categoryData = response.data.message;
 
@@ -57,13 +58,8 @@ const AdminEditCategoryPage = () => {
         setIsSubmitting(true);
 
         try {
-            const response = await adminApiClient.put(
-                `http://localhost:4000/admin/updateCategory/${id}`,
-                {
-                    name,
-                    isActive
-                }
-            );
+            if(!id) return;
+            const response = await updateCategory(id,name,isActive)
             console.log(response.data.message)
             if (response.data.message === 'Category Updated') {
                 toast.success('Category updated successfully');

@@ -295,11 +295,11 @@ class adminController {
         }
     }
 
-    async getUserDetails(req: Request, res: Response): Promise<void> {
+    async getHostDetails(req: Request, res: Response): Promise<void> {
         try {
             console.log(req.params.id, 'heello');
             const userId = req.params.id;
-            const response = await this.adminService.getUserDetails(userId)
+            const response = await this.adminService.getHostDetails(userId)
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
