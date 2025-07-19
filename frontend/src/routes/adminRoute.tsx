@@ -1,4 +1,3 @@
-import React from 'react';
 import { Route, Routes } from 'react-router-dom';
 import AdminLogin from '../pages/adminPages/adminLoginPage';
 import AdminUserManagePage from '../pages/adminPages/adminUserManagePage';

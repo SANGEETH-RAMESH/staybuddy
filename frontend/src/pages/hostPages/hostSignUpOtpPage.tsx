@@ -1,4 +1,3 @@
-import React from 'react'
 import HostSignUpOtpBody from '../../components/hostComponent/Otp/HostSignUpOtpBody'
 
 const hostSignUpOtpPage = () => {

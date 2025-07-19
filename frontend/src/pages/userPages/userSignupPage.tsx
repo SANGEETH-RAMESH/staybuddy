@@ -1,4 +1,3 @@
-import React from 'react'
 import UserSignUpBody from '../../components/userComponent/SignUp/UserSignupBody'
 
 const UserSignUp = () => {

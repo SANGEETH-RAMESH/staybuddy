@@ -12,7 +12,7 @@ interface BookingDetails {
   totalDepositAmount: number;
   tenantPreferred: string;
   selectedFacilities: {
-    [key: string]: boolean;
+    [key: string]: boolean | undefined;
     food?: boolean;
   };
   host_id: string;
@@ -22,7 +22,7 @@ interface BookingDetails {
   paymentMethod: string;
   startDate: Date;
   endDate: Date;
-  cancellationPolicy:string;
+  cancellationPolicy: string;
 }
 
 
@@ -65,7 +65,7 @@ export const endBooking = (orderId: mongoose.Types.ObjectId | string) =>
 
 export const getSavedBookings = (id: mongoose.Types.ObjectId | string, params?: URLSearchParams) => userApiClient.get(`${apiUrl}/order/users/${id}/bookings?${params}`);
 
-export const getOrderBookingByHostelId = (id: mongoose.Types.ObjectId) =>  userApiClient.get(`${apiUrl}/order/users/${id}/allbookings`);
+export const getOrderBookingByHostelId = (id: mongoose.Types.ObjectId) => userApiClient.get(`${apiUrl}/order/users/${id}/allbookings`);
 
 
 export const submitReview = (orderId: mongoose.Types.ObjectId | string,

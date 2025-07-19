@@ -1,4 +1,3 @@
-// import React from 'react'
 import UserHeader from '../../components/commonComponents/userHeader'
 import UserSavedDetailHostelPage from '../../components/userComponent/Hostel/SavedDetailHostel'
 

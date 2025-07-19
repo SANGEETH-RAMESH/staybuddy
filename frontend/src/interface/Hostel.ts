@@ -14,7 +14,7 @@ export interface Hostel {
   averageRating: number;
   reviews: Review[];
   hostelname: string
-  facilities: Facilities
+  facilities?:  Facilities | string | string[];
   beds:  number;
   bedShareRoom: string;
   foodRate?: string;
@@ -27,7 +27,7 @@ export interface Hostel {
   advanceamount: string;
   isActive: boolean;
   inactiveReason: string;
-  address?: string;
+  address: string;
   rating?: number;
   contact?: number;
   totalRooms?: number;

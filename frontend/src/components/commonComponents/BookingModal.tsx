@@ -9,7 +9,7 @@ interface BookingModalProps {
   maxGuests?: number;
   orderDetails: any[];
   totalRooms: number;
-  availableRooms: number;
+  availableRooms?: number;
 }
 
 interface BookingData {
@@ -49,9 +49,9 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const maxDate = new Date();
   maxDate.setMonth(maxDate.getMonth() + 2);
 
-  // Calculate room availability for each date
   const getRoomAvailability = (date: Date) => {
     const dateStr = formatDateToLocal(date);
+    console.log(dateStr)
     let occupiedRooms = 0;
 
     orderDetails.forEach(booking => {
@@ -169,6 +169,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
     const month = currentMonth.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
+    console.log(lastDay)
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
 

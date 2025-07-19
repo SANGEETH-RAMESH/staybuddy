@@ -17,7 +17,7 @@ declare class Razorpay {
 }
 
 
-const calculateMonthsDifference = (startDate, endDate) => {
+const calculateMonthsDifference = (startDate:string, endDate:string) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
 

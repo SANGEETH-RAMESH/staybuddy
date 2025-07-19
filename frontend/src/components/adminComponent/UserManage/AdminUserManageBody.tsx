@@ -16,10 +16,10 @@ const AdminUserManageBody = () => {
   const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'blocked'>('all');
+  const [filterStatus] = useState<'all' | 'active' | 'blocked'>('all');
 
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [itemsPerPage, setItemsPerPage] = useState<number>(4);
+  const [itemsPerPage] = useState<number>(4);
   const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>({
     currentPage: 1,
     totalPages: 1,
@@ -338,7 +338,7 @@ const AdminUserManageBody = () => {
                   <td className="py-4 px-6">
                     <div className="flex justify-end space-x-3">
                       <button
-                        className="p-2 rounded-lg hover:bg-gray-700 transition-colors group tooltip-container"
+                        className="relative p-2 rounded-lg hover:bg-gray-700 transition-colors group"
                         onClick={() =>
                           user.isBlock ? handleUnblockUser(user._id) : handleBlockUser(user._id)
                         }
@@ -349,17 +349,19 @@ const AdminUserManageBody = () => {
                         ) : (
                           <Lock className="w-5 h-5 text-yellow-400 group-hover:text-yellow-300" />
                         )}
-                        <span className="tooltip">
+                        <span className="invisible group-hover:visible absolute bottom-full left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 text-white text-center py-1 px-2 rounded text-xs whitespace-nowrap mb-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                           {user.isBlock ? 'Unblock User' : 'Block User'}
                         </span>
                       </button>
                       <button
-                        className="p-2 rounded-lg hover:bg-red-900/50 transition-colors group tooltip-container"
+                        className="relative p-2 rounded-lg hover:bg-red-900/50 transition-colors group"
                         onClick={() => handleDeleteUser(user._id)}
                         aria-label="Delete user"
                       >
                         <Trash2 className="w-5 h-5 text-red-400 group-hover:text-red-300" />
-                        <span className="tooltip">Delete User</span>
+                        <span className="invisible group-hover:visible absolute bottom-full left-1/2 transform -translate-x-1/2 bg-black bg-opacity-80 text-white text-center py-1 px-2 rounded text-xs whitespace-nowrap mb-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                          Delete User
+                        </span>
                       </button>
                     </div>
                   </td>
@@ -445,18 +447,6 @@ const AdminUserManageBody = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* First Page
-            <button
-              onClick={() => handlePageChange(1)}
-              disabled={!paginationInfo.hasPrev}
-              className={`p-2 rounded-lg transition-colors ${!paginationInfo.hasPrev
-                  ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                  : 'bg-[#212936] text-white hover:bg-[#2D394E]'
-                }`}
-            >
-              <ChevronsLeft className="w-4 h-4" />
-            </button> */}
-
             {/* Previous Page */}
             <button
               onClick={() => handlePageChange(paginationInfo.currentPage - 1)}
@@ -473,7 +463,7 @@ const AdminUserManageBody = () => {
             {getPageNumbers().map((page) => (
               <button
                 key={page}
-                onClick={() => handlePageChange(page)}
+                onClick={() => handlePageChange(page as number)}
                 className={`px-3 py-2 rounded-lg transition-colors ${page === paginationInfo.currentPage
                     ? 'bg-[#45B8F2] text-white'
                     : 'bg-[#212936] text-white hover:bg-[#2D394E]'
@@ -494,50 +484,9 @@ const AdminUserManageBody = () => {
             >
               <ChevronRight className="w-4 h-4" />
             </button>
-
-            {/* Last Page
-            <button
-              onClick={() => handlePageChange(paginationInfo.totalPages)}
-              disabled={!paginationInfo.hasNext}
-              className={`p-2 rounded-lg transition-colors ${!paginationInfo.hasNext
-                  ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                  : 'bg-[#212936] text-white hover:bg-[#2D394E]'
-                }`}
-            >
-              <ChevronsRight className="w-4 h-4" />
-            </button> */}
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .tooltip-container {
-          position: relative;
-        }
-        
-        .tooltip {
-          visibility: hidden;
-          position: absolute;
-          bottom: 100%;
-          left: 50%;
-          transform: translateX(-50%);
-          background-color: rgba(0, 0, 0, 0.8);
-          color: white;
-          text-align: center;
-          padding: 4px 8px;
-          border-radius: 4px;
-          font-size: 12px;
-          white-space: nowrap;
-          margin-bottom: 5px;
-          opacity: 0;
-          transition: opacity 0.2s;
-        }
-        
-        .tooltip-container:hover .tooltip {
-          visibility: visible;
-          opacity: 1;
-        }
-      `}</style>
     </div>
   );
 };

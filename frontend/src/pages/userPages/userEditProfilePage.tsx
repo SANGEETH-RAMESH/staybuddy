@@ -1,4 +1,3 @@
-import React from 'react'
 import UserHeader from '../../components/commonComponents/userHeader'
 import UserEditProfileBody from '../../components/userComponent/Profile/userEditProfileBody'
 

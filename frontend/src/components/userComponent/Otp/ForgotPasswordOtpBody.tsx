@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import OTPInput from "react-otp-input";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +18,7 @@ const ForgotPasswordOtpBody = () => {
   const email = location.state?.email;
 
   useEffect(() => {
-    let countdown: number;
+    let countdown:  ReturnType<typeof setTimeout>;
     if (timer > 0) {
       countdown = setTimeout(() => {
         setTimer((prev) => prev - 1);
@@ -80,8 +80,7 @@ const ForgotPasswordOtpBody = () => {
     }
   };
 
-  // Clear error when user starts typing
-  const handleOtpChange = (value) => {
+  const handleOtpChange = (value: string) => {
     setOtp(value);
     if (error) {
       setError("");

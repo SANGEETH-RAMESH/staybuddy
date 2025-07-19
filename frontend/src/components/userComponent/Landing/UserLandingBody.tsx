@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../../../redux/userAuthSlice';
@@ -13,6 +13,9 @@ import { getAllHostel } from '../../../services/userServices';
 
 
 
+interface CustomJwtPayload {
+  _id: string;
+}
 
 // interface Room {
 //   _id: string;
@@ -46,9 +49,8 @@ const UserLandingBody = () => {
   useEffect(() => {
     const accessToken = localStorage.getItem('userAccessToken');
     if (accessToken) {
-      const decoded = jwtDecode(accessToken);
+      const decoded = jwtDecode<CustomJwtPayload>(accessToken);
       const userId = decoded?._id
-      console.log(userId._id, 'ddaaaaa')
       if (userId) {
         socket.emit('userLoggedIn', userId);
       }

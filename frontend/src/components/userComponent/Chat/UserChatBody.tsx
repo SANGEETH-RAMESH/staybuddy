@@ -131,7 +131,7 @@ const ChatApplication: React.FC = () => {
     });
 
     socket.on('incoming_call', ({ callerId, callerName, chatId }) => {
-      console.log('Incoming call from:', callerName);
+      console.log('Incoming call from:', callerName,callerId);
       if (selectedChat && selectedChat.id === chatId) {
         setIsCallActive(true);
         setIsCallInitiator(false);
@@ -139,7 +139,7 @@ const ChatApplication: React.FC = () => {
     });
 
     socket.on('counted_read',({chatId,receiverId})=>{
-          console.log("heyyy")
+          console.log(chatId,receiverId,"heyyy")
         })
 
     return () => {
@@ -272,9 +272,8 @@ const ChatApplication: React.FC = () => {
   }, [selectedChat?.messages]);
 
   const handleSelectChat = (chat: Chat, receiverId: string) => {
-    console.log('nauu')
+    console.log('fdlf',selectedFile)
     setSelectedChat(chat);
-    console.log(chat, 'sett')
     setReceiverId(receiverId);
     socket.emit('join_room', chat.id);
     socket.emit("old_message", { chatId: chat.id });

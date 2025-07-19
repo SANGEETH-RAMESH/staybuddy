@@ -6,7 +6,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Category } from '../../../interface/Category';
 import { editHostel, getAllCategory, getHost, getSingleHostel } from '../../../services/hostServices';
 import LocationPicker from '../../commonComponents/locationPicker';
-import { checkDomainOfScale } from 'recharts/types/util/ChartUtils';
 
 const HostelEditForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -102,7 +101,7 @@ const HostelEditForm = () => {
     location: string;
     latitude: number;
     longitude: number;
-    phoneNumber: string;
+    mobile: string;
     photos: File[];
     facilities: { wifi: boolean; laundry: boolean; food: boolean };
     bedsPerRoom: string;
@@ -133,8 +132,7 @@ const HostelEditForm = () => {
         const hostData = hostResponse.data.message
         const hostelResponse = await getSingleHostel(id);
         const hostelData = hostelResponse.data.message;
-        console.log(hostelData, 'heyyyy')
-        console.log(hostelData.facilities)
+        console.log(photosToDelete)
         const facilitiesArray = Array.isArray(hostelData.facilities)
           ? hostelData.facilities
           : typeof hostelData.facilities === 'string'
@@ -402,8 +400,9 @@ const HostelEditForm = () => {
       const dataToSend = new FormData();
 
       (Object.keys(formData) as (keyof FormDataType)[]).forEach((key) => {
+        const value = formData[key];
         if (key !== 'photos' && key !== 'facilities' && key !== 'foodRate') {
-          dataToSend.append(key, formData[key] as string);
+          dataToSend.append(key, value.toString());
         }
       });
 
@@ -494,7 +493,7 @@ const HostelEditForm = () => {
             id="phoneNumber"
             type="tel"
             value={formData.mobile}
-            onChange={(e) => handleChange('phoneNumber', e.target.value)}
+            onChange={(e) => handleChange('mobile', e.target.value)}
             placeholder="Enter phone number"
             className={`w-full px-3 py-2 border ${errors.phoneNumber ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#31AFEF]`}
           />

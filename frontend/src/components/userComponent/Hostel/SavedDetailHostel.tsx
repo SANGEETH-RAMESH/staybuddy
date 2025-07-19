@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     Wifi,
     UtensilsCrossed,
@@ -43,7 +43,7 @@ const SavedDetailHostel = () => {
 
 
 
-    const checkCancellationEligibility = (cancellationDate) => {
+    const checkCancellationEligibility = (cancellationDate:string) => {
         console.log(cancellationDate,'Cancellation Date')
         const today = new Date();
         const cancelDate = new Date(cancellationDate);
@@ -55,7 +55,7 @@ const SavedDetailHostel = () => {
         setCancellationAllowed(isEligible);
         console.log(cancelDate,today,'dfldjf')
         if (!isEligible) {
-            const daysPassed = Math.floor((today - cancelDate) / (1000 * 60 * 60 * 24));
+            const daysPassed = Math.floor((today.getTime() - cancelDate.getTime()) / (1000 * 60 * 60 * 24))
             setCancellationMessage(`Cancellation period expired ${daysPassed} day(s) ago`);
         } else {
             setCancellationMessage('Cancellation available');
@@ -137,7 +137,7 @@ const SavedDetailHostel = () => {
         setIsEndingBooking(true);
 
         try {
-            const response = await endBooking(orderId, cancellationAllowed);
+            const response = await endBooking(orderId);
             if (response.data.message == 'Updated') {
                 setBookingEnded(true);
                 toast.success('Booking ended successfully');

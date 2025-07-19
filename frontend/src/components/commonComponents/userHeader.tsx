@@ -3,7 +3,6 @@ import { Menu, X, Heart, MessageCircle, Bell, User, LogOut } from 'lucide-react'
 import { useDispatch } from 'react-redux';
 import { logout } from '../../redux/userAuthSlice';
 import { useNavigate } from 'react-router-dom';
-import createApiClient from '../../apis/apiClient';
 const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { Notification } from '../../interface/Notification';
 import { formatDistanceToNow } from 'date-fns';
@@ -11,7 +10,6 @@ import { io } from "socket.io-client";
 import { getUserDetails } from '../../services/userServices';
 import logo from '../../assets/logo.png'
 const socket = io(`${apiUrl}`);
-const userApiClient = createApiClient('user');
 
 export const UserHeader: React.FC = () => {
   const dispatch = useDispatch();

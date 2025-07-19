@@ -1,4 +1,3 @@
-import React from 'react'
 import ForgotPasswordBody from '../../components/userComponent/ForgotPassword/ForgotPasswordBody'
 
 const UserForgotPassword = () => {

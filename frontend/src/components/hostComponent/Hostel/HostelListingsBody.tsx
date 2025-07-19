@@ -446,7 +446,7 @@ const HostelCardGrid: React.FC = () => {
     }
   }, [debouncedSearchTerm]);
 
-  const handleDeleteClick = (hostel: Hostel) => {
+  const handleDeleteClick = async(hostel: Hostel) => {
     setHostelToDelete(hostel.id);
     setHostelNameToDelete(hostel.name);
     setIsDeleteModalOpen(true);

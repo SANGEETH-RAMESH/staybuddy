@@ -257,11 +257,11 @@ const HostelDetailPage = () => {
     );
   }
 
-  const facilities = Array.isArray(hostel.facilities)
-    ? hostel.facilities
-    : typeof hostel.facilities === 'string'
-      ? hostel.facilities.split(',').map(f => f.trim())
-      : [];
+  const facilities: string[] = Array.isArray(hostel.facilities)
+  ? hostel.facilities
+  : typeof hostel.facilities === 'string'
+    ? (hostel.facilities as string).split(',').map((f: string) => f.trim())
+    : [];
 
   return (
     <div className="bg-gray-50 min-h-screen pt-20 pb-8 px-4 md:px-8">

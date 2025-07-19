@@ -1,4 +1,3 @@
-import React from 'react'
 import AdminLoginBody from '../../components/adminComponent/Login/AdminLoginBody'
 
 const AdminLogin = () => {

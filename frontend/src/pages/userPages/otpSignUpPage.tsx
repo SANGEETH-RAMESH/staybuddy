@@ -1,4 +1,3 @@
-import React from 'react'
 import SignUpOtpBody from '../../components/userComponent/Otp/SignupOtpBody'
 
 const OtpSignUpPage = () => {

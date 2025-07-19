@@ -11,6 +11,7 @@ import { SearchBarProps } from '../../../interface/Search';
 import { FacilityBadgeProps } from '../../../interface/FacilityBadgeProps';
 import { FilterState } from '../../../interface/FilterState';
 import { PaginationProps } from '../../../interface/PaginationProps';
+import { Facilities } from '../../../interface/Facilities';
 
 interface HostelCardProps {
   hostel: Hostel;
@@ -229,6 +230,24 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
     }
   };
 
+  const isFacilities = (facilities: any): facilities is Facilities => {
+    return (
+      facilities &&
+      typeof facilities === "object" &&
+      "wifi" in facilities &&
+      "food" in facilities &&
+      "laundry" in facilities
+    );
+  };
+
+  const facilitiesList = Array.isArray(hostel.facilities)
+  ? hostel.facilities
+  : typeof hostel.facilities === "string"
+  ? hostel.facilities.split(",").map(f => f.trim().toLowerCase())
+  : [];
+
+  const hasFacility = (name: string) => facilitiesList.includes(name.toLowerCase());
+
   return (
     <div
       onClick={handleClick}
@@ -339,19 +358,37 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
           <FacilityBadge
             icon={<Wifi size={14} />}
             label="WiFi"
-            available={hostel.facilities?.wifi}
+            available={
+              hostel.facilities
+                ? isFacilities(hostel.facilities)
+                  ? hostel.facilities.wifi
+                  : hasFacility("wifi")
+                : false
+            }
             color="green"
           />
           <FacilityBadge
             icon={<UtensilsCrossed size={14} />}
             label="Food"
-            available={hostel.facilities?.food}
+            available={
+              hostel.facilities
+                ? isFacilities(hostel.facilities)
+                  ? hostel.facilities.food
+                  : hasFacility("food")
+                : false
+            }
             color="blue"
           />
           <FacilityBadge
             icon={<Shirt size={14} />}
             label="Laundry"
-            available={hostel.facilities?.laundry}
+            available={
+              hostel.facilities
+                ? isFacilities(hostel.facilities)
+                  ? hostel.facilities.laundry
+                  : hasFacility("laundry")
+                : false
+            }
             color="purple"
           />
         </div>
@@ -644,7 +681,7 @@ const HostelCardGrid: React.FC = () => {
       const handler = setTimeout(() => {
         setDebouncedValue(value);
       }, delay);
-      
+
 
       return () => {
         clearTimeout(handler);
@@ -1064,7 +1101,7 @@ const HostelCardGrid: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {hostels.length > 0 ? (
                     hostels.map((hostel, index) => (
-                      <HostelCard key={hostel._id} hostel={hostel} />
+                      <HostelCard key={index} hostel={hostel} />
                     ))
                   ) : (
                     <div className="col-span-full">

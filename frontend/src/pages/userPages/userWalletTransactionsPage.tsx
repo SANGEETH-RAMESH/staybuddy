@@ -1,4 +1,3 @@
-import React from 'react'
 import UserHeader from '../../components/commonComponents/userHeader'
 import UserWalletTransactionsBody from '../../components/userComponent/Wallet/UserWalletTransactionsBody'
 

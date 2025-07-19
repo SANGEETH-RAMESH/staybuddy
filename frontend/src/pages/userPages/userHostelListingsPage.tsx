@@ -1,5 +1,3 @@
-    // import React from 'react'
-
     import UserHeader from '../../components/commonComponents/userHeader'
     import HostelListingsBody from '../../components/userComponent/Hostel/HostelListingBody'
 

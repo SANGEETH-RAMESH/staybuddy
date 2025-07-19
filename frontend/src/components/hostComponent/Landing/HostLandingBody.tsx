@@ -9,6 +9,11 @@ const hostApiClient = createApiClient('host');
 const socket = io("http://localhost:4000");
 
 
+
+interface CustomJwtPayload {
+  _id: string;
+}
+
 const HostLandingBody = () => {
 
   const navigate = useNavigate();
@@ -32,9 +37,8 @@ const HostLandingBody = () => {
   useEffect(() => {
       const accessToken = localStorage.getItem('hostAccessToken');
       if (accessToken) {
-        const decoded = jwtDecode(accessToken);
+        const decoded = jwtDecode<CustomJwtPayload>(accessToken);
         const hostId = decoded._id
-        console.log(hostId._id, 'ddaaaaa')
         if (hostId) {
           socket.emit('hostLoggedIn', hostId);
         }

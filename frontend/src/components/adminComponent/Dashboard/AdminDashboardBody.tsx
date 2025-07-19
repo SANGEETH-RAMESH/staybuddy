@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Home, CreditCard, Users, TrendingUp, Building, Star, MapPin, Phone, Mail } from 'lucide-react';
+import  { useState, useEffect } from 'react';
+import { Home, CreditCard, Users, TrendingUp, Building, MapPin, Phone, Mail } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -62,6 +62,7 @@ const AdminDashboardBody = () => {
       const userBookingStats: { [key: string]: any } = {};
 
       bookings.forEach((booking: Order) => {
+        if(!booking.createdAt) return;
         const date = new Date(booking.createdAt);
         const monthIndex = date.getMonth();
         const rent = Number(booking.totalRentAmount) || 0;

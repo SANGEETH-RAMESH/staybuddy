@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import AdminSidebar from '../../components/commonComponents/adminSidebar';
 import AdminHeader from '../../components/commonComponents/adminHeader';
 import AdminHostDetailedPage from '../../components/adminComponent/HostManage/AdminHostDetailedBody';

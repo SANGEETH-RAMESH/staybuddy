@@ -1,4 +1,3 @@
-// import React from 'react'
 import HostHeader from '../../components/commonComponents/hostHeader'
 import HostChatBody from '../../components/hostComponent/Chat/HostChatBody'
 

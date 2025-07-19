@@ -1,4 +1,3 @@
-import React from 'react'
 import HostForgotPasswordBody from '../../components/hostComponent/ForgotPassword/hostForgotPasswordBody'
 
 const hostForgotPasswordPage = () => {

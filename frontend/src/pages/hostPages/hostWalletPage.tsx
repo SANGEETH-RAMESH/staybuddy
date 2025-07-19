@@ -1,4 +1,3 @@
-// import React from 'react'
 import HostHeader from '../../components/commonComponents/hostHeader'
 import HostWalletBody from '../../components/hostComponent/Wallet/HostWalletBody'
 

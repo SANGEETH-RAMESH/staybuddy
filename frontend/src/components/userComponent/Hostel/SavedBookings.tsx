@@ -33,16 +33,16 @@ const HostBookings = () => {
     hasPrevPage: false
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
+  const [filter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const limit = 3; 
+  const limit = 3;
   const { id } = useParams();
   const navigate = useNavigate();
 
   const fetchHostBookings = async (page: number = 1, statusFilter: string = 'all') => {
     setIsLoading(true);
     try {
-      if(!id) return;
+      if (!id) return;
       const skip = (page - 1) * limit;
 
       const params = new URLSearchParams({
@@ -51,13 +51,13 @@ const HostBookings = () => {
         ...(statusFilter !== 'all' && { status: statusFilter })
       });
 
-      const response = await getSavedBookings(id.toString(),params)
-      console.log(response.data.message,'heyy')
+      const response = await getSavedBookings(id.toString(), params)
+      console.log(response.data.message, 'heyy')
       const data = response.data.message || {};
 
       const totalCount = data.totalCount || 0;
       const totalPages = Math.ceil(totalCount / limit);
-      console.log(data.bookings[0].name,'dfsdjf')
+      console.log(data.bookings[0].name, 'dfsdjf')
       setBookings(data.bookings || []);
       setPaginationData({
         bookings: data.bookings || [],
@@ -67,7 +67,7 @@ const HostBookings = () => {
         hasNextPage: page < totalPages,
         hasPrevPage: page > 1
       });
-      
+
     } catch (error) {
       console.error("Error fetching bookings:", error);
       setBookings([]);
@@ -131,8 +131,8 @@ const HostBookings = () => {
                 key={i}
                 onClick={() => handlePageChange(i)}
                 className={`flex items-center justify-center w-8 h-8 text-sm font-medium rounded ${i === currentPage
-                    ? 'text-white bg-blue-600 border border-blue-600'
-                    : 'text-gray-600 bg-white border border-gray-300 hover:bg-gray-50'
+                  ? 'text-white bg-blue-600 border border-blue-600'
+                  : 'text-gray-600 bg-white border border-gray-300 hover:bg-gray-50'
                   }`}
               >
                 {i}
@@ -200,7 +200,7 @@ const HostBookings = () => {
             <span>Total Bookings: {paginationData.totalCount}</span>
           </div>
 
-          
+
         </div>
       </div>
 
@@ -229,7 +229,7 @@ const HostBookings = () => {
                     alt={booking?.name}
                     className="w-full h-48 object-cover"
                   />
-                  
+
                 </div>
 
                 <div className="p-4">
@@ -274,11 +274,11 @@ const HostBookings = () => {
                         <span className="text-gray-600">Booked On</span>
                       </div>
                       <span className="font-medium">
-                        {new Date(booking.createdAt).toLocaleDateString('en-US', {
+                        {booking.createdAt ? new Date(booking.createdAt).toLocaleDateString('en-US', {
                           month: 'short',
                           day: 'numeric',
                           year: 'numeric'
-                        })}
+                        }) : 'N/A'}
                       </span>
                     </div>
 
@@ -319,7 +319,7 @@ const HostBookings = () => {
             ))}
           </div>
 
-          
+
           {renderPagination()}
         </>
       )}

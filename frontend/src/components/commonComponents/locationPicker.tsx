@@ -1,4 +1,4 @@
-// LocationPicker.tsx
+
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -6,6 +6,7 @@ import 'leaflet/dist/leaflet.css';
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+import { Hostel } from '../../interface/Hostel';
 import { MapPin } from 'lucide-react';
 
 interface LocationPickerProps {
@@ -13,16 +14,7 @@ interface LocationPickerProps {
   selectedLocation?: string;
   initialLatitude?: number;
   initialLongitude?: number;
-  hostels?: Array<{
-    _id: string;
-    hostelname: string;
-    address: string;
-    latitude?: number;
-    longitude?: number;
-    bedShareRoom: number;
-    rating?: number;
-    photos?: string;
-  }>;
+  hostels?:Hostel[]
 };
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -59,6 +51,7 @@ const LocationMarker = ({
         );
         const data = await res.json();
         const address = data.display_name || 'Unknown location';
+        console.log(isGeocoding)
         onSelect(lat, lng, address);
       } catch (err) {
         console.log(err)
@@ -85,7 +78,7 @@ const LocationMarker = ({
 
 
 
-const HostelMarkers = ({ hostels }: { hostels: Array<any> }) => {
+const HostelMarkers = ({ hostels }: { hostels: Hostel[] }) => {
     // Custom icon for hostels
     const hostelIcon = L.divIcon({
       html: `
@@ -155,7 +148,7 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   selectedLocation,
   initialLatitude = 0,
   initialLongitude = 0,
-  hostels = []
+  hostels = [],
 }) => {
   const [currentPosition, setCurrentPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
@@ -165,19 +158,16 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
     ? { lat: initialLatitude, lng: initialLongitude }
     : null;
 
-  // Set current position on mount if initial coordinates are provided
   useEffect(() => {
     if (initialPosition) {
       setCurrentPosition(initialPosition);
     }
   }, [initialLatitude, initialLongitude]);
 
-  // Determine map center - use initial position if available, otherwise default to Kerala
   const mapCenter: [number, number] = initialPosition
     ? [initialPosition.lat, initialPosition.lng]
     : [10.8505, 76.2711];
 
-  // Determine zoom level - closer zoom if we have initial position
   const mapZoom = initialPosition ? 15 : 7;
 
   return (

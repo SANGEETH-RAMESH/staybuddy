@@ -49,7 +49,7 @@ const HostChatBody = () => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-
+      console.log(filePreview)
       // Create preview for images
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
@@ -101,7 +101,7 @@ const HostChatBody = () => {
     });
 
     socket.on('incoming_call', ({ callerId, callerName, chatId }) => {
-      console.log('Incoming call from:', callerName);
+      console.log('Incoming call from:', callerName,callerId);
       console.log(selectedChat,selectedChat?._id,chatId)
      
         setIsCallActive(true);
@@ -110,7 +110,7 @@ const HostChatBody = () => {
     });
 
     socket.on('counted_read',({chatId,receiverId})=>{
-      console.log("heyyy")
+      console.log(chatId,receiverId)
     })
 
     return () => {

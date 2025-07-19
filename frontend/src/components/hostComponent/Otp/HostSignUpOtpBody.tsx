@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import OTPInput from "react-otp-input";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     Wifi,
@@ -22,11 +22,16 @@ import { toast } from 'react-toastify';
 import { createChat, getOrderBookingByHostelId, getSingleHostel } from '../../../services/userServices';
 import LocationDisplay from '../../commonComponents/LocationDisplay';
 import BookingModal from '../../commonComponents/BookingModal';
-import { Host } from '../../../interface/Host'
 import mongoose from 'mongoose';
-import { jwtDecode } from 'jwt-decode';
 import { Hostel } from '../../../interface/Hostel';
 import { Order } from '../../../interface/Order';
+
+
+interface BookingData {
+  fromDate: string;
+  toDate: string;
+  guests: number;
+}
 
 const ImageGallery = ({ photos }: { photos: string[] | string }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -114,27 +119,9 @@ const HostelDetailPage = () => {
     const [error, setError] = useState('');
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [orderDetails, setOrderDetails] = useState([]);
-    const [currentAvailableRooms, setCurrentAvailableRooms] = useState(0);
     const navigate = useNavigate();
 
-    const calculateCurrentAvailableRooms = (totalRooms: number, bookings: any[]) => {
-        const today = new Date();
-        let occupiedRooms = 0;
 
-        bookings.forEach(booking => {
-            if (booking.active !== false) {
-                const bookingStart = new Date(booking.startDate);
-                const bookingEnd = new Date(booking.endDate);
-
-                if (today >= bookingStart && today <= bookingEnd) {
-                    const roomsInBooking = booking.selectedRooms || 1;
-                    occupiedRooms += roomsInBooking;
-                }
-            }
-        });
-
-        return Math.max(0, totalRooms - occupiedRooms);
-    };
 
     useEffect(() => {
         const fetchHostelDetails = async () => {
@@ -155,14 +142,13 @@ const HostelDetailPage = () => {
                 console.log(orderResponse.data.message, 'ldflsdfsdf')
                 const allBookings = orderResponse?.data?.message || [];
 
-                const hostelBookings = allBookings.filter(booking =>
-                    booking.hostel_id === id
+                const hostelBookings = allBookings.filter((booking: Order) =>
+                    booking.hostel_id.toString() === id
                 );
                 console.log(hostelBookings, 'Hostel Bookings')
 
                 setOrderDetails(hostelBookings);
 
-                const hostelData = response.data.message;
                 // const totalRooms = hostelData.totalRooms || 0;
                 // const availableRooms = calculateCurrentAvailableRooms(totalRooms, hostelBookings);
                 // setCurrentAvailableRooms(availableRooms);
@@ -221,7 +207,7 @@ const HostelDetailPage = () => {
         }
     };
 
-    const handleBookingConfirm = (bookingData: Order) => {
+    const handleBookingConfirm = (bookingData: BookingData) => {
         setShowBookingModal(false);
 
         navigate(`/user/booking/${id}`, {
@@ -259,11 +245,11 @@ const HostelDetailPage = () => {
         );
     }
 
-    const facilities = Array.isArray(hostel.facilities)
-        ? hostel.facilities
-        : typeof hostel.facilities === 'string'
-            ? hostel.facilities.split(',').map(f => f.trim())
-            : [];
+    const facilities: string[] = Array.isArray(hostel.facilities)
+  ? hostel.facilities
+  : typeof hostel.facilities === 'string'
+  ? hostel.facilities.split(',').map((f: string) => f.trim())
+  : [];
 
     return (
         <div className="bg-gray-50 min-h-screen py-8 px-4 md:px-8">
@@ -293,8 +279,8 @@ const HostelDetailPage = () => {
                             {/* </div> */}
                         </div>
                         <div className="flex items-center gap-4">
-                             <button
-                                 onClick={() => handleChatWithOwner(hostel.host_id._id.toString())}
+                            <button
+                                onClick={() => handleChatWithOwner(hostel.host_id._id.toString())}
                                 className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
                             >
                                 <MessageCircle className="w-4 h-4" />
@@ -469,8 +455,8 @@ const HostelDetailPage = () => {
                     onConfirm={handleBookingConfirm}
                     hostelName={hostel.hostelname}
                     maxGuests={Number(hostel.beds) || 10}
-                    orderDetails={orderDetails}  // Add this line
-                    totalRooms={hostel.totalRooms || 10}  // Add this line
+                    orderDetails={orderDetails}  
+                    totalRooms={hostel.totalRooms || 10}  
                 />
             )}
         </div>

@@ -1,4 +1,3 @@
-import React from 'react'
 import UserHeader from '../../components/commonComponents/userHeader'
 import UserWishListBody from '../../components/userComponent/Wishlist/UserWishListBody'
 

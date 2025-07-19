@@ -1,4 +1,3 @@
-// import React from 'react'
 import HostHeader from '../../components/commonComponents/hostHeader'
 import ShowBookingsBody from '../../components/hostComponent/Hostel/ShowBookingsBody'
 

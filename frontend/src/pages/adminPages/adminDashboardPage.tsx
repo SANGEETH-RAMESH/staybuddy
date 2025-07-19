@@ -1,11 +1,11 @@
-import React, { useState } from 'react'
+import  { useState } from 'react'
 import AdminSidebar from '../../components/commonComponents/adminSidebar'
 import AdminDashboardBody from '../../components/adminComponent/Dashboard/AdminDashboardBody'
 import AdminHeader from '../../components/commonComponents/adminHeader'
 import { Menu, X } from 'lucide-react'
 
 const AdminDashboardPage = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Start closed on mobile
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
 
   return (
     <div className="min-h-screen bg-[#2D394E] flex flex-col">

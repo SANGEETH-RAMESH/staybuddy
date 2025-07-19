@@ -2,7 +2,6 @@ import {
   Building2,
   MapPin,
   Clock,
-  ArrowUpRight,
   CalendarCheck,
   Bed,
   UserCheck,
@@ -14,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { useNavigate, useParams } from 'react-router-dom';
+import {  useParams } from 'react-router-dom';
 import { getBookings } from '../../../services/hostServices';
 
 interface HostelData {
@@ -82,7 +81,6 @@ const HostBookings = () => {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const limit = 3;
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchHostBookings = async (page: number = 1) => {
@@ -123,22 +121,6 @@ const HostBookings = () => {
   };
 
 
-  const navigateToBookingDetails = (bookingId: string) => {
-    navigate(`/host/booking-details/${bookingId}`);
-  };
-
-  // const getStatusColor = (status: string) => {
-  //   switch (status) {
-  //     case 'Confirmed':
-  //       return 'bg-green-100 text-green-700';
-  //     case 'Pending':
-  //       return 'bg-yellow-100 text-yellow-700';
-  //     case 'Cancelled':
-  //       return 'bg-red-100 text-red-700';
-  //     default:
-  //       return 'bg-gray-100 text-gray-700';
-  //   }
-  // };
 
   const renderPagination = () => {
     if (paginationData.totalPages <= 1) return null;

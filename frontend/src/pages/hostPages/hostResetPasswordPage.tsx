@@ -1,4 +1,3 @@
-import React from 'react'
 import HostResetPasswordBody from '../../components/hostComponent/Password/hostResetPasswordBody'
 
 const hostResetPassword = () => {

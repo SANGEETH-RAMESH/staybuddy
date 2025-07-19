@@ -1,4 +1,3 @@
-import React from 'react'
 import HostSignUpBody from '../../components/hostComponent/SignUp/HostSignUpBody'
 
 const hostSignupPage = () => {
