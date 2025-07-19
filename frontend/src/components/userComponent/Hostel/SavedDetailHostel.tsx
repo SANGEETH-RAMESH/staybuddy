@@ -19,73 +19,9 @@ import {
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { endBooking, getOrderDetails, getReviewByOrderId, submitReview } from '../../../hooks/userHooks';
-
-
-interface HosetlNestedData {
-    advanceAmount: number;
-    bedShareRoom: number;
-    beds: number;
-    category: string;
-    facilities: string[];
-    foodRate: number;
-    host_id: string;
-    hostelName: string;
-    location: string;
-    nearbyaccess: string;
-    phone: string;
-    photos: string[];
-    policies: string;
-    _id: string
-}
-
-interface Hostel {
-    id: HosetlNestedData;
-    name: string;
-    location: string;
-    host_mobile: string;
-}
-
-interface Facilities {
-    wifi: boolean;
-    laundry: boolean;
-    food: boolean;
-    [key: string]: boolean;
-}
-
-interface Host {
-    _id: string;
-    name: string;
-    email: string;
-    password: string;
-    mobile: number;
-}
-
-interface hostelData {
-    category: string;
-    createdAt: string;
-    customerEmail: string;
-    customerName: string;
-    customerPhone: string;
-    foodRate: number | null;
-    host_id: Host;
-    hostel_id: Hostel;
-    paymentMethod: string;
-    selectedBeds: number;
-    selectedFacilities: Facilities;
-    tenantPreferred: string;
-    totalDepositAmount: number;
-    totalRentAmount: number;
-    updatedAt: string;
-    userId: string;
-    _id: string
-}
-
-interface Review {
-    ratings: number;
-    review: string;
-}
-
+import { endBooking, getOrderDetails, getReviewByOrderId, submitReview } from '../../../services/userServices';
+import { Order } from '../../../interface/Order';
+import { Review } from '../../../interface/Review';
 
 
 const SavedDetailHostel = () => {
@@ -96,30 +32,92 @@ const SavedDetailHostel = () => {
     const [review, setReview] = useState('');
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
     const [bookingEnded, setBookingEnded] = useState(false);
-    const [existingReview, setExistingReview] = useState<Review | null>(null);
+    const [existingReview, setExistingReview] = useState<Review | null>(null)
+    const [cancellationAllowed, setCancellationAllowed] = useState(false);
+    const [cancellationMessage, setCancellationMessage] = useState('');
 
     const { id } = useParams();
-    const [booking, setBooking] = useState<hostelData | null>(null);
+    const [booking, setBooking] = useState<Order | null>(null);
     const [orderId, setOrderId] = useState('');
     const [loading, setLoading] = useState(true)
 
 
+
+    const checkCancellationEligibility = (cancellationDate) => {
+        console.log(cancellationDate,'Cancellation Date')
+        const today = new Date();
+        const cancelDate = new Date(cancellationDate);
+
+        today.setHours(0, 0, 0, 0);
+        cancelDate.setHours(0, 0, 0, 0);
+
+        const isEligible = cancelDate >= today;
+        setCancellationAllowed(isEligible);
+        console.log(cancelDate,today,'dfldjf')
+        if (!isEligible) {
+            const daysPassed = Math.floor((today - cancelDate) / (1000 * 60 * 60 * 24));
+            setCancellationMessage(`Cancellation period expired ${daysPassed} day(s) ago`);
+        } else {
+            setCancellationMessage('Cancellation available');
+        }
+
+        return isEligible;
+    };
+
     useEffect(() => {
         const fetchHostelDetails = async () => {
             try {
-                if(!id) return;
+                if (!id) return;
                 const response = await getOrderDetails(id)
                 const orderData = response.data.message;
                 setOrderId(orderData._id);
-                setBooking(orderData);
+
+                if (orderData.cancellationPolicy) {
+                    checkCancellationEligibility(orderData.startDate);
+                }
+
+                setBooking({
+                    _id: orderData._id,
+                    userId: orderData.userId,
+                    customerName: orderData.customerName,
+                    customerPhone: orderData.customerPhone,
+                    name: orderData.name,
+                    active: orderData.active,
+                    hostName: orderData.host_id.name,
+                    advanceamount: orderData.advanceamount,
+                    bedShareRoom: orderData.bedShareRoom,
+                    category: orderData.category,
+                    customerEmail: orderData.customerEmail,
+                    foodRate: orderData.foodRate,
+                    host_id: orderData.host_id,
+                    hostel_id: orderData.hostel_id,
+                    location: orderData.location,
+                    host_mobile: orderData.host_mobile,
+                    nearbyaccess: orderData.nearbyaccess,
+                    policies: orderData.policies,
+                    photos: orderData.photos,
+                    selectedBeds: orderData.selectedBeds,
+                    selectedFacilities: orderData.selectedFacilities,
+                    tenantPreferred: orderData.tenantPreferred,
+                    totalDepositAmount: orderData.totalDepositAmount,
+                    totalRentAmount: orderData.totalRentAmount,
+                    paymentMethod: orderData.paymentMethod,
+                    fromDate: orderData.startDate,
+                    toDate: orderData.endDate,
+                    cancellationPolicy: orderData.cancellationPolicy
+                });
+
                 setBookingEnded(!orderData.active);
                 const o_id = orderData._id;
+                console.log(orderData, 'Order')
+                console.log(o_id, 'OrderId')
                 const reviewData = await getReviewByOrderId(o_id)
+                console.log(reviewData, 'heyy')
                 setLoading(false)
 
                 if (reviewData.data.message) {
                     setExistingReview({
-                        ratings: reviewData.data.message.rating,
+                        rating: reviewData.data.message.rating,
                         review: reviewData.data.message.review
                     });
                 }
@@ -132,23 +130,31 @@ const SavedDetailHostel = () => {
     }, []);
 
     const handleEndBooking = () => setShowAlert(true);
+
+
     const confirmEndBooking = async () => {
         setShowAlert(false);
         setIsEndingBooking(true);
+
         try {
-            const response = await endBooking(orderId);
+            const response = await endBooking(orderId, cancellationAllowed);
             if (response.data.message == 'Updated') {
                 setBookingEnded(true);
+                toast.success('Booking ended successfully');
+            } else if (response.data.message == 'Cancellation not allowed') {
+                toast.error('Cancellation period has expired');
             }
             setLoading(false)
         } catch (error) {
             console.error('Error ending booking:', error);
-            alert('Failed to end booking. Please try again.');
+            toast.error('Failed to end booking. Please try again.');
         } finally {
             setIsEndingBooking(false);
             setShowAlert(false);
         }
     };
+
+
     const cancelEndBooking = () => setShowAlert(false);
 
     const handleSubmitReview = async () => {
@@ -171,13 +177,15 @@ const SavedDetailHostel = () => {
 
         setIsSubmittingReview(true);
         try {
-            if(!booking?.hostel_id.id._id) return
-            const response = await submitReview(orderId,rating,review,booking?.hostel_id.id._id)
+            console.log(booking, 'bookings')
+            if (!booking?.hostel_id) return
+            const hostelId = booking.hostel_id
+            const response = await submitReview(orderId, rating, review, hostelId)
             console.log(response.data.message, 'Sangggg')
             if (response.data.message === 'Review Created') {
                 toast.success('Review Added');
                 setExistingReview({
-                    ratings: rating,
+                    rating: rating,
                     review: review
                 });
 
@@ -227,7 +235,7 @@ const SavedDetailHostel = () => {
                                 <Star
                                     key={star}
                                     size={16}
-                                    className={star <= existingReview.ratings ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
+                                    className={star <= existingReview.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}
                                 />
                             ))}
                         </div>
@@ -252,19 +260,37 @@ const SavedDetailHostel = () => {
         }
 
         return (
-            <button
-                onClick={handleEndBooking}
-                disabled={isEndingBooking}
-                className="bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                <div className="flex items-center gap-2">
-                    <XCircle size={20} />
-                    {isEndingBooking ? 'Ending Booking...' : 'End Booking'}
+            <div className="space-y-2">
+                {/* Cancellation Status */}
+                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${cancellationAllowed
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700'
+                    }`}>
+                    {cancellationAllowed ? (
+                        <CheckCircle size={16} />
+                    ) : (
+                        <XCircle size={16} />
+                    )}
+                    <span>{cancellationMessage}</span>
                 </div>
-            </button>
+
+                {/* End Booking Button */}
+                <button
+                    onClick={handleEndBooking}
+                    disabled={isEndingBooking || !cancellationAllowed}
+                    className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg transform hover:-translate-y-0.5 ${cancellationAllowed
+                        ? 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white hover:shadow-xl'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        } ${isEndingBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                    <div className="flex items-center gap-2">
+                        <XCircle size={20} />
+                        {isEndingBooking ? 'Ending Booking...' : 'End Booking'}
+                    </div>
+                </button>
+            </div>
         );
     };
-
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
             {/* Header */}
@@ -298,8 +324,8 @@ const SavedDetailHostel = () => {
                     {/* Image Gallery */}
                     <div className="relative h-80 bg-gray-200">
                         <img
-                            src={booking?.hostel_id.id.photos[0]}
-                            alt={booking?.hostel_id.id.hostelName}
+                            src={booking?.photos[0]}
+                            alt={booking?.name}
                             className="w-full h-full object-cover"
                         />
                         <div className="absolute bottom-4 left-4 flex gap-2">
@@ -307,7 +333,7 @@ const SavedDetailHostel = () => {
                         </div>
                         <div className="absolute top-4 right-4">
                             <span className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                                {booking?.hostel_id.id.category}
+                                {booking?.category}
                             </span>
                         </div>
                     </div>
@@ -317,16 +343,25 @@ const SavedDetailHostel = () => {
                         <div className="flex justify-between items-start mb-6">
                             <div>
                                 <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                                    {booking?.hostel_id.id.hostelName}
+                                    {booking?.name}
                                 </h2>
                                 <div className="flex items-center gap-2 text-gray-600 mb-4">
                                     <MapPin size={16} />
-                                    <span className="text-sm">{booking?.hostel_id.location}</span>
+                                    <span className="text-sm">{booking?.location}</span>
                                 </div>
                                 {booking?.createdAt && (
-                                    <div className="flex items-center gap-2 text-gray-500 text-sm">
+                                    <div className="flex items-center gap-2 text-gray-500 mb-4 text-sm">
                                         <Calendar size={16} />
                                         <span>Booked since {new Date(booking.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                )}
+                                {booking?.fromDate && booking?.toDate && (
+                                    <div className="flex items-center gap-2 text-gray-500 text-sm">
+                                        <Calendar size={16} className="text-gray-500" />
+                                        <span>
+                                            From {new Date(booking.fromDate).toLocaleDateString()} to{" "}
+                                            {new Date(booking.toDate).toLocaleDateString()}
+                                        </span>
                                     </div>
                                 )}
                             </div>
@@ -434,20 +469,20 @@ const SavedDetailHostel = () => {
                             <div className="space-y-4">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
-                                        {booking?.host_id.name.charAt(0)}
+                                        {booking?.hostName.charAt(0)}
                                     </div>
                                     <div>
-                                        <p className="font-medium">{booking?.host_id.name}</p>
+                                        <p className="font-medium">{booking?.hostName}</p>
                                         <p className="text-sm text-gray-500">Host</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3 text-gray-600">
                                     <Phone size={16} />
-                                    <span>{booking?.hostel_id.host_mobile}</span>
+                                    <span>{booking?.host_mobile}</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-gray-600">
                                     <Mail size={16} />
-                                    <span>{booking?.host_id.email}</span>
+                                    <span>{booking?.customerEmail}</span>
                                 </div>
                                 {/* <button className="w-full bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2">
                                     <MessageCircle size={16} />
@@ -465,10 +500,10 @@ const SavedDetailHostel = () => {
                                 <h3 className="font-bold text-lg text-gray-900">Location & Access</h3>
                             </div>
                             <div className="space-y-3">
-                                <p className="text-gray-700">{booking?.hostel_id.location}</p>
+                                <p className="text-gray-700">{booking?.location}</p>
                                 <div className="bg-gray-50 p-3 rounded-lg">
                                     <p className="text-sm text-gray-600 font-medium mb-1">Nearby Access:</p>
-                                    <p className="text-sm text-gray-700">{booking?.hostel_id.id.nearbyaccess}</p>
+                                    <p className="text-sm text-gray-700">{booking?.nearbyaccess}</p>
                                 </div>
                                 {/* <button className="w-full bg-blue-50 hover:bg-blue-100 text-blue-600 py-2 rounded-lg font-medium transition-colors">
                                     View on Map
@@ -528,11 +563,23 @@ const SavedDetailHostel = () => {
                 {showAlert && (
                     <div className="fixed inset-0 flex justify-center items-center bg-black/50 backdrop-blur-sm z-50">
                         <div className="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-md w-full mx-4">
-                            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <AlertCircle className="text-yellow-600" size={32} />
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${cancellationAllowed ? 'bg-yellow-100' : 'bg-red-100'
+                                }`}>
+                                {cancellationAllowed ? (
+                                    <AlertCircle className="text-yellow-600" size={32} />
+                                ) : (
+                                    <XCircle className="text-red-600" size={32} />
+                                )}
                             </div>
-                            <h3 className="font-bold text-xl mb-2">End Booking?</h3>
-                            <p className="text-gray-600 mb-6">This action cannot be undone. Your booking will be terminated immediately.</p>
+                            <h3 className="font-bold text-xl mb-2">
+                                {cancellationAllowed ? 'End Booking?' : 'Cancellation Not Allowed'}
+                            </h3>
+                            <p className="text-gray-600 mb-6">
+                                {cancellationAllowed
+                                    ? 'This action cannot be undone. Your booking will be terminated immediately.'
+                                    : 'The cancellation period has expired. You cannot end this booking.'
+                                }
+                            </p>
                             <div className="flex gap-3">
                                 <button
                                     onClick={cancelEndBooking}
@@ -541,13 +588,15 @@ const SavedDetailHostel = () => {
                                     <XCircle size={16} />
                                     Cancel
                                 </button>
-                                <button
-                                    onClick={confirmEndBooking}
-                                    className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
-                                >
-                                    <CheckCircle size={16} />
-                                    Yes, End Booking
-                                </button>
+                                {cancellationAllowed && (
+                                    <button
+                                        onClick={confirmEndBooking}
+                                        className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <CheckCircle size={16} />
+                                        Yes, End Booking
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

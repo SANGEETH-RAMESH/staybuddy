@@ -4,7 +4,7 @@ import HostChatBody from '../../components/hostComponent/Chat/HostChatBody'
 
 const HostChatPage = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div>
       <HostHeader />
       <div className="mt-16">
         <HostChatBody />

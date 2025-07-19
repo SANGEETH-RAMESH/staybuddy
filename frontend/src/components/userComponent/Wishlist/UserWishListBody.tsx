@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { X, Check, Heart, ArrowLeft, Trash2, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { deleteWishlist, deleteWishlists, getWishlist, removeFromWishlist } from '../../../hooks/userHooks';
+import {  deleteAllWishlists, getWishlist, removeFromWishlist } from '../../../services/userServices';
 
 export interface WishlistItem {
   _id: string;
@@ -61,7 +61,7 @@ export default function WishlistPage() {
 
   const handleClearWishlist = async () => {
     try {
-      const response = await deleteWishlists();
+      const response = await deleteAllWishlists();
       console.log(response.data.message);
       if (response.data.message === 'Wishlist Deleted') {
         toast.success("Wishlist Cleared", {

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
@@ -14,13 +13,92 @@ import {
   Shield,
   ChevronLeft,
   ChevronRight,
-  Star
+  Star,
+  Power,
+  X
 } from 'lucide-react';
 
 import { Hostel } from '../../../interface/Hostel';
-import { getSingleHostel } from '../../../hooks/hostHooks';
+import { getSingleHostel, status } from '../../../services/hostServices';
+import toast from 'react-hot-toast';
+import LocationDisplay from '../../commonComponents/LocationDisplay';
 
+const InactiveReasonModal = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  loading 
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (reason: string) => void;
+  loading: boolean;
+}) => {
+  const [reason, setReason] = useState('');
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (reason.trim()) {
+      onConfirm(reason);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">
+            Inactive Hostel
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+            disabled={loading}
+          >
+            <X size={20} />
+          </button>
+        </div>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Reason for deactivation *
+            </label>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={4}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              placeholder="Please provide a reason for deactivating this hostel..."
+              required
+              disabled={loading}
+            />
+          </div>
+          
+          <div className="flex gap-3 justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
+              disabled={loading || !reason.trim()}
+            >
+              {loading ? 'Inactivating...' : 'Inactive'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const ImageGallery = ({ photos }: { photos: string[] }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -99,6 +177,8 @@ const HostelDetailPage = () => {
   const [hostel, setHostel] = useState<Hostel | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [toggleLoading, setToggleLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const { search } = useLocation();
   const queryParams = new URLSearchParams(search);
   const id = queryParams.get('id');
@@ -119,6 +199,47 @@ const HostelDetailPage = () => {
 
     fetchHostelData();
   }, [id]);
+
+  // Function to handle status toggle
+  const handleStatusToggle = async (inactiveReason?: string) => {
+    if (!hostel || !id) return;
+
+    setToggleLoading(true);
+    
+    try {
+      const payload = {
+        id: id,
+        isActive: !hostel.isActive,
+        ...(inactiveReason && { inactiveReason })
+      };
+
+      console.log('Sending to backend:', payload);
+      
+      const response = await status(payload);
+      console.log("response",response)
+      if(response.data.message == 'Status Updated'){
+        toast.success('Status Updated')
+      }
+      
+      setHostel(prev => prev ? { ...prev, isActive: !prev.isActive } : null);
+      setShowModal(false);
+      
+    } catch (error) {
+      console.error('Error updating hostel status:', error);
+    } finally {
+      setToggleLoading(false);
+    }
+  };
+
+  const handleToggleClick = () => {
+    if (!hostel) return;
+    
+    if (hostel.isActive) {
+      setShowModal(true);
+    } else {
+      handleStatusToggle();
+    }
+  };
 
   if (loading) {
     return (
@@ -149,9 +270,18 @@ const HostelDetailPage = () => {
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                {hostel.hostelname}
-              </h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold text-gray-800">
+                  {hostel.hostelname}
+                </h1>
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  hostel.isActive 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {hostel.isActive ? 'Active' : 'Inactive'}
+                </div>
+              </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center text-gray-600">
                   <MapPin className="mr-1" size={18} />
@@ -163,18 +293,34 @@ const HostelDetailPage = () => {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col items-end">
+            <div className="flex flex-col items-end gap-3">
               <div className="text-2xl font-bold text-blue-600">
                 ₹{hostel.bedShareRoom}/month
               </div>
-              {
-                hostel.foodRate && (
-                  <div className="text-sm text-gray-500">
-                    + ₹{hostel.foodRate} for food
-                  </div>
-                )
-              }
-
+              {hostel.foodRate && (
+                <div className="text-sm text-gray-500">
+                  + ₹{hostel.foodRate} for food
+                </div>
+              )}
+              
+              {/* Status Toggle Button */}
+              <button
+                onClick={handleToggleClick}
+                disabled={toggleLoading}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 ${
+                  hostel.isActive
+                    ? 'bg-red-600 hover:bg-red-700 text-white'
+                    : 'bg-green-600 hover:bg-green-700 text-white'
+                }`}
+              >
+                <Power size={16} />
+                {toggleLoading 
+                  ? 'Updating...' 
+                  : hostel.isActive 
+                    ? 'Inactivate' 
+                    : 'Activate'
+                }
+              </button>
             </div>
           </div>
         </div>
@@ -212,6 +358,14 @@ const HostelDetailPage = () => {
                   <p className="font-medium">{hostel.nearbyaccess}</p>
                 </div>
               </div>
+              {hostel.latitude && hostel.longitude && (
+                            <LocationDisplay
+                                latitude={hostel.latitude}
+                                longitude={hostel.longitude}
+                                locationName={hostel.location}
+                                hostelName={hostel.hostelname}
+                            />
+                        )}
             </div>
 
             {/* Policies */}
@@ -273,17 +427,23 @@ const HostelDetailPage = () => {
                     <UtensilsCrossed className="mr-3 text-orange-500" />
                     <div>
                       <p className="text-sm text-gray-500">Food Rate (Monthly)</p>
-
                       <p className="font-medium">₹{hostel.foodRate?.toLocaleString()}</p>
                     </div>
                   </div>
                 )}
-
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Inactive Reason Modal */}
+      <InactiveReasonModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onConfirm={handleStatusToggle}
+        loading={toggleLoading}
+      />
     </div>
   );
 };

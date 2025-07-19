@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Wallet, CreditCard, AlertCircle, AlertTriangle } from 'lucide-react';
 
 import { toast } from 'react-toastify';
 import { Notification } from '../../../interface/Notification';
 import { io } from "socket.io-client";
-import { getSingleHostel, getUserDetails, getWalletDetails, orderDetails, payment } from '../../../hooks/userHooks';
+import { getSingleHostel, getUserDetails, getWalletDetails, payment, createBooking } from '../../../services/userServices';
 const socket = io("http://localhost:4000");
+import { RazorpayResponse, ValidationErrors } from '../../../interface/RazorpayOptions';
+import { RazorpayOptions } from '../../../interface/RazorpayOptions';
 
 declare class Razorpay {
   constructor(options: RazorpayOptions);
@@ -14,46 +16,27 @@ declare class Razorpay {
   on(event: string, callback: (response: RazorpayResponse) => void): void;
 }
 
-interface RazorpayOptions {
-  key: string;
-  amount: number;
-  currency: string;
-  name: string;
-  description: string;
-  image?: string;
-  order_id?: string;
-  prefill?: {
-    name?: string;
-    email?: string;
-    contact?: string;
-  };
-  notes?: Record<string, string>;
-  theme?: {
-    color?: string;
-  };
-  handler: (response: RazorpayResponse) => void;
-  modal?: {
-    ondismiss?: () => void;
-  };
-}
 
-interface RazorpayResponse {
-  razorpay_payment_id: string;
-  razorpay_order_id: string;
-  razorpay_signature: string;
-}
+const calculateMonthsDifference = (startDate, endDate) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
 
-interface ValidationErrors {
-  customerName?: string;
-  customerPhone?: string;
-  customerEmail?: string;
-  selectedBeds?: string;
-  facilities?: string;
-}
+  const yearDiff = end.getFullYear() - start.getFullYear();
+  const monthDiff = end.getMonth() - start.getMonth();
+  const dayDiff = end.getDate() - start.getDate();
+
+  let totalMonths = yearDiff * 12 + monthDiff;
+
+  if (dayDiff < 0) {
+    totalMonths -= 1;
+  }
+
+  return Math.max(1, Math.ceil(totalMonths + (dayDiff > 0 ? dayDiff / 30 : 0)));
+};
 
 const BookingForm = () => {
   const [maxBeds, setMaxBeds] = useState(1);
-  const [selectedBeds, setSelectedBeds] = useState(1);
+  const [selectedBeds, setSelectedBeds] = useState<number>(1);
   const [selectedFacilities, setSelectedFacilities] = useState<{ [key: string]: boolean }>({
     wifi: false,
     laundry: false,
@@ -70,22 +53,31 @@ const BookingForm = () => {
   const [customerEmail, setCustomerEmail] = useState('');
   const [host_id, setHost_id] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('online');
+  const [isActive, setIsActive] = useState<boolean>(true)
   const [walletBalance, setWalletBalance] = useState(0);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState('')
   const [hostelName, setHostelName] = useState('')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
+  const [cancellationPolicy, setCancellationPolicy] = useState('');
 
-  // Validation states
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
+  const [bookingMonths, setBookingMonths] = useState(1);
   // const [facilityError, setFacilityError] = useState<string>('');
 
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const totalRentAmount = baseRentAmount * selectedBeds;
+  const { fromDate, toDate, guests } = location.state || {}
+  console.log(fromDate, toDate, guests, 'dddd')
+
+
+  const totalRentAmount = baseRentAmount * selectedBeds * bookingMonths;
   const totalDepositAmount = baseDepositAmount * selectedBeds;
-  const totalFoodRate = foodRate * selectedBeds;
+  const totalFoodRate = foodRate * selectedBeds * bookingMonths;
   const totalAmount = totalRentAmount + totalDepositAmount + (selectedFacilities.food ? totalFoodRate : 0);
 
   // Validation functions
@@ -127,6 +119,13 @@ const BookingForm = () => {
     validateField(field);
   };
 
+  useEffect(() => {
+    if (startDate && endDate) {
+      const months = calculateMonthsDifference(startDate, endDate);
+      setBookingMonths(months);
+    }
+  }, [startDate, endDate]);
+
   const validateField = (field: keyof ValidationErrors) => {
     let fieldError: string | undefined;
 
@@ -153,6 +152,16 @@ const BookingForm = () => {
     return !fieldError;
   };
 
+  useEffect(() => {
+    if (fromDate && toDate && guests) {
+      console.log(typeof guests);
+      console.log(guests, 'dfsdf')
+      setStartDate(fromDate);
+      setEndDate(toDate);
+      setSelectedBeds(guests)
+    }
+  }, [fromDate, toDate, guests]);
+
   const validateForm = (): boolean => {
     const newErrors: ValidationErrors = {
       customerName: validateName(customerName),
@@ -177,7 +186,7 @@ const BookingForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if(!id) return ;
+        if (!id) return;
         const [hostelResponse, userResponse, walletResponse] = await Promise.all([
           getSingleHostel(id),
           getUserDetails(),
@@ -188,22 +197,28 @@ const BookingForm = () => {
         const userData = userResponse.data.data;
         const walletData = walletResponse.data.message;
         console.log(walletData, 'hee')
+        setCancellationPolicy(hostelData.cancellationPolicy);
         setWalletBalance(walletData.balance);
         setUserId(userData._id)
         setCustomerEmail(userData.email);
+        setIsActive(hostelData.isActive)
         setCustomerName(userData.name);
         setCustomerPhone(userData.mobile);
         setMaxBeds(parseInt(hostelData.beds));
-        setSelectedBeds(1);
+        // setSelectedBeds(1);
         setBaseRentAmount(hostelData.bedShareRoom);
         setBaseDepositAmount(hostelData.advanceamount);
-        setCategory(hostelData.category === 'men' ? 'MEN' : hostelData.category === 'women' ? 'WOMEN' : 'N/A');
+        setCategory(hostelData.category);
         setTenantPreferred(hostelData.policies);
         setHost_id(hostelData.host_id._id);
         setFoodRate(hostelData.foodRate);
         setHostelName(hostelData.hostelname)
 
-        const facilitiesArray = hostelData.facilities[0].split(',').map((f: string) => f.trim().toLowerCase());
+        const facilitiesArray = Array.isArray(hostelData.facilities)
+          ? hostelData.facilities
+          : typeof hostelData.facilities === 'string'
+            ? hostelData.facilities.split(',')
+            : [];
         setAvailableFacilities(facilitiesArray);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -280,10 +295,13 @@ const BookingForm = () => {
       foodRate: selectedFacilities.food ? foodRate : null,
       category,
       paymentMethod,
+      cancellationPolicy,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate)
     };
 
     try {
-      const response = await orderDetails(bookingDetails);
+      const response = await createBooking(bookingDetails);
       console.log(response)
       if (response.data.message === 'Hostel Booked') {
         const newNotification: Notification = {
@@ -363,7 +381,12 @@ const BookingForm = () => {
   };
 
   const handlePaymentSelection = () => {
-    if (paymentMethod === 'wallet') {
+    if (isActive == false) {
+      toast.error("Hostel is InActive")
+    } else if (maxBeds < 1) {
+      toast.error("No Rooms Available")
+    }
+    else if (paymentMethod === 'wallet') {
       handleWalletPayment();
     } else {
       handlePayment();
@@ -385,10 +408,13 @@ const BookingForm = () => {
       foodRate: selectedFacilities.food ? foodRate : null,
       category,
       paymentMethod,
+      cancellationPolicy,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate)
     };
 
     try {
-      const response = await orderDetails(bookingDetails);
+      const response = await createBooking(bookingDetails);
       if (response.data.message === 'Hostel Booked') {
         const newNotification: Notification = {
           receiver: userId,
@@ -397,8 +423,17 @@ const BookingForm = () => {
           type: 'success',
           isRead: true
         }
+        console.log(host_id)
+        const hostNotification: Notification = {
+          receiver: host_id,
+          message: `A new booking has been made for ${hostelName} on ${new Date().toLocaleDateString()}`,
+          title: 'New Booking received',
+          type: 'info',
+          isRead: true
+        }
         console.log('rece', newNotification)
         socket.emit('send_notification', newNotification)
+        socket.emit('send_notification', hostNotification)
         toast.success('Hostel Booked Successfully');
         navigate('/user/hostel');
       } else {
@@ -444,6 +479,16 @@ const BookingForm = () => {
           </div>
 
           <div>
+            <label className="block text-sm text-blue-600 mb-1">From Date</label>
+            <input
+              type="text"
+              value={startDate}
+              disabled
+              className="w-full p-2 border rounded-lg bg-gray-50"
+            />
+          </div>
+
+          <div>
             <label className="block text-sm text-blue-600 mb-1">Rent Amount / Month</label>
             <input
               type="text"
@@ -452,6 +497,26 @@ const BookingForm = () => {
               className="w-full p-2 border rounded-lg bg-gray-50"
             />
           </div>
+
+
+
+          {cancellationPolicy === 'freecancellation' && (
+            <div className="p-3 bg-green-50 border  mb-1 border-green-200 rounded-lg">
+              <div className="flex items-center text-green-700">
+                <AlertCircle className="h-4 w-4 mr-2" />
+                <span className="text-sm font-medium">Free Cancellation Policy Available</span>
+              </div>
+            </div>
+          )}
+
+          {cancellationPolicy === 'no free cancellation' && (
+            <div className="p-3 bg-red-50 border mb-1 border-red-200 rounded-lg">
+              <div className="flex items-center text-red-700">
+                <AlertCircle className="h-4 w-4 mr-2" />
+                <span className="text-sm font-medium">No Free Cancellation — Charges may apply</span>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-sm text-blue-600 mb-1">Number of Beds (Max: {maxBeds})</label>
@@ -473,7 +538,7 @@ const BookingForm = () => {
             <input
               type="text"
               readOnly
-              value={category}
+              value={category.toUpperCase()}
               className="w-full p-2 border rounded-lg bg-gray-50"
             />
           </div>
@@ -544,6 +609,16 @@ const BookingForm = () => {
           </div>
 
           <div>
+            <label className="block text-sm text-blue-600 mb-1">End Date</label>
+            <input
+              type="text"
+              value={endDate}
+              disabled
+              className="w-full p-2 border rounded-lg bg-gray-50"
+            />
+          </div>
+
+          <div>
             <label className="block text-sm text-blue-600 mb-1">Email</label>
             <input
               type="email"
@@ -570,6 +645,8 @@ const BookingForm = () => {
               />
             </div>
           )}
+
+
 
           <div>
             <label className="block text-sm text-blue-600 mb-1">Deposit</label>
@@ -633,7 +710,7 @@ const BookingForm = () => {
           <div className="p-4 bg-blue-50 rounded-lg">
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Rent Amount:</span>
+                <span>Rent Amount ({bookingMonths} month{bookingMonths > 1 ? 's' : ''}):</span>
                 <span>₹{totalRentAmount}</span>
               </div>
               <div className="flex justify-between text-sm">
@@ -642,7 +719,7 @@ const BookingForm = () => {
               </div>
               {selectedFacilities.food && (
                 <div className="flex justify-between text-sm">
-                  <span>Food Charges:</span>
+                  <span>Food Charges ({bookingMonths} month{bookingMonths > 1 ? 's' : ''}):</span>
                   <span>₹{totalFoodRate}</span>
                 </div>
               )}

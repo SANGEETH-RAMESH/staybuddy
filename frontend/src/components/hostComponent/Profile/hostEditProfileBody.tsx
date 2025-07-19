@@ -2,7 +2,7 @@ import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
 import { User, Phone, Loader2, CheckCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-import { editProfile, getHost } from '../../../hooks/hostHooks';
+import { editProfile, getHost } from '../../../services/hostServices';
 
 
 interface FormData {

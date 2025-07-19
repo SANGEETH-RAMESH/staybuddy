@@ -6,10 +6,7 @@ import { Types } from "mongoose";
 import { userPayload } from "../types/commonInterfaces/tokenInterface";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Jwt/jwt";
 import HashedPassword from "../utils/hashedPassword";
-import { IHostel } from "../model/hostelModel";
-import { IWallet } from "../model/walletModel";
-import { IOrder } from "../model/orderModel";
-import { IWishlist } from "../model/wishlistModel";
+import bcrypt from 'bcrypt';
 import { IUserResponse } from "../dtos/UserResponse";
 import { IHost } from "../model/hostModel";
 import { INotification } from "../model/notificationModel";
@@ -19,15 +16,20 @@ import { IHostRepository } from "../interface/host/!HostRepository";
 
 interface ResetPasswordData {
     email: string;
-    password: string; 
+    password: string;
     newPassword: string;
 }
 
 interface ChangePasswordData {
-    email: string;
-    currentPassword: string;  
+    userId: string;
+    currentPassword: string;
     newPassword: string;
 }
+type EditUserDetailData = {
+    userId: string;
+    name: string;
+    mobile: string;
+};
 
 interface UserData {
     displayName?: string;
@@ -40,7 +42,7 @@ function otpgenerator(): number {
 }
 
 function generateRandomMobileNumber() {
-    const firstDigit = Math.floor(Math.random() * 5) + 6; 
+    const firstDigit = Math.floor(Math.random() * 5) + 6;
     let mobileNumber = firstDigit.toString();
     for (let i = 0; i < 9; i++) {
         mobileNumber += Math.floor(Math.random() * 10).toString();
@@ -71,12 +73,12 @@ function generateRandomPassword() {
 }
 
 class UserService implements IUserService {
-    constructor(private userRepository: IUserRespository,private walletRepository:IWalletRepository,private hostRepository:IHostRepository) { }
+    constructor(private userRepository: IUserRespository, private walletRepository: IWalletRepository, private hostRepository: IHostRepository) { }
 
     async userSignUp(userData: IUser): Promise<string> {
         try {
             const existingUser = await this.userRepository.FindUserByEmail(userData.email);
-            if (existingUser && !existingUser.isAdmin) {
+            if (existingUser && !existingUser.isAdmin && existingUser.temp == false) {
                 return "User already exists";
             }
             const otp = otpgenerator();
@@ -94,7 +96,6 @@ class UserService implements IUserService {
     async verifyOtp(userOtp: { email: string; otp: number }): Promise<string> {
         try {
             const verifiedOtp = await this.userRepository.otpVerifying(userOtp);
-            console.log(verifiedOtp, "OTp")
             if (verifiedOtp === 'OTP not verified') {
                 return "Invalid OTP";
             }
@@ -109,33 +110,47 @@ class UserService implements IUserService {
         }
     }
 
-    async verifyLogin(userData: IUser): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
+    async verifyLogin(userData: IUser): Promise<{
+        message: string;
+        accessToken?: string;
+        refreshToken?: string;
+        role?: string;
+    }> {
         try {
-            console.log('loginnn')
-            const checkingUser = await this.userRepository.UserVerifyLogin(userData);
-            console.log(checkingUser, 'userrr');
-
-            let accessToken = '';
-            let refreshToken = '';
-
-            if (typeof checkingUser !== 'string' && checkingUser.message === 'Success') {
-                const userPayload: userPayload = {
-                    _id: new Types.ObjectId(checkingUser.user._id),
-                    role:'user'
-                };
-
-                accessToken = generateAccessToken(userPayload);
-                refreshToken = generateRefreshToken(userPayload);
+            const checkingUser = await this.userRepository.UserVerifyLogin(userData.email);
+            if(!checkingUser){
+                return {message:"Invalid email"}
             }
-
             if (typeof checkingUser === 'string') {
-                return checkingUser;
+                return { message: checkingUser };
             }
 
-            return { message: checkingUser.message, accessToken, refreshToken };
+
+            if (checkingUser?.isBlock) {
+                return { message: "User is blocked" };
+            }
+
+            const isMatch = await bcrypt.compare(userData.password, checkingUser.password);
+            if (!isMatch) {
+                return { message: "Invalid password" };
+            }
+
+            const userPayload = {
+                _id: checkingUser._id as Types.ObjectId,
+                role: 'user' as const
+            };
+
+            const accessToken = generateAccessToken(userPayload);
+            const refreshToken = generateRefreshToken(userPayload);
+            return {
+                message: "Success",
+                accessToken,
+                refreshToken,
+                role: 'user'
+            };
         } catch (error) {
             console.error(error);
-            return error as string
+            return { message: error as string };
         }
     }
 
@@ -156,7 +171,6 @@ class UserService implements IUserService {
         try {
 
             const userFind = await this.userRepository.FindUserByEmail(userData.email);
-            // console.log(userFind,'hello')
             if (!userFind) {
                 return null;
             }
@@ -165,7 +179,7 @@ class UserService implements IUserService {
             await this.userRepository.OtpGenerating(userData.email, otp);
             return {
                 email: userFind.email,
-                temp: userFind.temp?? false
+                temp: userFind.temp ?? false
             };
         } catch (error) {
             console.error(error);
@@ -218,10 +232,10 @@ class UserService implements IUserService {
         }
     }
 
-    async changePassword(userData: { email: string; currentPassword: string; newPassword: string }): Promise<string> {
+    async changePassword(userData: { userId: string; currentPassword: string; newPassword: string }): Promise<string> {
         try {
             const changePasswordData: ChangePasswordData = {
-                email: userData.email,
+                userId: userData.userId,
                 currentPassword: userData.currentPassword,
                 newPassword: userData.newPassword,
             };
@@ -234,7 +248,7 @@ class UserService implements IUserService {
         }
     }
 
-    async editUserDetail(userData: IUserResponse): Promise<string> {
+    async editUserDetail(userData: EditUserDetailData): Promise<string> {
         try {
             const response = await this.userRepository.editUserDetail(userData);
             return response;
@@ -251,12 +265,11 @@ class UserService implements IUserService {
             const hashed = await HashedPassword.hashPassword(password);
             const data = { ...userData, password: hashed, mobile }
             const response = await this.userRepository.addGoogleUser(data);
-            // console.log(response,'responseeee')
             if (typeof response === 'object' && response !== null && 'message' in response) {
                 if (response.message === 'Success') {
                     const userPayload: userPayload = {
                         _id: new Types.ObjectId(response.user?._id),
-                        role:'user'
+                        role: 'user'
                     };
                     const accessToken = generateAccessToken(userPayload);
                     const refreshToken = generateRefreshToken(userPayload);
@@ -264,7 +277,7 @@ class UserService implements IUserService {
                 } else if (response.message == 'Already') {
                     const userPayload: userPayload = {
                         _id: new Types.ObjectId(response.user?._id),
-                        role:'user'
+                        role: 'user'
                     };
                     const accessToken = generateAccessToken(userPayload);
                     const refreshToken = generateRefreshToken(userPayload);
@@ -280,7 +293,9 @@ class UserService implements IUserService {
 
     async validateRefreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | string> {
         try {
+            console.log(refreshToken)
             const decoded = verifyToken(refreshToken)
+            console.log(decoded,'dfldjfldfjdf')
             if (typeof decoded === 'object' && decoded !== null) {
                 const response = await this.userRepository.FindUserById(decoded._id);
                 if (!response) {
@@ -288,12 +303,12 @@ class UserService implements IUserService {
                 }
                 const userPayload: userPayload = {
                     _id: new Types.ObjectId(response._id),
-                    role:'user'
+                    role: 'user'
                 }
 
                 const accessToken = generateAccessToken(userPayload);
-                const newRefreshToken = generateRefreshToken(userPayload);
-                return { accessToken, refreshToken: newRefreshToken };
+                const refreshToken = generateRefreshToken(userPayload);
+                return { accessToken, refreshToken };
             }
 
             return "Invalid Token";
@@ -303,9 +318,9 @@ class UserService implements IUserService {
         }
     }
 
-    
 
-    
+
+
 
     async allHost(): Promise<IHost[] | string | null> {
         try {
@@ -340,7 +355,7 @@ class UserService implements IUserService {
             return response
         } catch (error) {
             return error as string
-        } 
+        }
     }
 }
 

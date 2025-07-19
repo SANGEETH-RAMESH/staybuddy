@@ -13,4 +13,5 @@ export interface Message {
   fileSize?: number;
   fileUrl?: string;
   messageType?:string
+  count:number;
 }

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getWalletDetails } from '../../../hooks/userHooks';
+import { getWalletDetails } from '../../../services/userServices';
 
 
 interface Transaction {

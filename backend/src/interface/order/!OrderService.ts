@@ -20,5 +20,5 @@ export interface IOrderService {
     getReviewDetailsByOrderId(orderId: Types.ObjectId): Promise<IReview | string | null>,
     getSavedBookings(id: Types.ObjectId, skip: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null>,
     getBookings(hostId: string, skip: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null>,
-
+    getBookingByOrder(hostelId: string): Promise<IOrder[] | string>,
 }

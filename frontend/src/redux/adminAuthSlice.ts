@@ -1,9 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-    isLoggedIn : localStorage.getItem('adminToken')?true:false,
-    accessToken: localStorage.getItem("adminToken") || "",
-    refreshToken:localStorage.getItem("adminToken") || ""
+    isLoggedIn : false,
+    accessToken: localStorage.getItem("adminAccessToken") || "",
+    refreshToken:localStorage.getItem("adminRefreshToken") || ""
 }
 
 const adminAuthSlice = createSlice({

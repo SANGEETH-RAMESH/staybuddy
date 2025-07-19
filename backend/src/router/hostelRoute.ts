@@ -12,14 +12,27 @@ const hostelRepository = new HostelRepository();
 const hostelService = new HostelService(hostelRepository);
 const hostelController = new HostelController(hostelService)
 
+const user_route = Router()
+const host_route = Router()
+const admin_route =Router()
 
-hostel_route.get('/getHostels',userAuthMiddleware,hostelController.getHostels.bind(hostelController))
-hostel_route.get('/getsingleHostel/:id',userAuthMiddleware,hostelController.getSingleHostel.bind(hostelController))
-hostel_route.post('/addhostel',upload.single('photos'),hostelController.addHostel.bind(hostelController))
-hostel_route.get('/hostels',hostAuthMiddleware,hostelController.getHostHostels.bind(hostelController))
-hostel_route.delete('/hostel/:id',hostAuthMiddleware,hostelController.deleteHostel.bind(hostelController))
-hostel_route.put('/updatehostel/:id',upload.single('photos'),hostAuthMiddleware,hostelController.updateHostel.bind(hostelController))
-hostel_route.get('/detailhostel',hostelController.getOneHostel.bind(hostelController))
+hostel_route.use('/user',user_route);
+hostel_route.use('/host',host_route)
+hostel_route.use('/admin',admin_route)
+
+
+user_route.get('/',userAuthMiddleware,hostelController.getHostels.bind(hostelController))
+user_route.get('/:id',userAuthMiddleware,hostelController.getSingleHostel.bind(hostelController))
+user_route.get('/all',userAuthMiddleware,hostelController.getAllHostel.bind(hostelController))
+
+
+host_route.get('/hostels',hostAuthMiddleware,hostelController.getHostHostels.bind(hostelController))
+host_route.post('/',upload.single('photos'),hostelController.addHostel.bind(hostelController))
+host_route.delete('/:id',hostAuthMiddleware,hostelController.deleteHostel.bind(hostelController))
+host_route.put('/:id',upload.single('photos'),hostAuthMiddleware,hostelController.updateHostel.bind(hostelController))
+host_route.get('/detail',hostelController.getOneHostel.bind(hostelController));
+host_route.patch('/status',hostAuthMiddleware,hostelController.updateStatus.bind(hostelController))
+
 
 
 export default hostel_route

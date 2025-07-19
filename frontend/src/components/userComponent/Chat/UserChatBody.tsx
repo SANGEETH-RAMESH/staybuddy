@@ -4,7 +4,7 @@ import { Send, Search, Plus, Paperclip, Image, X, Clock, Video, ArrowLeft } from
 import dummy_profile from '../../../assets/dummy profile.png';
 import { useLocation } from 'react-router-dom';
 import VideoCall from '../../commonComponents/VideoCall'
-import { createChat, getAllHosts, getChat } from '../../../hooks/userHooks';
+import { createChat, getAllHosts, getChat } from '../../../services/userServices';
 const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
 
@@ -138,11 +138,16 @@ const ChatApplication: React.FC = () => {
       }
     });
 
+    socket.on('counted_read',({chatId,receiverId})=>{
+          console.log("heyyy")
+        })
+
     return () => {
       socket.off("onlineHosts");
       socket.off("hostLoggedIn");
       socket.off("hostLoggedOut");
       socket.off("incoming_call");
+      socket.off("counted_read");
     };
   }, [selectedChat]);
 
@@ -219,8 +224,8 @@ const ChatApplication: React.FC = () => {
       console.log(chats, 'Before')
       
       setSelectedChat(prevChat => {
-        if (!prevChat || prevChat.id !== newMessage.chatId) return prevChat;
-        const updatedMessages = [...(prevChat.messages || []), newMessage];
+        if (!prevChat || prevChat.id !== newMessage.savedMessage.chatId) return prevChat;
+        const updatedMessages = [...(prevChat.messages || []), newMessage.savedMessage];
         const updatedChat = { ...prevChat, messages: updatedMessages };
         return updatedChat;
       });
@@ -228,19 +233,20 @@ const ChatApplication: React.FC = () => {
       console.log(newMessage, 'heee')
       setChats(prevChats =>
         prevChats.map(chat => {
-          const isMatched = chat.id === newMessage?.chatId;
+          const isMatched = chat.id === newMessage.savedMessage?.chatId;
           console.log('Chat ID:', chat.id);
-          console.log('Selected Chat ID:', newMessage.chatId);
+          console.log('Selected Chat ID:', newMessage.savedMessage.chatId);
           console.log('Match Found:', isMatched);
 
           if (isMatched) {
-            console.log('Updating chat with message:', newMessage.message);
-            console.log('Timestamp:', newMessage.timestamp);
+            console.log('Updating chat with message:', newMessage.savedMessage.message);
+            console.log('Timestamp:', newMessage.savedMessage.timestamp);
             return {
               ...chat,
-              lastMessage: newMessage.message,
-              lastMessageTime: newMessage.timestamp,
-              type: newMessage.type
+              lastMessage: newMessage.savedMessage.message,
+              lastMessageTime: newMessage.savedMessage.timestamp,
+              type: newMessage.savedMessage.type,
+              unreadCount:newMessage.readCount
             };
           } else {
             return chat;
@@ -266,11 +272,24 @@ const ChatApplication: React.FC = () => {
   }, [selectedChat?.messages]);
 
   const handleSelectChat = (chat: Chat, receiverId: string) => {
+    console.log('nauu')
     setSelectedChat(chat);
     console.log(chat, 'sett')
     setReceiverId(receiverId);
     socket.emit('join_room', chat.id);
     socket.emit("old_message", { chatId: chat.id });
+    const chatId = chat.id
+    socket.emit('count_read',{chatId,receiverId})
+    setChats(prevChats =>
+        prevChats.map(chat =>
+          chat.id === chatId
+            ? {
+              ...chat,
+              unreadCount:0
+            }
+            : chat
+        )
+      );
   };
 
   const handleBackToChats = () => {
@@ -538,6 +557,7 @@ const ChatApplication: React.FC = () => {
                       hour12: true,
                     })}
                   </span>
+                  {/* <span>{chat.unreadCount}</span> */}
                 </div>
                 <div className="flex justify-between items-center mt-1">
                   <div className="text-xs sm:text-sm text-gray-600 truncate flex items-center flex-grow min-w-0">

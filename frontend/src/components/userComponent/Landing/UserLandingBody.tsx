@@ -9,7 +9,7 @@ import { jwtDecode } from 'jwt-decode';
 import { io } from "socket.io-client";
 const socket = io("http://localhost:4000");
 import {Hostel} from '../../../interface/Hostel'
-import { getHostel } from '../../../hooks/userHooks';
+import { getAllHostel } from '../../../services/userServices';
 
 
 
@@ -59,7 +59,7 @@ const UserLandingBody = () => {
   useEffect(() => {
     const fetchHostel = async () => {
       try {
-        const response = await getHostel();
+        const response = await getAllHostel();
         const hostelData = (response.data.response.hostels).slice(0, 3);
         setHostel(
           hostelData.map((hostel:Hostel) => ({

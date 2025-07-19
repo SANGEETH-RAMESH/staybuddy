@@ -23,7 +23,6 @@ declare module "express-serve-static-core" {
 
 const userOrHostAuth = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.header('Authorization')?.split(' ')[1];
-    console.log(token, 'tokennns')
     if (!token) {
         res.status(401).json({ message: "No token found" });
         return;

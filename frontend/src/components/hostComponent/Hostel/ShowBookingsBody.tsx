@@ -15,7 +15,7 @@ import {
 import { useEffect, useState } from 'react';
 
 import { useNavigate, useParams } from 'react-router-dom';
-import { getBookings } from '../../../hooks/hostHooks';
+import { getBookings } from '../../../services/hostServices';
 
 interface HostelData {
   advanceAmount: number;
@@ -51,10 +51,13 @@ interface Booking {
   customerPhone: string;
   createdAt: string;
   selectedBeds: number;
+  hostelname:string;
+  location:string;
   tenantPreferred: string;
   totalDepositAmount: number;
   totalRentAmount: number;
   foodRate: number | null;
+  photos:string[]
   paymentMethod: string;
   hostel_id: {
     id: HostelData;
@@ -219,8 +222,8 @@ const HostBookings = () => {
             >
               <div className="relative">
                 <img
-                  src={booking?.hostel_id.id.photos[0] || "/placeholder-hostel.jpg"}
-                  alt={booking?.hostel_id.id.name}
+                  src={booking?.photos[0] || "/placeholder-hostel.jpg"}
+                  alt={booking?.hostelname}
                   className="w-full h-48 object-cover"
                 />
                 {/* <div className="absolute top-4 right-4">
@@ -233,10 +236,10 @@ const HostBookings = () => {
               <div className="p-4">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <h2 className="text-lg font-bold text-gray-800 mb-1">{booking.hostel_id.id.hostelname}</h2>
+                    <h2 className="text-lg font-bold text-gray-800 mb-1">{booking.hostelname}</h2>
                     <div className="flex items-center gap-1 text-gray-600">
                       <MapPin className="w-4 h-4" />
-                      <span className="text-sm">{booking.hostel_id.id.location}</span>
+                      <span className="text-sm">{booking.location}</span>
                     </div>
                   </div>
                 </div>
@@ -304,13 +307,13 @@ const HostBookings = () => {
                       ₹{booking.totalDepositAmount + booking.totalRentAmount + (booking.foodRate || 0)}
                     </p>
                   </div>
-                  <button
+                  {/* <button
                     onClick={() => navigateToBookingDetails(booking._id)}
                     className="flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium"
                   >
                     <span className="text-sm">Manage</span>
                     <ArrowUpRight className="w-4 h-4" />
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>

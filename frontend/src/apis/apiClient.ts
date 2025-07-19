@@ -113,7 +113,7 @@ const authConfig: Record<Role, AuthConfig> = {
       login: userLogin,
       logout: userLogout,
     },
-    refreshEndpoint: '/user/refresh',
+    refreshEndpoint: '/user/token/refresh',
     loginRedirect: '/user/login',
   },
   host: {
@@ -123,7 +123,7 @@ const authConfig: Record<Role, AuthConfig> = {
       login: hostLogin,
       logout: hostLogout,
     },
-    refreshEndpoint: '/host/refresh',
+    refreshEndpoint: '/host/token/refresh',
     loginRedirect: '/host/login',
   },
   admin: {
@@ -133,7 +133,7 @@ const authConfig: Record<Role, AuthConfig> = {
       login: adminLogin,
       logout: adminLogout,
     },
-    refreshEndpoint: '/admin/refresh',
+    refreshEndpoint: '/admin/token/refresh',
     loginRedirect: '/admin/login',
   },
 };
@@ -148,13 +148,7 @@ const createApiClient = (role: Role) => {
 
   instance.interceptors.request.use(
     (req) => {
-      // const state = store.getState();
-      // const authState = state[`${role}Auth` as keyof typeof state] as AuthState;
       const accessToken = localStorage.getItem(config.accessTokenKey);
-      // console.log(localStorage.getItem('adminAccessToken'))
-      // console.log(authState.accessToken,'heee')
-      // console.log(config.accessTokenKey,'aa')
-      // console.log(accessToken,'tokennnnn')
       if (accessToken) {
         req.headers.Authorization = `Bearer ${accessToken}`;
       }
@@ -167,29 +161,23 @@ const createApiClient = (role: Role) => {
   instance.interceptors.response.use(
     (response) => response,
     async (error) => {
-      // console.log("oooi")
       const originalRequest = error.config;
 
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
         try {
-          // const state = store.getState();
-          // const authState = state[`${role}Auth` as keyof typeof state] as AuthState;
-          const refreshToken =localStorage.getItem(config.refreshTokenKey);
-
-          if (!refreshToken) throw new Error('Refresh token missing');
+          const newRefreshToken = localStorage.getItem(config.refreshTokenKey);
+          if (!newRefreshToken) throw new Error('Refresh token missing');
           const { data } = await axios.post(
             `http://localhost:4000${config.refreshEndpoint}`,
-            { refreshToken }
+            { refreshToken:newRefreshToken }
           );
-          console.log(data,'heyy')
-
-          const { accessToken, refreshToken: newRefresh } = data.message;
-
+          const { accessToken, refreshToken } = data.message;
+          console.log(data.message)
           store.dispatch(
             config.slice.login({
               accessToken,
-              refreshToken: newRefresh,
+              refreshToken: refreshToken,
               isLoggedIn: true,
             })
           );
@@ -205,6 +193,12 @@ const createApiClient = (role: Role) => {
         }
       }
 
+
+      if (error.response?.status == 403 && error.response.message == `Access denied:Not a ${role.toUpperCase()}`) {
+        console.warn(`Access denied:Not a ${role.toUpperCase()}`);
+        //  window.location.href = config.loginRedirect;
+      }
+      console.log(error, 'Error Und')
       if (error.response?.status === 403) {
         console.warn(`${role.toUpperCase()} is blocked. Logging out...`);
         store.dispatch(config.slice.logout({ isLoggedIn: false }));

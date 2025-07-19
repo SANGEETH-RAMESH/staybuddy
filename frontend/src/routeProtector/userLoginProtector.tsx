@@ -13,11 +13,9 @@ const UserLoginProtector: React.FC<ProtectivePropsCheck> = ({ element }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   
-  // Get tokens from URL
-  const accessToken = queryParams.get('accessToken');
-  const refreshToken = queryParams.get('refreshToken');
+  const accessToken = queryParams.get('userAccessToken');
+  const refreshToken = queryParams.get('userRefreshToken');
   
-  // State to track auth status
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   
   useEffect(() => {
@@ -44,12 +42,10 @@ const UserLoginProtector: React.FC<ProtectivePropsCheck> = ({ element }) => {
     }
   }, [accessToken, refreshToken, dispatch, navigate]);
   
-  // Show nothing while checking auth status
   if (isAuthenticated === null) {
     return null;
   }
   
-  // Show protected content only if authenticated
   return isAuthenticated ? element : null;
 };
 

@@ -42,7 +42,6 @@ class WalletController {
         try {
 
             const id = req?.customHost?._id?.toString() || req?.user?._id?.toString();
-            console.log(id, 'IDddd')
             if (!id) {
                 res.status(StatusCode.BAD_REQUEST).json({ message: "No User or Not Host" });
                 return

@@ -3,12 +3,13 @@ import { Menu, X, Heart, MessageCircle, Bell, User, LogOut } from 'lucide-react'
 import { useDispatch } from 'react-redux';
 import { logout } from '../../redux/userAuthSlice';
 import { useNavigate } from 'react-router-dom';
-import createApiClient from '../../services/apiClient';
+import createApiClient from '../../apis/apiClient';
 const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { Notification } from '../../interface/Notification';
 import { formatDistanceToNow } from 'date-fns';
 import { io } from "socket.io-client";
-import { getUserDetails } from '../../hooks/userHooks';
+import { getUserDetails } from '../../services/userServices';
+import logo from '../../assets/logo.png'
 const socket = io(`${apiUrl}`);
 const userApiClient = createApiClient('user');
 
@@ -41,20 +42,27 @@ export const UserHeader: React.FC = () => {
 
     const handleNotification = (notification: Notification) => {
       console.log(' Notification received:', notification);
-      setNotification((prev) => [notification,...prev]);
+      setNotification((prev) => [notification, ...prev]);
       setIsRead(notification.isRead)
       setReadCount((prev) => prev + 1);
     };
-      
+
     socket.on('receive_notification', handleNotification);
 
     const handleOldNotifications = (notifications: Notification[]) => {
       console.log(notifications, 'Siuu')
       setNotification(notifications)
       setIsRead(notifications[0].isRead)
-      const unreadCount = notifications.filter(n => !n.isRead).length;
-
+      const unreadCount = notifications.filter(n => n.isRead).length;
+      console.log(unreadCount,'Read')
       setReadCount(unreadCount)
+    }
+
+
+    const handleMarkedAllNotification = (receiverId: string) => {
+      console.log(receiverId)
+      
+      console.log(readCount,'cou')
     }
 
     socket.emit('get_old_notifications', userId);
@@ -63,29 +71,24 @@ export const UserHeader: React.FC = () => {
 
 
 
+    socket.on('marked_all_notifications', handleMarkedAllNotification)
+
     return () => {
       socket.off('receive_notification', handleNotification);
       socket.off('receive_old_notifications', handleOldNotifications)
+      socket.off('marked_all_notifications', handleMarkedAllNotification)
     };
   }, [userId]);
 
   const handleOpenNotifications = async () => {
-    console.log(userId,'hey')
+    console.log(userId, 'hey')
     if (userId) {
       try {
         console.log('heee')
-        const response = await userApiClient.put(`${apiUrl}/user/mark-all-read`);
-        console.log(response,'Mm')
-        if (response.data.message == 'Updated') {
-          setNotification((prev) =>
-            prev.map((notif) => ({
-              ...notif,
-              isRead: true,
-            }))
-          );
-          setIsRead(false);
-          setReadCount(0)
-        }
+        socket.emit('mark_all_notification', ({ receiverId:userId }))
+        // setNotification([])
+      setReadCount(0)
+
       } catch (error) {
         console.log(error)
       }
@@ -121,7 +124,6 @@ export const UserHeader: React.FC = () => {
     fetchData();
   }, [])
 
-  // Close notification dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -144,9 +146,10 @@ export const UserHeader: React.FC = () => {
             {/* Logo */}
             <button
               onClick={() => navigate('/user/home')}
-              className="text-xl font-bold bg-gradient-to-r from-[#31AFEF] to-[#2196F3] bg-clip-text text-transparent"
+              className="flex items-center gap-x-2 text-xl font-bold bg-gradient-to-r from-[#31AFEF] to-[#2196F3] bg-clip-text text-transparent"
             >
-              StayBuddy
+              <img src={logo} alt="Logo" className="h-16 w-16" />
+              <p>StayBuddy</p>
             </button>
 
             {/* Desktop Navigation */}
@@ -160,7 +163,7 @@ export const UserHeader: React.FC = () => {
                   <Bell
                     onClick={handleOpenNotifications}
                     className="w-6 h-6 text-gray-600" />
-                  {isRead && (
+                  {isRead && readCount>0 && (
                     <>
                       <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 animate-ping" />
                       <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500" />

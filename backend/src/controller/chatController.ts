@@ -19,7 +19,6 @@ class chatController {
             }
 
             const id = typeof user._id === "string" ? new ObjectId(user._id) : user._id;
-            console.log(ownerId, id, "Heeeellolo")
             const chat = await this.chatService.createChat(id, ownerId);
 
             res.status(StatusCode.OK).json({ success: true, chat });
@@ -32,8 +31,6 @@ class chatController {
     async getChat(req: Request, res: Response): Promise<void> { 
         try {
             const user = req.user;
-            console.log(user)
-            console.log(req.query, 's')
             const ownerId = req.query.id as string;
 
             if (!user || !user._id) {
@@ -42,10 +39,8 @@ class chatController {
             }
             const userId = new ObjectId(user._id);
             const ownerObjectId = new ObjectId(ownerId);
-            console.log(ownerObjectId, userId, "Validated ObjectIds");
 
             const response = await this.chatService.getChat(userId, ownerObjectId);
-            console.log("Response", response)
             res.status(StatusCode.OK).json({ success: true, data: response });
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
@@ -55,7 +50,6 @@ class chatController {
     async getHostChat(req: Request, res: Response): Promise<void> {
         try {
             const host = req.customHost;
-            console.log(host, 'Host')
             if (!host || !host._id) {
                 res.status(StatusCode.BAD_REQUEST).json({ success: false, message: "Host Id is missing" })
                 return
@@ -73,7 +67,6 @@ class chatController {
     async createHostChat(req: Request, res: Response): Promise<void> {
         try {
             const host = req.customHost;
-            console.log(host, 'HostId')
             if (!host) {
                 res.status(StatusCode.BAD_REQUEST).json({ message: "No host" });
                 return;

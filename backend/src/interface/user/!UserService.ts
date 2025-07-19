@@ -13,16 +13,23 @@ interface UserData {
     email?: string;
 }
 
+type EditUserDetailData = {
+    userId: string;
+    name: string;
+    mobile: string;
+};
+
+
 export interface IUserService {
     userSignUp(userData: IUser): Promise<string>
     verifyOtp(userOtp: { email: string; otp: number }): Promise<string>,
-    verifyLogin(userData: IUser): Promise<{ message: string; accessToken: string; refreshToken: string } | string>,
+    verifyLogin(userData: IUser): Promise<{ message: string;accessToken?: string;refreshToken?: string;role?: string;}>,
     resendOtp(userData: IUser): Promise<string | null>,
     forgotPassword(userData: IUser): Promise<{ email: string; temp: boolean } | null>,
     resetPassword(userData: { email: string; password: string }): Promise<string | { message: string }>,
     getUserDetails(userId: Types.ObjectId): Promise<IUserResponse | null>
-    changePassword(userData: { email: string; currentPassword: string; newPassword: string }): Promise<string>,
-    editUserDetail(userData: IUser): Promise<string>,
+    changePassword(userData: { userId: string; currentPassword: string; newPassword: string }): Promise<string>,
+    editUserDetail(userData: EditUserDetailData): Promise<string>,
     googleSignUp(userData: UserData): Promise<{ message: string; accessToken: string; refreshToken: string } | string>,
     existingUser(email: string): Promise<string>,
     validateRefreshToken(refreFshToken:string):Promise<{  accessToken: string; refreshToken: string } | string>,    

@@ -12,11 +12,11 @@ const wishlistService = new WishlistService(wishlistRepository);
 const wishlistController = new WishlistController(wishlistService);
 
 
-wishlist_route.post('/addToWishlist/:id',userAuthMiddleware,wishlistController.addToWishlist.bind(wishlistController))
-wishlist_route.delete('/removeFromWishlist/:id',userAuthMiddleware,wishlistController.removeFromWishlist.bind(wishlistController))
-wishlist_route.get('/checkWishlist/:id',userAuthMiddleware,wishlistController.checkWishlist.bind(wishlistController))
-wishlist_route.get('/getWishlist',userAuthMiddleware,wishlistController.getWishlist.bind(wishlistController))
-wishlist_route.delete('/deleteWishlist',userAuthMiddleware,wishlistController.deleteWishlist.bind(wishlistController))
+wishlist_route.post('/:hostelId',userAuthMiddleware,wishlistController.addToWishlist.bind(wishlistController))
+wishlist_route.delete('/:hostelId',userAuthMiddleware,wishlistController.removeFromWishlist.bind(wishlistController))
+wishlist_route.get('/:hostelId/check',userAuthMiddleware,wishlistController.checkWishlist.bind(wishlistController))
+wishlist_route.get('/',userAuthMiddleware,wishlistController.getWishlist.bind(wishlistController))
+wishlist_route.delete('/',userAuthMiddleware,wishlistController.deleteWishlist.bind(wishlistController))
 
 
 export default wishlist_route;

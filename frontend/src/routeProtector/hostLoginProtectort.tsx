@@ -15,8 +15,8 @@ const HostLoginProtector: React.FC<ProtectivePropsCheck> = ({ element }) => {
   const queryParams = new URLSearchParams(location.search);
   const dispatch = useDispatch()
 
-  const accessToken = queryParams.get('accessToken')
-  const refreshToken = queryParams.get('refreshToken')
+  const accessToken = queryParams.get('hostAccessToken')
+  const refreshToken = queryParams.get('hostRefreshToken')
 
   if (accessToken && refreshToken) {
     dispatch(

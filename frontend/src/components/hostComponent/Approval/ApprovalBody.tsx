@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import { Host } from '../../../interface/Host';
 import { Notification } from '../../../interface/Notification';
 import { io } from "socket.io-client";
-import { getAdmin, getHost, submitHostApproval } from '../../../hooks/hostHooks';
+import { getAdmin, getHost, submitHostApproval } from '../../../services/hostServices';
 const socket = io("http://localhost:4000");
 
 
@@ -95,7 +95,7 @@ const ApprovalBody = () => {
         message: `You have received a new verification request on ${new Date().toLocaleDateString()}`,
         title: 'Verification Request',
         type: 'info', 
-        isRead: false
+        isRead: true
       };
       console.log('rece', newNotification)
       socket.emit('send_notification', newNotification)

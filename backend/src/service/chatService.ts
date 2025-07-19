@@ -33,9 +33,8 @@ class chatService implements IChatService {
         senderId: string, receiverId: string, message: string, timestamp: number;
         type: 'text' | 'image' | 'document';
         fileUrl?: string;
-    }): Promise<IMessage | string> {
+    }): Promise<{ savedMessage: IMessage; readCount: number } | string> {
         try {
-            console.log(messageData.type,'Typee')
             if (messageData.type !== 'text') {
                 const base64Data = messageData.message.split(',')[1];
                 const fileBuffer = Buffer.from(base64Data, 'base64');
@@ -69,7 +68,7 @@ class chatService implements IChatService {
         }
     }
 
-    async getUserChats(userId:string):Promise<IChat[] | string>{
+    async getUserChats(userId: string): Promise<IChat[] | string> {
         try {
             const response = await this.chatRepository.getUserChats(userId);
             return response
@@ -78,12 +77,21 @@ class chatService implements IChatService {
         }
     }
 
-    async createHostChat(hostId:string,userId:string):Promise<string>{
+    async createHostChat(hostId: string, userId: string): Promise<string> {
         try {
-            const response = await this.chatRepository.createHostChat(hostId,userId);
+            const response = await this.chatRepository.createHostChat(hostId, userId);
             return response
         } catch (error) {
             return error as string;
+        }
+    }
+
+    async setCountRead(chatId: string): Promise<string> {
+        try {
+            const response = await this.chatRepository.setCountRead(chatId);
+            return response
+        } catch (error) {
+            return error as string
         }
     }
 }

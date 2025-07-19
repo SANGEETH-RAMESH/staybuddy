@@ -45,7 +45,7 @@ const UserSignUpBody = () => {
 
         try {
            
-            const res = await axios.post(`${apiUrl}/user/signup`, formValues);
+            const res = await axios.post(`${apiUrl}/user/auth/signup`, formValues);
             console.log(res, 'hello');
             const {message} = res.data;
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Star, StarHalf, ClipboardX } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { getReviewDetails } from "../../../hooks/userHooks";
+import { getReviewDetails } from "../../../services/userServices";
 
 
 interface IReview {

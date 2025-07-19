@@ -26,7 +26,7 @@ const ForgotPasswordBody = () => {
             // await validationSchema.validate({ email: emailValue });
 
             // Send API request
-            const response = await axios.post(`${apiUrl}/user/forgotpassword`, {
+            const response = await axios.post(`${apiUrl}/user/auth/forgot-password`, {
                 email: emailValue,
             });
 

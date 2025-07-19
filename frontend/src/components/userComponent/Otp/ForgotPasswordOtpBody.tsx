@@ -39,7 +39,7 @@ const ForgotPasswordOtpBody = () => {
       setLoading(true);
       try {
         const response = await axios.post(
-          `${apiUrl}/user/verifyforgotpasswordotp`,
+          `${apiUrl}/user/auth/verify-forgot-otp`,
           { email, otp: numericOtp }
         );
         console.log(response.data.message, "sd");
@@ -69,7 +69,7 @@ const ForgotPasswordOtpBody = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:4000/user/resendOtp",
+        "http://localhost:4000/user/auth/resend-otp",
         { email }
       );
       console.log(response.data.message, "response");

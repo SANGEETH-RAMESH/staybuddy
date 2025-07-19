@@ -1,8 +1,7 @@
 
 import { IAdminService } from "../interface/admin/IAdminService";
 import { IAdminRepository } from "../interface/admin/IAdminRepository";
-// import HashedPassword from "../utils/hashedPassword";
-// import bcrypt from 'bcrypt'
+import bcrypt from 'bcrypt';
 import { IUser } from "../model/userModel";
 import mongoose, { ObjectId, Types } from 'mongoose'
 import { IHost } from "../model/hostModel";
@@ -16,20 +15,54 @@ import { adminPayload } from "../types/commonInterfaces/tokenInterface";
 import { IUserResponse } from "../dtos/UserResponse";
 import { IUserRespository } from "../interface/user/!UserRepository";
 import { IHostRepository } from "../interface/host/!HostRepository";
+import { IHostResponse } from "../dtos/HostResponse";
 
 
 class adminService implements IAdminService {
-    constructor(private adminRepository: IAdminRepository,private userRepository:IUserRespository,private hostRepository:IHostRepository) {
+    constructor(private adminRepository: IAdminRepository, private userRepository: IUserRespository, private hostRepository: IHostRepository) {
 
     }
 
-    async adminLogin(adminData: { email: string, password: string }): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
+    async adminLogin(adminData: { email: string, password: string }): Promise<{ message: string;
+        accessToken?: string;
+        refreshToken?: string;
+        role?: string;} > {
         try {
-            const response = await this.adminRepository.AdminVerifyLogin(adminData)
-            return response
+            const checkingHost = await this.adminRepository.AdminVerifyLogin(adminData.email);
+            if (typeof checkingHost === 'string') {
+                return { message: checkingHost };
+            }
+
+            if(!checkingHost){
+                return {message:"No Admin"}
+            }
+
+            if (checkingHost.isBlock) {
+                return { message: "Admin is blocked" };
+            }
+
+            const isMatch = await bcrypt.compare(adminData.password, checkingHost.password);
+            if (!isMatch) {
+                return { message: "Invalid password" };
+            }
+
+            const adminPayload = {
+                _id: checkingHost._id as Types.ObjectId,
+                role: 'admin' as const
+            };
+
+            const accessToken = generateAccessToken(adminPayload);
+            const refreshToken = generateRefreshToken(adminPayload);
+
+            return {
+                message: "Success",
+                accessToken,
+                refreshToken,
+                role: 'admin'
+            };
         } catch (error) {
             console.log(error)
-            return error as string
+            return { message:error as string}
         }
     }
 
@@ -43,7 +76,7 @@ class adminService implements IAdminService {
         }
     }
 
-    async userBlock(userId: ObjectId): Promise<string> {
+    async userBlock(userId: Types.ObjectId): Promise<string> {
         try {
             const response = await this.adminRepository.userBlock(userId);
             return response
@@ -68,7 +101,6 @@ class adminService implements IAdminService {
 
     async userDelete(userId: Types.ObjectId): Promise<string> {
         try {
-            console.log("sfdfsd")
             const response = await this.adminRepository.userDelete(userId);
             return response
         } catch (error) {
@@ -77,10 +109,10 @@ class adminService implements IAdminService {
         }
     }
 
-    async getHost(skip: number, limit: number): Promise<{ hosts: IHost[] | null; totalCount: number, hostIdCounts: Record<string, number> } | null> {
+    async getHost(skip: number, limit: number): Promise<{ hosts: IHostResponse[] | null; totalCount: number, hostIdCounts: Record<string, number> } | null> {
         try {
             const getHostels = await this.adminRepository.getHostels();
-            const getHost = await this.adminRepository.getHost(skip, limit);
+            const getHost = await this.hostRepository.getHost(skip, limit);
 
             if (!Array.isArray(getHostels)) {
                 console.error("Invalid data format: getHostels is not an array.");
@@ -109,7 +141,7 @@ class adminService implements IAdminService {
         }
     }
 
-    async hostBlock(hostId: ObjectId): Promise<string> {
+    async hostBlock(hostId: Types.ObjectId): Promise<string> {
         try {
             const response = await this.adminRepository.hostBlock(hostId);
             return response
@@ -119,7 +151,7 @@ class adminService implements IAdminService {
         }
     }
 
-    async hostUnBlock(hostId: ObjectId): Promise<string> {
+    async hostUnBlock(hostId: Types.ObjectId): Promise<string> {
         try {
             const response = await this.adminRepository.hostUnBlock(hostId);
             return response
@@ -158,7 +190,6 @@ class adminService implements IAdminService {
     async rejectHost(hostId: mongoose.Types.ObjectId): Promise<string> {
         try {
             const rejectHost = await this.adminRepository.rejectHost(hostId)
-            console.log(rejectHost)
             if (rejectHost == 'Reject') {
                 const Host = await this.adminRepository.findHostById(hostId);
                 if (typeof Host !== "string" && Host?.email) {
@@ -223,7 +254,7 @@ class adminService implements IAdminService {
         }
     }
 
-    async getHostDetails(userId: string): Promise<string | IHost | null> {
+    async getHostDetails(userId: string): Promise<string | IHostResponse | null> {
         try {
             const response = await this.adminRepository.getHostDetails(userId)
             return response;
@@ -316,22 +347,21 @@ class adminService implements IAdminService {
 
     async validateRefreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | string> {
         try {
-            console.log('heyeeeheh')
             const decoded = verifyToken(refreshToken)
             if (typeof decoded === 'object' && decoded !== null) {
                 const response = await this.adminRepository.FindAdminById(decoded._id);
                 if (!response || typeof response === 'string') {
-                return "No User";
-            }
+                    return "No User";
+                }
                 const adminPayload: adminPayload = {
                     _id: new Types.ObjectId(response._id),
-                    role:'admin'
+                    role: 'admin'
                 }
 
                 const accessToken = generateAccessToken(adminPayload);
-                const newRefreshToken = generateRefreshToken(adminPayload);
+                const refreshToken = generateRefreshToken(adminPayload);
 
-                return { accessToken, refreshToken: newRefreshToken };
+                return { accessToken, refreshToken };
             }
 
             return "Invalid Token";

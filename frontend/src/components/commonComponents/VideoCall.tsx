@@ -32,6 +32,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
     const [isMinimized, setIsMinimized] = useState(false);
     const [callStatus, setCallStatus] = useState('');
     const [callerName, setCallerName] = useState('');
+    const [mediaError, setMediaError] = useState<string | null>(null);
 
     const localVideoRef = useRef<HTMLVideoElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -39,6 +40,7 @@ const VideoCall: React.FC<VideoCallProps> = ({
     const localStream = useRef<MediaStream | null>(null);
     const remoteStream = useRef<MediaStream | null>(null);
     const hasInitiated = useRef(false);
+    const isCleaningUp = useRef(false);
 
     useEffect(() => {
         if (isCallActive && !isInitiator) {
@@ -242,12 +244,40 @@ const VideoCall: React.FC<VideoCallProps> = ({
         };
     };
 
-    const getUserMedia = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: true,
-                audio: true
+    const stopExistingStream = () => {
+        if (localStream.current) {
+            localStream.current.getTracks().forEach(track => {
+                track.stop();
+                console.log('Stopped existing track:', track.kind);
             });
+            localStream.current = null;
+        }
+    };
+
+    const getUserMedia = async (retryCount = 0) => {
+        const maxRetries = 3;
+        
+        try {
+            // Stop any existing stream first
+            stopExistingStream();
+
+            // Wait a bit to ensure devices are released
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const constraints = {
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: 'user'
+                },
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            };
+
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
 
             localStream.current = stream;
             if (localVideoRef.current) {
@@ -260,15 +290,77 @@ const VideoCall: React.FC<VideoCallProps> = ({
                 });
             }
 
+            setMediaError(null);
             return stream;
         } catch (error) {
             console.error('Error accessing media devices:', error);
-            setCallStatus('Camera/Microphone access denied');
+            
+            if (error instanceof Error) {
+                if (error.name === 'NotReadableError' && retryCount < maxRetries) {
+                    console.log(`Retrying getUserMedia... Attempt ${retryCount + 1}/${maxRetries}`);
+                    // Wait longer before retry
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+                    return getUserMedia(retryCount + 1);
+                }
+                
+                // Handle different error types
+                switch (error.name) {
+                    case 'NotAllowedError':
+                        setMediaError('Camera/Microphone access denied. Please allow permissions and try again.');
+                        setCallStatus('Permission denied');
+                        break;
+                    case 'NotFoundError':
+                        setMediaError('No camera or microphone found. Please check your devices.');
+                        setCallStatus('No media devices found');
+                        break;
+                    case 'NotReadableError':
+                        setMediaError('Camera/Microphone is being used by another application. Please close other apps using these devices.');
+                        setCallStatus('Device in use');
+                        break;
+                    case 'OverconstrainedError':
+                        setMediaError('Camera/Microphone constraints cannot be satisfied.');
+                        setCallStatus('Media constraints error');
+                        break;
+                    default:
+                        setMediaError('Failed to access camera/microphone. Please try again.');
+                        setCallStatus('Media access failed');
+                }
+            }
+            
+            // Try with fallback constraints
+            if (retryCount === 0) {
+                try {
+                    console.log('Trying with fallback constraints...');
+                    const fallbackStream = await navigator.mediaDevices.getUserMedia({
+                        video: true,
+                        audio: true
+                    });
+                    
+                    localStream.current = fallbackStream;
+                    if (localVideoRef.current) {
+                        localVideoRef.current.srcObject = fallbackStream;
+                    }
+
+                    if (peerConnection.current) {
+                        fallbackStream.getTracks().forEach(track => {
+                            peerConnection.current?.addTrack(track, fallbackStream);
+                        });
+                    }
+
+                    setMediaError(null);
+                    return fallbackStream;
+                } catch (fallbackError) {
+                    console.error('Fallback also failed:', fallbackError);
+                }
+            }
+            
             throw error;
         }
     };
 
     const initiateCall = async () => {
+        if (isCleaningUp.current) return;
+        
         try {
             console.log('Initiating call to:', receiverId, 'chatId:', chatId);
             setCallStatus('Initiating call...');
@@ -290,8 +382,13 @@ const VideoCall: React.FC<VideoCallProps> = ({
                 await getUserMedia();
                 console.log('WebRTC setup completed');
             } catch (mediaError) {
-                console.error('WebRTC setup failed, but call was still initiated:', mediaError);
-                setCallStatus('Media setup failed, but call initiated');
+                console.error('WebRTC setup failed:', mediaError);
+                // Don't fail the call completely, just set appropriate status
+                if (mediaError instanceof Error && mediaError.name === 'NotReadableError') {
+                    setCallStatus('Device in use - call initiated without media');
+                } else {
+                    setCallStatus('Media setup failed - call initiated');
+                }
             }
 
         } catch (error) {
@@ -303,13 +400,22 @@ const VideoCall: React.FC<VideoCallProps> = ({
     };
 
     const acceptCall = async () => {
+        if (isCleaningUp.current) return;
+        
         try {
             setIncomingCall(false);
             setIsCallStarted(true);
             setCallStatus('Accepting call...');
 
             initializePeerConnection();
-            await getUserMedia();
+            
+            try {
+                await getUserMedia();
+                setCallStatus('Call accepted');
+            } catch (mediaError) {
+                console.error('Media setup failed while accepting call:', mediaError);
+                setCallStatus('Call accepted - media setup failed');
+            }
 
             socket.emit('accept_call', {
                 callerId: receiverId,
@@ -317,7 +423,6 @@ const VideoCall: React.FC<VideoCallProps> = ({
                 chatId
             });
 
-            setCallStatus('Call accepted');
         } catch (error) {
             console.error('Error accepting call:', error);
             setCallStatus('Failed to accept call');
@@ -373,12 +478,21 @@ const VideoCall: React.FC<VideoCallProps> = ({
     };
 
     const cleanup = () => {
+        if (isCleaningUp.current) return;
+        isCleaningUp.current = true;
+        
         console.log('Cleaning up media resources');
 
         if (localStream.current) {
             localStream.current.getTracks().forEach(track => {
                 track.stop();
                 console.log('Stopped track:', track.kind);
+            });
+        }
+
+        if (remoteStream.current) {
+            remoteStream.current.getTracks().forEach(track => {
+                track.stop();
             });
         }
 
@@ -400,6 +514,23 @@ const VideoCall: React.FC<VideoCallProps> = ({
         setIsVideoEnabled(true);
         setIsAudioEnabled(true);
         setIsMinimized(false);
+        setMediaError(null);
+        
+        // Reset cleanup flag after a delay
+        setTimeout(() => {
+            isCleaningUp.current = false;
+        }, 1000);
+    };
+
+    const retryMediaAccess = async () => {
+        setMediaError(null);
+        setCallStatus('Retrying media access...');
+        try {
+            await getUserMedia();
+            setCallStatus('Media access restored');
+        } catch (error) {
+            console.error('Retry failed:', error);
+        }
     };
 
     if (!isCallActive || callEnded) return null;
@@ -415,6 +546,9 @@ const VideoCall: React.FC<VideoCallProps> = ({
                         <div>
                             <h3 className="text-lg font-semibold">{receiverName}</h3>
                             <p className="text-sm text-gray-300">{callStatus}</p>
+                            {mediaError && (
+                                <p className="text-xs text-red-400 mt-1">{mediaError}</p>
+                            )}
                         </div>
                         <div className="flex space-x-2">
                             <button
@@ -458,6 +592,18 @@ const VideoCall: React.FC<VideoCallProps> = ({
                     </div>
                 </div>
 
+                {mediaError && (
+                    <div className="absolute top-20 left-4 right-4 bg-red-600 text-white p-3 rounded-lg">
+                        <p className="text-sm">{mediaError}</p>
+                        <button
+                            onClick={retryMediaAccess}
+                            className="mt-2 px-3 py-1 bg-white text-red-600 rounded text-sm hover:bg-gray-100"
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
+
                 {incomingCall && (
                     <div className="absolute inset-0 bg-black/90 flex items-center justify-center backdrop-blur-sm">
                         <div className="bg-white text-black p-8 rounded-2xl text-center max-w-sm mx-4 shadow-2xl">
@@ -479,7 +625,6 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                     </div>
                                 </button>
 
-                                {/* Accept Button */}
                                 <button
                                     onClick={acceptCall}
                                     className="group relative flex items-center justify-center w-16 h-16 bg-green-500 hover:bg-green-600 rounded-full transition-all duration-200 transform hover:scale-110 active:scale-95 shadow-lg animate-bounce"
@@ -491,7 +636,6 @@ const VideoCall: React.FC<VideoCallProps> = ({
                                 </button>
                             </div>
 
-                            {/* Additional Action Text */}
                             <div className="mt-8 flex justify-between text-xs text-gray-500">
                                 <span>Swipe left to decline</span>
                                 <span>Swipe right to accept</span>
@@ -500,7 +644,6 @@ const VideoCall: React.FC<VideoCallProps> = ({
                     </div>
                 )}
 
-                {/* Call Controls */}
                 {isCallStarted && !isMinimized && (
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
                         <div className="flex justify-center space-x-6">
@@ -534,7 +677,6 @@ const VideoCall: React.FC<VideoCallProps> = ({
                     </div>
                 )}
 
-                {/* Connection Status */}
                 {!isCallAccepted && isCallStarted && !incomingCall && (
                     <div className="absolute inset-0 bg-black/80 flex items-center justify-center backdrop-blur-sm">
                         <div className="text-center">

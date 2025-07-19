@@ -1,12 +1,9 @@
-// import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Mail, Lock, ArrowRight, EyeOff, Eye } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { loginSuccess } from '../../../redux/hostAuthSlice';
-// import { Field, } from 'formik';
-// import { signInValidation } from '../../../validations/commonValidations';
 import { LoginValues } from '../../../interface/Login';
 import { useState } from 'react';
 const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
@@ -41,7 +38,7 @@ const HostLoginBody = () => {
         e.preventDefault();
         try {
             const response = await axios.post(`${apiUrl}/host/verifylogin`, { ...formValues });
-            console.log(response.data.message, 'hello')
+            console.log(response.data, 'hello')
             if (response.data.message === 'Invalid password') {
                 setErrors((prev) => ({
                     ...prev,
@@ -55,9 +52,11 @@ const HostLoginBody = () => {
             } else if (response.data.message === 'Host is blocked') {
                 toast.error("You are blocked", { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
             } else {
+                console.log('dfhdsfjdfl')
                 dispatch(loginSuccess({
                     accessToken: response.data.accessToken,
                     refreshToken: response.data.refreshToken,
+                    role:response.data.role,
                     isLoggedIn: true
                 }));
                 toast.success("Login Successful", { position: "top-center", style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });

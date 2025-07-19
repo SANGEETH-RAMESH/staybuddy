@@ -61,7 +61,7 @@ class adminController {
 
     async userBlock(req: Request, res: Response): Promise<void> {
         try {
-            const { userId } = req.body
+            const  userId  = new mongoose.Types.ObjectId(req.params.id);
             const response = await this.adminService.userBlock(userId);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
@@ -71,7 +71,7 @@ class adminController {
 
     async userUnBlock(req: Request, res: Response): Promise<void> {
         try {
-            const { userId } = req.body;
+            const  userId  = new mongoose.Types.ObjectId(req.params.id);
             const response = await this.adminService.userUnBlock(userId);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
@@ -81,7 +81,7 @@ class adminController {
 
     async userDelete(req: Request, res: Response): Promise<void> {
         try {
-            let { userId } = req.body;
+            let  userId  = new mongoose.Types.ObjectId(req.params.id);;
             userId = new Types.ObjectId(userId);
             const response = await this.adminService.userDelete(userId);
             res.status(StatusCode.OK).json({ success: true, message: response })
@@ -105,7 +105,7 @@ class adminController {
 
     async hostBlock(req: Request, res: Response): Promise<void> {
         try {
-            const { hostId } = req.body
+            const  hostId  = new mongoose.Types.ObjectId(req.params.id);
             const response = await this.adminService.hostBlock(hostId);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
@@ -125,9 +125,7 @@ class adminController {
 
     async hostDelete(req: Request, res: Response): Promise<void> {
         try {
-            console.log('hey');
-            console.log(req.params, 'hello');
-            const { hostId } = req.params;
+            const  hostId  = req.params.id;
 
             if (!Types.ObjectId.isValid(hostId)) {
                 res.status(StatusCode.BAD_REQUEST).json({ success: false, message: 'Invalid hostId format' });
@@ -146,10 +144,7 @@ class adminController {
 
     async approveHost(req: Request, res: Response): Promise<void> {
         try {
-            console.log('sdfs')
-            const { hostId } = req.body;
-            console.log(hostId, "body");
-            console.log(typeof hostId, "type");
+            const hostId  = new mongoose.Types.ObjectId(req.params.id);;
 
             const Id = new mongoose.Types.ObjectId(hostId);
 
@@ -164,10 +159,8 @@ class adminController {
 
     async rejectHost(req: Request, res: Response): Promise<void> {
         try {
-            const { hostId } = req.body
-            const Id = new mongoose.Types.ObjectId(hostId)
-
-            const response = await this.adminService.rejectHost(Id);
+            const  hostId  = new mongoose.Types.ObjectId(req.params.id);;
+            const response = await this.adminService.rejectHost(hostId);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
             console.log(error);
@@ -177,7 +170,7 @@ class adminController {
 
     async getAllHostels(req: Request, res: Response): Promise<void> {
         try {
-            console.log(req.query, "body")
+            
             let { page, limit } = req.query
             if (!page || !limit) {
                 res.status(StatusCode.OK).json({ message: "Page or limit is not" })
@@ -320,8 +313,7 @@ class adminController {
 
     async deleteHostel(req: Request, res: Response): Promise<void> {
         try {
-            console.log(req.query)
-            const hostelId = req.query.hostel_id;
+            const hostelId = req.params.id;
             if (!hostelId || typeof hostelId !== 'string') {
                 res.status(StatusCode.BAD_REQUEST).json({ message: "No hostel Id" })
                 return
@@ -335,8 +327,7 @@ class adminController {
 
     async deleteCategory(req: Request, res: Response): Promise<void> {
         try {
-            console.log(req.body, "Sagneeth")
-            const categoryId = req.body.categoryId;
+            const categoryId = req.params.id;
             const response = await this.adminService.deleteCategory(categoryId);
             res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
@@ -393,7 +384,6 @@ class adminController {
 
     async getReviews(req: Request, res: Response): Promise<void> {
         try {
-            console.log("Params", req.params)
             const hostelId = req.params.hostelId;
             const response = await this.adminService.getReviews(hostelId);
             res.status(StatusCode.OK).json({ message: response });

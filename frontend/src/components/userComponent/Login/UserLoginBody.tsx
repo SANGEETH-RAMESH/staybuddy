@@ -44,32 +44,33 @@ const UserLoginBody = () => {
         try {
             console.log(import.meta.env);
             console.log(apiUrl, 'api')
-            const response = await axios.post(`${apiUrl}/user/verifylogin`, { ...formValues });
+            const response = await axios.post(`${apiUrl}/user/auth/login`, { ...formValues });
             console.log(response.data.message, 'response');
 
-            const { message, accessToken, refreshToken } = response.data;
+            const { message, accessToken, refreshToken,role } = response.data.message;
             console.log(message, "MEssage")
 
-            if (response.data.message === 'Invalid password') {
+            if (response.data?.message?.message === 'Invalid password') {
 
                 setErrors((prev) => ({
                     ...prev,
                     password: 'Invalid password'
                 }))
-            } else if (response.data.message === 'Invalid email') {
+            } else if (response.data?.message?.message === 'Invalid email') {
 
                 setErrors((prev) => ({
                     ...prev,
                     email: 'Invalid email'
                 }))
-            } else if (response.data.message === 'User is blocked') {
+            } else if (response.data?.message?.message === 'User is blocked') {
                 toast.error("User is blocked", { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
-            } else if (response.data.message == undefined) {
+            } else if (response.data?.message?.message == undefined) {
                 toast.error("Invalid credentials", { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
             } else if (accessToken && refreshToken) {
                 dispatch(loginSuccess({
                     accessToken: accessToken,
                     refreshToken: refreshToken,
+                    role:role,
                     isLoggedIn: true
                 }));
                 toast.success("Login Successful", { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });

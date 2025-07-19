@@ -86,7 +86,6 @@ class walletRepository extends baseRepository<IWallet> implements IWalletReposit
 
     async findUserWallet(id: string): Promise<IWallet | string | null> {
         try {
-            console.log(id,'heeee')
             const userWallet = await Wallet.aggregate([
                 { $match: { userOrHostId: new Types.ObjectId(id) } },
                 {

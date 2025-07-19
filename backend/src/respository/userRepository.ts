@@ -33,13 +33,13 @@ interface UserData {
 }
 
 type ChangePasswordData = {
-    email: string;
+    userId: string;
     currentPassword: string;
     newPassword: string;
 };
 
 type EditUserDetailData = {
-    email: string;
+    userId: string;
     name: string;
     mobile: string;
 };
@@ -164,34 +164,13 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async UserVerifyLogin(userData: TempUserData): Promise<{ message: string, user: IUserResponse } | string> {
+    async UserVerifyLogin(email:string): Promise< IUser | string> {
         try {
-            const checkuser = await User.findOne({ email: userData.email, isAdmin: false }) as IUser
-            if (checkuser && checkuser.isBlock !== true) {
-                const isMatch = await bcrypt.compare(userData.password, checkuser.password);
-                if (isMatch) {
-                    const userResponse: IUserResponse = {
-                        _id: checkuser._id,
-                        name: checkuser.name,
-                        email: checkuser.email,
-                        mobile: checkuser.mobile,
-                        isAdmin: checkuser.isAdmin,
-                        isBlock: checkuser.isBlock,
-                        wallet_id: checkuser.wallet_id ? checkuser.wallet_id : null,
-                    };
-
-                    return { message: "Success", user: userResponse };
-                } else {
-                    return 'Invalid password';
-                }
-            } else if (checkuser?.isBlock === true) {
-                return 'User is blocked';
-            } else {
-                return 'Invalid email';
-            }
+            const checkuser = await User.findOne({ email: email, isAdmin: false }) as IUser
+            return checkuser
         } catch (error) {
             console.log(error);
-            return 'Error occurred during login';
+            return error as string
         }
     }
 
@@ -223,7 +202,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
 
     async changePassword(userData: ChangePasswordData): Promise<string> {
         try {
-            const findUser = await User.findOne({ email: userData.email });
+            const findUser = await User.findOne({ _id: userData.userId });
             if (!findUser) {
                 return "User not found";
             }
@@ -236,7 +215,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
 
                 const hashedPassword = await bcrypt.hash(userData.newPassword, 10);
                 const updatePassword = await User.updateOne(
-                    { email: userData.email },
+                    { _id: userData.userId },
                     { $set: { password: hashedPassword } }
                 );
 
@@ -259,7 +238,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
     async editUserDetail(userData: EditUserDetailData): Promise<string> {
         try {
             const updatingUserDetails = await User.updateOne(
-                { email: userData.email },
+                { _id: userData.userId },
                 {
                     $set: {
                         name: userData.name,

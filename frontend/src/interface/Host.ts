@@ -5,13 +5,13 @@ export interface Host{
   name: string;
   email: string;
   mobile: string;
-  count:string
+  count?:string
   isBlock: boolean;
   approvalRequest: string;
-  tempExpires: string;
+  tempExpires?: string;
   photo:string;
-  status:string;
-  documentType:string;
-  createdAt:string;
-  address:string;
+  status?:string;
+  documentType?:string;
+  createdAt?:string;
+  address?:string;
 }

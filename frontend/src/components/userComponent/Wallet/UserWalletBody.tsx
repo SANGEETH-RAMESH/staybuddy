@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { CreditCard, ArrowUpRight, ArrowDownRight, AlertCircle } from 'lucide-react';
-import { deposit, getUserDetails, getWalletDetails, payment, withdrew } from '../../../hooks/userHooks';
+import { deposit, getUserDetails, getWalletDetails, payment, withdrew } from '../../../services/userServices';
 
 
 

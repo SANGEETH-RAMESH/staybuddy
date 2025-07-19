@@ -8,12 +8,15 @@ export interface IOrder extends Document {
     customerPhone: string;
     foodRate: number | null;
     host_id: Types.ObjectId;
-    hostel_id: {
-        id?: Types.ObjectId;
-        name: string;
-        location: string;
-        host_mobile: string;
-    };
+    hostel_id: Types.ObjectId;
+    name: string,
+    location: string,
+    host_mobile: string,
+    nearbyaccess: string,
+    policies: string,
+    advanceamount: number,
+    bedShareRoom: number,
+    photos: string[],
     selectedBeds: number;
     selectedFacilities: {
         wifi: boolean;
@@ -24,7 +27,10 @@ export interface IOrder extends Document {
     totalDepositAmount: number;
     totalRentAmount: number;
     paymentMethod: "online" | "wallet";
-    active:boolean
+    active: boolean,
+    startDate: Date,
+    endDate: Date,
+    cancellationPolicy:string
 }
 
 const orderSchema: Schema = new Schema(
@@ -34,9 +40,9 @@ const orderSchema: Schema = new Schema(
             required: true,
         },
         userId: {
-            type:  mongoose.Schema.Types.ObjectId,
+            type: mongoose.Schema.Types.ObjectId,
             required: true,
-            ref:'User'
+            ref: 'User'
         },
         customerEmail: {
             type: String,
@@ -55,28 +61,46 @@ const orderSchema: Schema = new Schema(
             default: null,
         },
         host_id: {
-            type:  mongoose.Schema.Types.ObjectId,
-            ref:'Host',
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Host',
             required: true,
         },
         hostel_id: {
-            id: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Hostel',
-                required: true,
-            },
-            name: {
-                type: String,
-                required: true,
-            },
-            location: {
-                type: String,
-                required: true,
-            },
-            host_mobile: {
-                type: String,
-                required: true,
-            },
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Hostel',
+            required: true
+        },
+        name: {
+            type: String,
+            required: true,
+        },
+        location: {
+            type: String,
+            required: true,
+        },
+        host_mobile: {
+            type: String,
+            required: true,
+        },
+        nearbyaccess: {
+            type: String,
+            required: true
+        },
+        policies: {
+            type: String,
+            required: true
+        },
+        advanceamount: {
+            type: Number,
+            required: true
+        },
+        bedShareRoom: {
+            type: Number,
+            required: true
+        },
+        photos: {
+            type: [String],
+            required: true
         },
         selectedBeds: {
             type: Number,
@@ -113,10 +137,22 @@ const orderSchema: Schema = new Schema(
             enum: ["online", "wallet"],
             required: true,
         },
-        active:{
-            type:Boolean,
+        active: {
+            type: Boolean,
+            required: true
+        },
+        startDate: {
+            type: Date,
+            required: true
+        },
+        endDate: {
+            type: Date,
+            required: true
+        },
+        cancellationPolicy:{
+            type:String,
             required:true
-        }
+        },
     },
     { timestamps: true }
 );

@@ -23,13 +23,13 @@ type ResetPasswordData = {
 };
 
 type ChangePasswordData = {
-    email: string;
+    userId: string;
     currentPassword: string;
     newPassword: string;
 };
 
 type EditUserDetailData = {
-    email: string;
+    userId: string;
     name: string;
     mobile: string;
 };
@@ -45,7 +45,7 @@ export interface IUserRespository{
     OtpGenerating(email:string,otp:number):Promise<void>,
     tempStoreUser(userData: TempUserData): Promise<string | null>,
     CreateUser(userData: {email:string,otp:number}): Promise<string>,
-    UserVerifyLogin(userData: TempUserData): Promise<{ message: string, user: IUserResponse } | string>,
+    UserVerifyLogin(email: string): Promise< IUser | string>,
     resetPassword(userData: ResetPasswordData): Promise<string | { message: string }>,
     FindUserById(id:Types.ObjectId):Promise<IUserResponse | null>,
     changePassword(userData: ChangePasswordData): Promise<string>,

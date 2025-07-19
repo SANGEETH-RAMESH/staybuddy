@@ -3,12 +3,13 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../redux/hostAuthSlice';
 import { MessageCircle, Building2, User, LogOut, Menu, X, Bell, BellRing } from 'lucide-react';
+import logo from '../../assets/logo.png'
 import { formatDistanceToNow } from 'date-fns';
 const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { Notification } from '../../interface/Notification';
 
 import { io } from "socket.io-client";
-import { getHost } from '../../hooks/hostHooks';
+import { getHost } from '../../services/hostServices';
 const socket = io(`${apiUrl}`);
 
 const HostHeader = () => {
@@ -22,7 +23,7 @@ const HostHeader = () => {
   const [readCount, setReadCount] = useState<number>(0)
   const notificationRef = useRef<HTMLDivElement | null>(null);
 
-  
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -94,12 +95,17 @@ const HostHeader = () => {
     const handleNotification = (notification: Notification) => {
       console.log('Notification received:', notification);
       setNotifications((prev) => {
-        const updated = [notification,...prev];
+        const updated = [notification, ...prev];
         console.log('Updated notifications:', updated);
+
+        const unreadCount = updated.filter((n) => n.isRead).length;
+        console.log(unreadCount, 'unread');
+
+        setIsRead(false);
+        setReadCount(unreadCount);
+
         return updated;
       });
-      setIsRead(notification.isRead)
-      setReadCount((prev) => prev + 1);
     };
 
     socket.on('receive_notification', handleNotification);
@@ -108,20 +114,30 @@ const HostHeader = () => {
       console.log(notifications, 'Siuu')
       setNotifications(notifications)
       setIsRead(notifications[0]?.isRead)
-      const unreadCount = notifications.filter(n => !n.isRead).length;
-
+      const unreadCount = notifications.filter(n => n.isRead).length;
+      console.log(unreadCount, 'read')
       setReadCount(unreadCount)
+      setIsRead(false)
+    }
+
+    const handleMarkedAllNotification = (receiverId: string) => {
+      console.log(receiverId)
+      console.log('id')
+      setNotifications([])
     }
 
     socket.emit('get_old_notifications', hostId);
 
     socket.on('receive_old_notifications', handleOldNotifications)
 
+    socket.on('marked_all_notifications', handleMarkedAllNotification)
+
 
 
     return () => {
       socket.off('receive_notification', handleNotification);
       socket.off('receive_old_notifications', handleOldNotifications)
+      socket.off('marked_all_notifications', handleMarkedAllNotification)
     };
   }, [hostId]);
 
@@ -164,7 +180,12 @@ const HostHeader = () => {
   };
 
   const toggleNotifications = () => {
+    console.log('heyyy')
     setNotificationOpen(!notificationOpen);
+    setReadCount(0)
+    socket.emit('mark_all_notification', ({ receiverId: hostId }))
+    
+    
   };
 
   const markAsRead = (notificationId: string) => {
@@ -189,9 +210,10 @@ const HostHeader = () => {
         <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
           <button
             onClick={handleHomeClick}
-            className="text-xl md:text-2xl font-bold text-emerald-600 hover:text-emerald-800 transition-colors"
+            className="flex items-center gap-x-2 old text-emerald-600 hover:text-emerald-800 transition-colors"
           >
-            StayBuddy Host
+            <img src={logo} alt="Logo" className="h-16 w-16" />
+            <p>StayBuddy</p>
           </button>
 
           {/* Desktop Navigation */}
@@ -208,9 +230,9 @@ const HostHeader = () => {
                   <Bell className="w-5 h-5" />
                 )}
                 <span className="ml-2 text-sm">Notification</span>
-                {!isRead && readCount>0  && (
+                {!isRead && readCount > 0 && (
                   <span className="absolute -top-0.5 sm:-top-1 -right-0.5 sm:-right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white font-bold">
-                    <span className="text-[8px] sm:text-[10px]">{readCount>0?readCount:''}</span>
+                    <span className="text-[8px] sm:text-[10px]">{readCount > 0 ? readCount : ''}</span>
                   </span>
                 )}
               </button>
@@ -240,7 +262,7 @@ const HostHeader = () => {
                   ) : (
                     // Scrollable notifications list
                     <div className="max-h-96 overflow-y-auto">
-                      {notifications.map((notification,index) => (
+                      {notifications.map((notification, index) => (
                         <div
                           key={index}
                           onClick={() => markAsRead(notification._id!)}

@@ -3,13 +3,15 @@ import { Building2, Bed, MapPin, Image, Wifi, ShowerHead, UtensilsCrossed, Users
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { Category } from '../../../interface/Category';
-import { addHostel, getAllCategory, getHost } from '../../../hooks/hostHooks';
+import { addHostel, getAllCategory, getHost } from '../../../services/hostServices';
+import LocationPicker from '../../commonComponents/locationPicker'
 
 
 
 const HostelForm = () => {
   const [step, setStep] = useState<number>(1);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [showMap, setShowMap] = useState<boolean>(false);
   const [formData, setFormData] = useState<{
     name: string;
     location: string;
@@ -28,6 +30,9 @@ const HostelForm = () => {
     bedShareRate: string;
     foodRate: string;
     host_id: string;
+    latitude: number;
+    longitude: number;
+    cancellationPolicy: string;
   }>({
     name: "",
     location: "",
@@ -46,6 +51,9 @@ const HostelForm = () => {
     bedShareRate: "",
     foodRate: "",
     host_id: "",
+    latitude: 0,
+    longitude: 0,
+    cancellationPolicy: ""
   });
 
   const [errors, setErrors] = useState<{
@@ -61,6 +69,9 @@ const HostelForm = () => {
     bedShareRate: string;
     foodRate: string;
     facilities: string;
+    latitude: string;
+    longitude: string;
+    cancellationPolicy: string;
   }>({
     name: '',
     location: '',
@@ -73,7 +84,10 @@ const HostelForm = () => {
     advance: '',
     bedShareRate: '',
     foodRate: '',
-    facilities: ''
+    facilities: '',
+    latitude: '',
+    longitude: '',
+    cancellationPolicy: ''
   });
 
   type Facilities = {
@@ -95,6 +109,7 @@ const HostelForm = () => {
     advance: string;
     bedShareRate: string;
     foodRate: string;
+    cancellationPolicy: string;
   };
 
   const facilities = [
@@ -110,7 +125,7 @@ const HostelForm = () => {
         const categorySet = await getAllCategory();
         const categorydata = categorySet.data.message
         setCategories(categorydata)
-        console.log("Category",categorySet)
+        console.log("Category", categorySet)
         const hostId = response.data.message._id;
         console.log(hostId)
         setFormData((prevData) => ({
@@ -129,7 +144,6 @@ const HostelForm = () => {
     let isValid = true;
     const newErrors = { ...errors };
 
-    // Property name validation
     if (!formData.name.trim()) {
       newErrors.name = 'Property name is required';
       isValid = false;
@@ -138,13 +152,11 @@ const HostelForm = () => {
       isValid = false;
     }
 
-    // Location validation
     if (!formData.location.trim()) {
       newErrors.location = 'Location is required';
       isValid = false;
     }
 
-    // Phone number validation
     const phoneRegex = /^\d{10}$/;
     if (!formData.phoneNumber.trim()) {
       newErrors.phoneNumber = 'Phone number is required';
@@ -154,31 +166,31 @@ const HostelForm = () => {
       isValid = false;
     }
 
-    // Nearby access validation
     if (!formData.nearbyAccess.trim()) {
       newErrors.nearbyAccess = 'Nearby access details are required';
       isValid = false;
     }
 
-    // Beds per room validation
     if (!formData.bedsPerRoom) {
       newErrors.bedsPerRoom = 'Please select number of beds per room';
       isValid = false;
     }
 
-    // Policies validation
     if (!formData.policies) {
       newErrors.policies = 'Please select a policy';
       isValid = false;
     }
 
-    // Category validation
     if (!formData.category) {
       newErrors.category = 'Please select a category';
       isValid = false;
     }
 
-    // Advance amount validation
+    if (!formData.cancellationPolicy) {
+      newErrors.cancellationPolicy = 'Please select and cancellation policy';
+      isValid = false;
+    }
+
     if (!formData.advance) {
       newErrors.advance = 'Advance amount is required';
       isValid = false;
@@ -187,7 +199,6 @@ const HostelForm = () => {
       isValid = false;
     }
 
-    // Photos validation
     if (formData.photos.length === 0) {
       newErrors.photos = 'Please upload at least one photo';
       isValid = false;
@@ -311,12 +322,20 @@ const HostelForm = () => {
 
       const dataToSend = new FormData();
 
-      (Object.keys(formData) as (keyof FormDataType)[]).forEach((key) => {
+
+      (Object.keys(formData) as (keyof typeof formData)[]).forEach((key) => {
         if (key !== 'photos' && key !== 'facilities') {
-          dataToSend.append(key, formData[key] as string);
+          const value = formData[key];
+
+          if ((key === 'latitude' || key === 'longitude') && typeof value === 'number') {
+            dataToSend.append(key, value.toString());
+          } else if (typeof value === 'string') {
+            dataToSend.append(key, value);
+          }
         }
       });
 
+      // Append facilities
       if (formData.facilities) {
         const facilitiesArray = Object.keys(formData.facilities).filter(
           (key) => formData.facilities[key as keyof typeof formData.facilities]
@@ -324,11 +343,15 @@ const HostelForm = () => {
         dataToSend.append('facilities', facilitiesArray.join(','));
       }
 
+      // Append photos
       if (formData.photos && formData.photos.length > 0) {
         formData.photos.forEach((photo) => {
           dataToSend.append('photos', photo);
         });
       }
+
+
+
       console.log(formData, 'hello')
       const response = await addHostel(dataToSend)
       console.log(response, 'sfhsdf')
@@ -368,13 +391,77 @@ const HostelForm = () => {
             <MapPin className="w-4 h-4 text-[#31AFEF]" />
             <label htmlFor="location" className="text-sm font-medium">Location</label>
           </div>
-          <input
-            id="location"
-            value={formData.location}
-            onChange={(e) => handleChange('location', e.target.value)}
-            placeholder="Enter location"
-            className={`w-full px-3 py-2 border ${errors.location ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#31AFEF]`}
-          />
+
+          {/* Location Input with Map Toggle */}
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <input
+                id="location"
+                value={formData.location}
+                onChange={(e) => handleChange('location', e.target.value)}
+                placeholder="Click 'Select on Map' or type address"
+                className={`flex-1 px-3 py-2 border ${errors.location ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#31AFEF]`}
+                readOnly
+              />
+              <button
+                type="button"
+                onClick={() => setShowMap(!showMap)}
+                className="px-4 py-2 bg-[#31AFEF] text-white rounded-md hover:bg-[#2a9ad8] transition-colors flex items-center gap-2"
+              >
+                <MapPin className="w-4 h-4" />
+                {showMap ? 'Hide Map' : 'Select on Map'}
+              </button>
+            </div>
+
+            {/* Map Container */}
+            {showMap && (
+              <div className="border rounded-lg overflow-hidden shadow-sm">
+                <LocationPicker
+                  onLocationSelect={(address, lat, lng) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      location: address,
+                      latitude: lat,
+                      longitude: lng
+                    }));
+                    setErrors(prev => ({
+                      ...prev,
+                      location: '',
+                      latitude: '',
+                      longitude: ''
+                    }));
+                  }}
+                  selectedLocation={formData.location}
+                />
+              </div>
+            )}
+
+            {/* Selected Location Display */}
+            {formData.location && (
+              <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-200 rounded-md">
+                <MapPin className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-green-800">Selected Location:</p>
+                  <p className="text-xs text-green-700 mt-1 leading-relaxed">{formData.location}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFormData(prev => ({
+                      ...prev,
+                      location: '',
+                      latitude: 0,
+                      longitude: 0
+                    }));
+                  }}
+                  className="text-green-600 hover:text-green-800 text-sm font-medium"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+          </div>
+
           {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
         </div>
 
@@ -464,12 +551,12 @@ const HostelForm = () => {
           >
             <option value="" disabled>Select category</option>
             {categories
-            .filter((cat) => cat.isActive)
-            .map((cat,index) => (
-              <option key={index} value={cat.name}>
-                {cat?.name}
-              </option>
-            ))}
+              .filter((cat) => cat.isActive)
+              .map((cat, index) => (
+                <option key={index} value={cat.name}>
+                  {cat?.name}
+                </option>
+              ))}
           </select>
           {errors.category && <p className="text-red-500 text-xs mt-1">{errors.category}</p>}
         </div>
@@ -490,7 +577,27 @@ const HostelForm = () => {
           />
           {errors.advance && <p className="text-red-500 text-xs mt-1">{errors.advance}</p>}
         </div>
+        <div className='w-full'>
+          <div className='flex items-center space-x-2 mb-2'>
+            <Info className='w-4 h-4 text-[#31AFEF]' />
+            <label htmlFor='cancellationPolicy' className='text-sm font-medium'>Cancellation Policy</label>
+          </div>
+          <select
+            id='cancellationPolicy'
+            value={formData.cancellationPolicy}
+            onChange={(e) => handleChange('cancellationPolicy', e.target.value)}
+            className={`w-full px-3 py-2 border ${errors.cancellationPolicy ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline focus:ring-2 focus:ring-[#31AFEF] bg-white`}
+          >
+            <option value="" disabled>Selection Cancellation policy</option>
+            <option value="freecancellation">Free Cancellation</option>
+            <option value="no free cancellation">No Free Cancellation</option>
+          </select>
+          {errors.cancellationPolicy && <p className='text-red-500 text-xs mt-1' >{errors.cancellationPolicy}</p>}
+
+        </div>
       </div>
+
+
 
       {/* Photos Upload Section */}
       <div className="w-full mb-8">

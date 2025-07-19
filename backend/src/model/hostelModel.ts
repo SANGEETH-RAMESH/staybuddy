@@ -2,7 +2,9 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IHostel extends Document {
     hostelname: string;
-    location: string;
+    location: number;
+    latitude:number;
+    longitude:number;
     nearbyaccess: string;
     beds: number;
     policies: string;
@@ -14,6 +16,10 @@ export interface IHostel extends Document {
     foodRate?: number;
     phone: string;
     host_id: mongoose.Types.ObjectId;
+    isActive:boolean,
+    inactiveReason:string,
+    cancellationPolicy:string,
+    totalRooms:number;
 }
 
 const hostelModel: Schema = new Schema(
@@ -25,6 +31,14 @@ const hostelModel: Schema = new Schema(
         location: {
             type: String,
             required: true,
+        },
+        longitude:{
+            type:Number,
+            required:true
+        },
+        latitude:{
+            type:Number,
+            required:true
         },
         nearbyaccess: {
             type: String,
@@ -69,6 +83,21 @@ const hostelModel: Schema = new Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Host',
             required: true,
+        },
+        isActive:{
+            type:Boolean,
+            required:true
+        },
+        inactiveReason:{
+            type:String
+        },
+        cancellationPolicy:{
+            type:String,
+            required:true
+        },
+        totalRooms:{
+            type:Number,
+            required:true
         }
     },
     { timestamps: true }

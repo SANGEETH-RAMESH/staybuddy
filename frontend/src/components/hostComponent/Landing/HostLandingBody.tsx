@@ -4,7 +4,7 @@ const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { io } from "socket.io-client";
-import createApiClient from '../../../services/apiClient';
+import createApiClient from '../../../apis/apiClient';
 const hostApiClient = createApiClient('host');
 const socket = io("http://localhost:4000");
 

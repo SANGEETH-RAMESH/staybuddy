@@ -7,16 +7,20 @@ import { ICategory } from "../../model/categoryModel";
 import { IReview } from "../../model/reviewModel";
 import { IOrder } from "../../model/orderModel";
 import { IUserResponse } from "../../dtos/UserResponse";
+import { IHostResponse } from "../../dtos/HostResponse";
 
 export interface IAdminService{
-    adminLogin(adminData: { email: string,password: string }): Promise<{ message: string; accessToken: string; refreshToken: string } | string>,
+    adminLogin(adminData: { email: string, password: string }): Promise<{ message: string;
+        accessToken?: string;
+        refreshToken?: string;
+        role?: string} >,
     getUser(page: number, limit: number): Promise<{ users: IUserResponse[]; totalCount: number } | string | null>,
-    userBlock(userId:ObjectId):Promise<string>,
+    userBlock(userId:Types.ObjectId):Promise<string>,
     userUnBlock(userId: Types.ObjectId): Promise<{ message: string; userUnBlock: IUser | null; error?: string }>,
     userDelete(userId:object):Promise<string>,
-    getHost(skip:number,limit:number): Promise<{ hosts: IHost[] | null;totalCount: number, hostIdCounts: Record<string, number> } | null>,
-    hostUnBlock(hostId:ObjectId):Promise<string>,
-    hostBlock(hostId:ObjectId):Promise<string>,
+    getHost(skip:number,limit:number): Promise<{ hosts: IHostResponse[] | null;totalCount: number, hostIdCounts: Record<string, number> } | null>,
+    hostUnBlock(hostId:Types.ObjectId):Promise<string>,
+    hostBlock(hostId:Types.ObjectId):Promise<string>,
     hostDelete(hostId:Types.ObjectId):Promise<string>,
     approveHost(hostId: mongoose.Types.ObjectId):Promise<string>,
     rejectHost(hostId:mongoose.Types.ObjectId):Promise<string>,
@@ -25,7 +29,7 @@ export interface IAdminService{
     getAllCategory(skip:number,limit:number):Promise<{getCategories:ICategory[],totalCount:number} | string>,
     getCategory(id:string):Promise<ICategory | string>,
     updateCategory(id: string, name: string, isActive: boolean): Promise<string>,
-    getHostDetails(userId:string):Promise<string | IHost | null>,
+    getHostDetails(userId:string):Promise<string | IHostResponse | null>,
     getHostHostelData(hostId:string): Promise<IHostel[] | string | null>,
     deleteHostel(hostelId: string): Promise<string>,
     deleteCategory(id: string): Promise<string | null>,

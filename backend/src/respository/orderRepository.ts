@@ -36,15 +36,12 @@ class orderRepository implements IOrderRepository {
 
     async orderBookings(orderData: IOrder): Promise<string> {
         try {
+            console.log(orderData,'OrderDate')
             const findHostel = await Hostel.findOne({ _id: orderData.hostel_id }).populate<{ host_id: HostelData }>('host_id');
-            console.log(orderData, 'sssss')
             if (!findHostel) {
                 throw new Error('Hostel not found');
             }
-            // console.log(findHostel,'Hostelllll')
-            // Assert the type of host_id to include the expected structure
             const host = findHostel?.host_id;
-            console.log(host, 'host')
             const hostelid = findHostel._id as ObjectId;
             const hostId = new mongoose.Types.ObjectId(orderData.host_id);
             const user_id = new mongoose.Types.ObjectId(orderData.userId);
@@ -57,19 +54,25 @@ class orderRepository implements IOrderRepository {
                 customerPhone: orderData.customerPhone,
                 foodRate: orderData.foodRate,
                 host_id: hostId,
-                hostel_id: {
-                    id: hostelid,
-                    name: findHostel.hostelname,
-                    location: findHostel.location,
-                    host_mobile: host.mobile,
-                },
+                hostel_id: hostelid,
+                name: findHostel.hostelname,
+                location: findHostel.location,
+                host_mobile: host.mobile,
+                nearbyaccess: findHostel.nearbyaccess,
+                policies: findHostel.policies,
+                advanceamount: findHostel.advanceamount,
+                bedShareRoom: findHostel.bedShareRoom,
+                photos: findHostel.photos,
                 selectedBeds: orderData.selectedBeds,
                 selectedFacilities: orderData.selectedFacilities,
                 tenantPreferred: orderData.tenantPreferred,
                 totalDepositAmount: orderData.totalDepositAmount,
                 totalRentAmount: orderData.totalRentAmount,
                 paymentMethod: paymentMethod,
-                active: true
+                active: true,
+                startDate: orderData.startDate,
+                endDate: orderData.endDate,
+                cancellationPolicy:orderData.cancellationPolicy
             });
             if (addBookings) {
                 await Hostel.updateOne(
@@ -77,7 +80,6 @@ class orderRepository implements IOrderRepository {
                     { $inc: { beds: -orderData.selectedBeds } }
                 )
             }
-            console.log(addBookings, 'dsfsdf')
             await addBookings.save();
             return "Hostel Booked"
         } catch (error) {
@@ -87,7 +89,6 @@ class orderRepository implements IOrderRepository {
 
     async debitUserWallet(id: Types.ObjectId, amount: number): Promise<string> {
         try {
-            console.log(id, 'id', amount)
             await Wallet.updateOne(
                 { userOrHostId: id },
                 {
@@ -111,9 +112,7 @@ class orderRepository implements IOrderRepository {
 
     async getOrderDetails(id: Types.ObjectId): Promise<IOrder | string | null> {
         try {
-            console.log("id", id)
-            const findOrder = await Order.findOne({ _id: id }).populate('hostel_id.id').populate('host_id');
-            console.log(findOrder, 'Orderrr')
+            const findOrder = await Order.findOne({ _id: id }).populate('host_id');
             return findOrder
         } catch (error) {
             return error as string
@@ -122,8 +121,6 @@ class orderRepository implements IOrderRepository {
 
     async creditUserWallet(id: Types.ObjectId, amount: number): Promise<string> {
         try {
-            console.log('heeeeello', id, amount)
-            console.log(id, 'id', amount)
             await Wallet.updateOne(
                 { userOrHostId: id },
                 {
@@ -148,7 +145,6 @@ class orderRepository implements IOrderRepository {
 
     async debitHostWallet(id: Types.ObjectId, amount: number): Promise<string> {
         try {
-            console.log(id, 'id', amount)
             await Wallet.updateOne(
                 { userOrHostId: id },
                 {
@@ -198,9 +194,7 @@ class orderRepository implements IOrderRepository {
 
     async getReviewDetails(hostelId: Types.ObjectId): Promise<IReview[] | string | null> {
         try {
-            console.log("Order", hostelId)
             const review = await Review.find()
-            console.log("Review", review)
             const findReview = await Review.find({ hostelId: hostelId }).populate('userId')
             return findReview
         } catch (error) {
@@ -211,9 +205,7 @@ class orderRepository implements IOrderRepository {
 
     async updatingOrderStatus(orderId: Types.ObjectId): Promise<string> {
         try {
-            console.log(orderId, "OrderId")
             const orderFind = await Order.findOne({ _id: orderId })
-            console.log("Order", orderFind)
             await Order.updateOne(
                 { _id: orderId },
                 { $set: { active: false } }
@@ -227,8 +219,6 @@ class orderRepository implements IOrderRepository {
 
     async updateRoom(hostelId: string, bedCount: number): Promise<string> {
         try {
-            console.log("Sangee")
-            console.log(hostelId, bedCount)
             const updatingRoom = await Hostel.updateOne(
                 { _id: hostelId },
                 { $inc: { beds: bedCount } }
@@ -248,7 +238,6 @@ class orderRepository implements IOrderRepository {
             }
             const totalCount = await Order.countDocuments({ userId: id });
             const bookings = await Order.find({ userId: id })
-                .populate('hostel_id.id')
                 .populate('host_id')
                 .populate('userId')
                 .sort({ updatedAt: -1 })
@@ -263,10 +252,8 @@ class orderRepository implements IOrderRepository {
 
     async getBookings(hostId: string, skip: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null> {
         try {
-            console.log(skip,limit,'daaaaa')
             const skipnumber = parseInt(skip, 0);
             const limitNumber = parseInt(limit, 10);
-            console.log(typeof skipnumber,typeof limitNumber)
             if (isNaN(skipnumber) || isNaN(limitNumber)) {
                 return 'Invalid pagination values';
             }
@@ -276,9 +263,19 @@ class orderRepository implements IOrderRepository {
                 .limit(limitNumber)
                 .populate("host_id")
                 .populate("userId")
-                .populate("hostel_id.id");
             const totalCount = await Order.countDocuments({ host_id: hostId });
-            return  { bookings:getBookings, totalCount };
+            return { bookings: getBookings, totalCount };
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getBookingByOrder(hostelId: string): Promise<IOrder[] | string> {
+        try {
+            console.log(hostelId)
+            const orders = await Order.find({ hostel_id: hostelId })
+            console.log(orders,'orders')
+            return orders;
         } catch (error) {
             return error as string
         }

@@ -61,7 +61,7 @@ const SignupOtpBody = () => {
     try {
       const numericOtp = Number(otp);
       console.log(email, otp, "Sdfdsfs");
-      const response = await axios.post(`${apiUrl}/user/verifyotp`, {
+      const response = await axios.post(`${apiUrl}/user/auth/verify-otp`, {
         email,
         otp: numericOtp,
       });

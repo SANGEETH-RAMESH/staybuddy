@@ -57,7 +57,7 @@ export interface IHostService {
     forgotPassword(hostData: IHostData): Promise<HostType | null>;
     resetPassword(hostData: { email: string, password: string }): Promise<{ message: string }>;
     resendOtp(hostData: hostData): Promise<string | null>;
-    verifyLogin(hostData: { email: string, password: string }): Promise<{ message: string, accessToken?: string, refreshToken?: string }>;
+    verifyLogin(hostData: { email: string, password: string }): Promise<{ message: string, accessToken?: string, refreshToken?: string,role?:string }>;
     newHost(host_id: Types.ObjectId): Promise<string>,
     approvalRequest(host_id:Types.ObjectId,photo:string | undefined,documentType:string):Promise<string>,
     hostGoogleSignUp(hostData:HostData):Promise<{ message: string; accessToken: string; refreshToken: string } | string>,

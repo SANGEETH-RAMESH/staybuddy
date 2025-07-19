@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, ArrowDownRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getwalletDetails } from '../../../hooks/hostHooks';
+import { getwalletDetails } from '../../../services/hostServices';
 
 interface Transaction {
   type: 'deposit' | 'withdraw';

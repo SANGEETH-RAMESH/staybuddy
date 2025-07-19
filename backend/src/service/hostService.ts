@@ -2,20 +2,15 @@ import { IHostService } from "../interface/host/!HostService";
 import { IHostRepository } from "../interface/host/!HostRepository";
 import { sendOtp } from "../utils/mail";
 import Host, { IHost } from "../model/hostModel";
-// import uploadImage from "../cloudinary/cloudinary";
-import { IHostel } from "../model/hostelModel";
 import { Types } from "mongoose";
 import HashedPassword from "../utils/hashedPassword";
 import { hostPayload } from "../types/commonInterfaces/tokenInterface";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Jwt/jwt";
 type HostType = InstanceType<typeof Host>
-import { ObjectId } from 'mongodb'
 import { ICategory } from "../model/categoryModel";
-import { IWallet } from "../model/walletModel";
-import { IOrder } from "../model/orderModel";
 import { IUser } from "../model/userModel";
-import { IUpdateHostelInput } from "../dtos/HostelData";
 import { IWalletRepository } from "../interface/wallet/!WalletRepository";
+import bcrypt from 'bcrypt';
 
 function otpgenerator() {
     return Math.floor(1000 + Math.random() * 9000);
@@ -166,13 +161,46 @@ class hostService implements IHostService {
         }
     }
 
-    async verifyLogin(hostData: hostData): Promise<{ message: string, accessToken?: string, refreshToken?: string }> {
+    async verifyLogin(hostData: { email: string; password: string }): Promise<{
+        message: string;
+        accessToken?: string;
+        refreshToken?: string;
+        role?: string;
+    }> {
         try {
-            const checkingHost = await this.hostRepository.verifyLogin(hostData);
-            return checkingHost
+            const checkhost = await this.hostRepository.FindHostByEmail(hostData.email);
+
+            if (!checkhost) {
+                return { message: "Invalid email" };
+            }
+
+            if (checkhost.isBlock) {
+                return { message: "Host is blocked" };
+            }
+
+            const isMatch = await bcrypt.compare(hostData.password, checkhost.password);
+
+            if (!isMatch) {
+                return { message: "Invalid password" };
+            }
+
+            const hostPayload = {
+                _id: checkhost._id as Types.ObjectId,
+                role: 'host' as const
+            };
+
+            const accessToken = generateAccessToken(hostPayload);
+            const refreshToken = generateRefreshToken(hostPayload);
+
+            return {
+                message: "Success",
+                accessToken,
+                refreshToken,
+                role: 'host'
+            };
         } catch (error) {
-            console.log(error)
-            return { message: "Internal error" }
+            console.error("Error in hostService.verifyLogin:", error);
+            return { message: "Internal server error" };
         }
     }
 
@@ -214,7 +242,6 @@ class hostService implements IHostService {
 
     async hostGoogleSignUp(hostData: hostData): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
         try {
-            console.log(hostData, 'hostdata')
             const password = generateRandomPassword();
             const mobile = generateRandomMobileNumber();
             const hashed = await HashedPassword.hashPassword(password);
@@ -259,9 +286,7 @@ class hostService implements IHostService {
 
     async validateRefreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | string> {
         try {
-            // console.log(refreshToken,'refresh')
             const decoded = verifyToken(refreshToken)
-            // console.log(decoded,'dedoddjfsd')
             if (decoded == null) {
                 console.log("Token is expired")
             }
@@ -279,9 +304,9 @@ class hostService implements IHostService {
                 }
 
                 const accessToken = generateAccessToken(hostPayload);
-                const newRefreshToken = generateRefreshToken(hostPayload)
+                const refreshToken = generateRefreshToken(hostPayload)
 
-                return { accessToken, refreshToken: newRefreshToken }
+                return { accessToken, refreshToken }
             }
             return "Invalid token"
         } catch (error) {
@@ -302,7 +327,6 @@ class hostService implements IHostService {
     async changePassword(hostData: { hostId: Types.ObjectId; currentPassword: string; newPassword: string }): Promise<string> {
         try {
             const response = await this.hostRepository.changePassword(hostData);
-            console.log(response, 'Res')
             return response
         } catch (error) {
             return error as string

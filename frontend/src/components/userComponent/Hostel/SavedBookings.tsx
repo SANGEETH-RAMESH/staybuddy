@@ -15,64 +15,15 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getSavedBookings } from '../../../hooks/userHooks';
+import { getSavedBookings } from '../../../services/userServices';
+import { Order } from '../../../interface/Order';
+import { PaginationData } from '../../../interface/PaginationProps';
 
 
-// Interface definitions
-interface HostelData {
-  advanceAmount: number;
-  bedShareRoom: number;
-  beds: number;
-  category: string;
-  facilities: string[];
-  foodRate: number;
-  host_id: string;
-  hostelName: string;
-  location: string;
-  nearbyAccess: string;
-  phone: string;
-  photos: string[];
-  policies: string;
-  _id: string;
-}
 
-interface Booking {
-  _id: string;
-  customerName: string;
-  customerEmail: string;
-  customerPhone: string;
-  createdAt: string;
-  selectedBeds: number;
-  tenantPreferred: string;
-  totalDepositAmount: number;
-  totalRentAmount: number;
-  foodRate: number | null;
-  paymentMethod: string;
-  hostel_id: {
-    id: HostelData;
-    name: string;
-    location: string;
-    host_mobile: string;
-  };
-  userId: {
-    name: string;
-    mobile: string;
-    email: string;
-  };
-  status: 'Pending' | 'Confirmed' | 'Cancelled';
-}
-
-interface PaginationData {
-  bookings: Booking[];
-  totalCount: number;
-  currentPage: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-}
 
 const HostBookings = () => {
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<Order[]>([]);
   const [paginationData, setPaginationData] = useState<PaginationData>({
     bookings: [],
     totalCount: 0,
@@ -100,12 +51,13 @@ const HostBookings = () => {
         ...(statusFilter !== 'all' && { status: statusFilter })
       });
 
-      const response = await getSavedBookings(id,params)
+      const response = await getSavedBookings(id.toString(),params)
+      console.log(response.data.message,'heyy')
       const data = response.data.message || {};
 
       const totalCount = data.totalCount || 0;
       const totalPages = Math.ceil(totalCount / limit);
-
+      console.log(data.bookings[0].name,'dfsdjf')
       setBookings(data.bookings || []);
       setPaginationData({
         bookings: data.bookings || [],
@@ -273,8 +225,8 @@ const HostBookings = () => {
               >
                 <div className="relative">
                   <img
-                    src={booking?.hostel_id.id.photos[0] || "/placeholder-hostel.jpg"}
-                    alt={booking?.hostel_id.name}
+                    src={booking?.photos[0] || "/placeholder-hostel.jpg"}
+                    alt={booking?.name}
                     className="w-full h-48 object-cover"
                   />
                   
@@ -283,10 +235,10 @@ const HostBookings = () => {
                 <div className="p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h2 className="text-lg font-bold text-gray-800 mb-1">{booking.hostel_id.name}</h2>
+                      <h2 className="text-lg font-bold text-gray-800 mb-1">{booking.name}</h2>
                       <div className="flex items-center gap-1 text-gray-600">
                         <MapPin className="w-4 h-4" />
-                        <span className="text-sm">{booking.hostel_id.location}</span>
+                        <span className="text-sm">{booking.location}</span>
                       </div>
                     </div>
                   </div>
@@ -297,7 +249,7 @@ const HostBookings = () => {
                         <UserCheck className="w-4 h-4 text-gray-500" />
                         <span className="text-gray-600">Customer</span>
                       </div>
-                      <span className="font-medium">{booking.userId.name}</span>
+                      <span className="font-medium">{booking.customerName}</span>
                     </div>
 
                     <div className="flex items-center justify-between text-sm">
@@ -305,7 +257,7 @@ const HostBookings = () => {
                         <PhoneCall className="w-4 h-4 text-gray-500" />
                         <span className="text-gray-600">Phone</span>
                       </div>
-                      <span className="font-medium">{booking.userId.mobile}</span>
+                      <span className="font-medium">{booking.customerPhone}</span>
                     </div>
 
                     <div className="flex items-center justify-between text-sm">
@@ -313,7 +265,7 @@ const HostBookings = () => {
                         <Mail className="w-4 h-4 text-gray-500" />
                         <span className="text-gray-600">Email</span>
                       </div>
-                      <span className="font-medium truncate max-w-32">{booking.userId.email}</span>
+                      <span className="font-medium truncate max-w-32">{booking.customerEmail}</span>
                     </div>
 
                     <div className="flex items-center justify-between text-sm">

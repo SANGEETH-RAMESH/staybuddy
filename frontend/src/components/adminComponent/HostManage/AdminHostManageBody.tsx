@@ -6,7 +6,7 @@ import { Trash2, Lock, Unlock, Check, X, Loader, Info, Search, ChevronLeft, Chev
 import { useNavigate } from 'react-router-dom';
 import { PaginationInfo} from '../../../interface/PaginationInfo'
 import { Host } from '../../../interface/Host';
-import { approveHost, blockHost, deleteHost, fetchHost, rejectHost, searchHost, unblockHost } from '../../../hooks/adminHooks';
+import { approveHost, blockHost, deleteHost, fetchHost, rejectHost, searchHost, unblockHost } from '../../../services/adminServices';
 
 
 
@@ -102,8 +102,8 @@ const AdminHostManageBody = () => {
     try {
       const response = await blockHost(hostId);
       if (response.data.success) {
-        localStorage.removeItem('hostRefreshToken');
-        localStorage.removeItem('hostAccessToken')
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('accessToken')
         setHosts(prevHosts =>
           prevHosts.map(host =>
             host._id === hostId ? { ...host, isBlock: true } : host

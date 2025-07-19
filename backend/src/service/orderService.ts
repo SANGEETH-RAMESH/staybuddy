@@ -23,7 +23,6 @@ class OrderService implements IOrderService {
 
     async userBookings(orderData: IOrder): Promise<string> {
         try {
-            // console.log(orderData)
             const foodRate = orderData.foodRate ?? 0;
             const amount = orderData.totalDepositAmount + orderData.totalRentAmount + foodRate;
             const response = await this.orderRepository.orderBookings(orderData);
@@ -57,7 +56,6 @@ class OrderService implements IOrderService {
             if (!response || typeof response === "string") {
                 return "No order"
             }
-            console.log("Response", response)
             const hostId = response.host_id._id
             const amount = response?.totalDepositAmount
             const updateStatusOrder = await this.orderRepository.updatingOrderStatus(data.orderId)
@@ -65,8 +63,7 @@ class OrderService implements IOrderService {
             const hostWalletDebit = await this.orderRepository.debitHostWallet(hostId, amount)
             const beds = response.selectedBeds;
 
-            const hostelId = (response.hostel_id as any).id._id.toString();
-            console.log(hostelId, 'Anuvinda', beds)
+            const hostelId = (response.hostel_id as any).toString();
             await this.orderRepository.updateRoom(hostelId, beds)
             if (userWalletCredit == 'Wallet updated successfully' && hostWalletDebit == 'Wallet updated successfully') {
                 return "Updated"
@@ -117,10 +114,19 @@ class OrderService implements IOrderService {
         }
     }
 
-    async getBookings(hostId: string, skip: string, limit: string):Promise<{ bookings: IOrder[]; totalCount: number } | string | null> {
+    async getBookings(hostId: string, skip: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null> {
         try {
             const response = await this.orderRepository.getBookings(hostId, skip, limit)
             return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getBookingByOrder(hostelId: string): Promise<IOrder[] | string> {
+        try {
+            const response = await this.orderRepository.getBookingByOrder(hostelId);
+            return response;
         } catch (error) {
             return error as string
         }

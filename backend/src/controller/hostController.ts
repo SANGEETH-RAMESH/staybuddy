@@ -22,7 +22,6 @@ class hostController {
 
             await signupValidation.validate(req.body.hostData, { abortEarly: false })
                 .catch((error: ValidationError) => {
-                    console.log('1')
                     error.inner.forEach((err: ValidationError) => {
                         if (err.path) {
                             validationErrors[err.path] = err.message;
@@ -31,7 +30,6 @@ class hostController {
                 })
 
             if (Object.keys(validationErrors).length > 0) {
-                console.log("2")
                 res.status(StatusCode.BAD_REQUEST).json({
                     success: false,
                     message: "Validation failed",
@@ -204,7 +202,7 @@ class hostController {
                 return;
             }
             const response = await this.hostService.verifyLogin(req.body);
-            res.status(StatusCode.OK).json({ success: true, message: response.message, accessToken: response.accessToken, refreshToken: response.refreshToken })
+            res.status(StatusCode.OK).json({ success: true, message: response.message, accessToken: response.accessToken, refreshToken: response.refreshToken,role:response.role })
         } catch (error) {
             console.log(error)
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
@@ -221,7 +219,6 @@ class hostController {
                 res.status(StatusCode.BAD_REQUEST).json({ success: false, message: 'Id is missing or invalid' });
                 return
             }
-            console.log(host, 'hello')
             const response = await this.hostService.getHost(host._id);
             res.status(StatusCode.OK).json({ success: true, message: response });
         } catch (error) {
@@ -233,7 +230,6 @@ class hostController {
     async newHost(req: Request, res: Response): Promise<void> {
         try {
             const host = req.customHost;
-            console.log(host, 'hsott')
 
             if (!host?._id) {
                 res.json({ message: "No host id" })
@@ -241,7 +237,6 @@ class hostController {
             }
 
             const response = await this.hostService.newHost(host?._id)
-            console.log(response, 'ssss')
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
             console.log(error)
@@ -250,16 +245,12 @@ class hostController {
 
     async requestApproval(req: Request, res: Response): Promise<void> {
         try {
-            console.log('hey')
-            console.log(req.file)
-            console.log(req.body.documentType, 'Body')
             const documentType = req.body.documentType;
             let photo: string | undefined = undefined;
             if (req.file && req.file.buffer) {
                 photo = await uploadImage(req.file.buffer);
             }
             const host = req.customHost;
-            console.log(host?._id)
             if (!host?._id) {
                 res.json({ success: false, message: "Not host id" })
             }
@@ -287,7 +278,6 @@ class hostController {
                 res.json({ message: response });
             }
 
-            console.log(hostData)
         } catch (error) {
             console.log(error)
         }
@@ -340,7 +330,6 @@ class hostController {
                 res.status(StatusCode.BAD_REQUEST).json({ message: "No Host" })
                 return
             }
-            // console.log(req.body,"body")
             const data = { hostId: host._id, ...req.body }
             const response = await this.hostService.editProfile(data)
             res.status(StatusCode.OK).json({ message: response })

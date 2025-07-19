@@ -23,6 +23,7 @@ export interface IOrderRepository {
     getReviewDetailsByOrderId(orderId: Types.ObjectId): Promise<IReview | string | null>,
     updateRoom(hostelId: string, bedCount: number): Promise<string>,
     getSavedBookings(id: Types.ObjectId, page: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null>,
-    getBookings(hostId: string, skip: string, limit: string):Promise<{ bookings: IOrder[]; totalCount: number } | string | null>,
+    getBookings(hostId: string, skip: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null>,
+    getBookingByOrder(hostelId: string): Promise<IOrder[] | string>
 
 }

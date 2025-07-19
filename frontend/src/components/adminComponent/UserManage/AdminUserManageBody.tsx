@@ -5,7 +5,7 @@ import { ObjectId } from 'bson';
 import { Unlock, Lock, Trash2, RefreshCw, UserX, Users, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { User } from '../../../interface/User';
 import { PaginationInfo } from '../../../interface/PaginationInfo';
-import { blockUser, deleteUser, fetchUser, searchUser, unblockUser } from '../../../hooks/adminHooks';
+import { blockUser, deleteUser, fetchUser, searchUser, unblockUser } from '../../../services/adminServices';
 
 
 const AdminUserManageBody = () => {
@@ -33,8 +33,8 @@ const AdminUserManageBody = () => {
     try {
       const response = await blockUser(userId);
       if (response.data.message === 'User blocked') {
-        localStorage.removeItem('userRefreshToken');
-        localStorage.removeItem('userAccessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('accessToken');
         setUsers(prevUsers =>
           prevUsers.map(user =>
             user._id === userId ? { ...user, isBlock: true } : user
@@ -86,6 +86,7 @@ const AdminUserManageBody = () => {
 
         if (response.data.success) {
           // Refresh the current page after deletion
+          console.log(itemsPerPage,'Items')
           await fetchUsers(currentPage, itemsPerPage);
           Swal.fire('Deleted!', 'The user has been deleted.', 'success');
         } else {
@@ -172,7 +173,7 @@ const AdminUserManageBody = () => {
 
     searchTimeout.current = setTimeout(async () => {
       if (newSearchTerm.trim() === '') {
-        fetchUsers(1, itemsPerPage); // Reset to first page when clearing search
+        fetchUsers(1, itemsPerPage); 
         return;
       }
 

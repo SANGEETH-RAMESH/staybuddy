@@ -15,19 +15,24 @@ const userService = new UserService(userRespository,walletRepository,hostReposit
 const userController = new UserController(userService);
 
 
-user_route.post('/signup', userController.userSignUp.bind(userController))
-user_route.post('/verifyotp', userController.verifyOtp.bind(userController))
-user_route.post('/verifylogin', userController.verifyLogin.bind(userController))
-user_route.post('/resendOtp', userController.resendOtp.bind(userController))
-user_route.post('/forgotpassword', userController.forgotPassword.bind(userController))
-user_route.post('/verifyforgotpasswordotp', userController.verifyForgotPasswordOtp.bind(userController))
-user_route.post('/resetPassword', userController.resetPassword.bind(userController))
-user_route.get('/getUserDetails', userAuthMiddleware, userController.getUserDetails.bind(userController));
-user_route.patch('/changepassword', userAuthMiddleware, userController.changePassword.bind(userController));
-user_route.patch('/editprofile', userAuthMiddleware, userController.editUserDetail.bind(userController));
-user_route.post('/refresh',userController.validaterefreshToken.bind(userController))
-user_route.get('/allHosts',userAuthMiddleware,userController.getHost.bind(userController))
-user_route.put('/mark-all-read',userAuthMiddleware,userController.markAllRead.bind(userController))
+user_route.post('/auth/signup', userController.userSignUp.bind(userController))
+user_route.post('/auth/verify-otp', userController.verifyOtp.bind(userController))
+user_route.post('/auth/login', userController.verifyLogin.bind(userController))
+user_route.post('/auth/resend-otp', userController.resendOtp.bind(userController))
+user_route.post('/auth/forgot-password', userController.forgotPassword.bind(userController))
+user_route.post('/auth/verify-forgot-otp', userController.verifyForgotPasswordOtp.bind(userController))
+user_route.post('/auth/reset-password', userController.resetPassword.bind(userController))
+user_route.post('/token/refresh',userController.validaterefreshToken.bind(userController))
+
+
+user_route.get('/users', userAuthMiddleware, userController.getUserDetails.bind(userController));
+
+user_route.patch('/profile', userAuthMiddleware, userController.editUserDetail.bind(userController));
+user_route.patch('/profile/change-password', userAuthMiddleware, userController.changePassword.bind(userController));
+
+
+user_route.get('/hosts',userAuthMiddleware,userController.getHost.bind(userController))
+user_route.put('/notifications/mark-all-read',userAuthMiddleware,userController.markAllRead.bind(userController))
 
 
 

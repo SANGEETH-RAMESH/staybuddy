@@ -18,22 +18,20 @@ const hostAuthMiddleware = async (req: Request, res: Response, next: NextFunctio
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET) as hostPayload;
-        console.log(decoded,'decodedddddd')
+        console.log("Decode",decoded)
         if (decoded.role !== 'host') {
-            console.log('fhhhh')
-            res.status(403).json({ messag: 'Access denied:Not a host' });
+            console.log("hmmmdsf")
+            res.status(403).json({ messag: 'Access denied:Not a HOST' });
             return
         }
 
         const host = await Host.findById(decoded._id);
-        console.log("Ind",host)
         if (!host) {
-            console.log("illa")
             res.status(404).json({ message: "Host not found" });
             return;
         }
         if (host.isBlock) {
-            console.log('isblock')
+            console.log("Blocking")
             res.status(403).json({ message: "Host is blocked" });
             return
         }

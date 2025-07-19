@@ -5,6 +5,7 @@ export interface IChat extends Document{
     participant2:mongoose.Types.ObjectId;
     latestMessage?:string;
     type:string;
+    readCount?:number;
 }
 
 const chatSchema: Schema = new Schema(
@@ -26,6 +27,10 @@ const chatSchema: Schema = new Schema(
     type: {
       type: String,
       default: null,
+    },
+    readCount:{
+      type:Number,
+      default:0
     },
     updatedAt: {
       type: Date,

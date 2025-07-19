@@ -16,7 +16,7 @@ import { toast } from 'react-toastify';
 import { Review } from '../../../types/Review';
 import { Hostel } from '../../../types/Hostel';
 import { HostelData } from '../../../types/Order';
-import { deleteHostel, getHostel, getReviews, searchHostel } from '../../../hooks/adminHooks';
+import { deleteHostel, getHostel, getReviews, searchHostel } from '../../../services/adminServices';
 
 
 

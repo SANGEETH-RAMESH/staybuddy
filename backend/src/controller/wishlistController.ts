@@ -9,7 +9,7 @@ class WishlistController{
 
     async addToWishlist(req: Request, res: Response): Promise<void> {
         try {
-            const hostelId = req.params.id
+            const hostelId = req.params.hostelId
             if (req.user) {
                 const userId = req.user._id
                 const response = await this.wishlistService.addToWishlist(hostelId, userId)
@@ -24,8 +24,7 @@ class WishlistController{
 
     async removeFromWishlist(req: Request, res: Response): Promise<void> {
         try {
-            console.log(req.params.id, "delete")
-            const hostelId = req.params.id;
+            const hostelId = req.params.hostelId;
             const userId = req.user?._id
             if (userId) {
                 const response = await this.wishlistService.removeFromWishlist(hostelId, userId)
@@ -39,7 +38,7 @@ class WishlistController{
     async checkWishlist(req: Request, res: Response): Promise<void> {
         try {
             const userId = req.user?._id;
-            const hostelId = req.params.id;
+            const hostelId = req.params.hostelId;
             if (userId) {
                 const response = await this.wishlistService.checkWishlist(userId, hostelId)
                 res.status(StatusCode.OK).json({ message: response })

@@ -11,7 +11,7 @@ const walletService = new WalletService(walletRepository);
 const walletController = new WalletController(walletService);
 
 wallet_route.post('/deposit',userOrHostAuth,walletController.walletDeposit.bind(walletController))
-wallet_route.get('/getWalletDetails',userOrHostAuth,walletController.getWalletDetails.bind(walletController))
+wallet_route.get('/',userOrHostAuth,walletController.getWalletDetails.bind(walletController))
 wallet_route.post('/withdraw',userOrHostAuth,walletController.walletWithdraw.bind(walletController))
 
 

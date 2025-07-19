@@ -14,6 +14,7 @@ import Order, { IOrder } from "../model/orderModel";
 import User, { IUser } from "../model/userModel";
 import baseRepository from "./baseRespository";
 import { IUpdateHostelInput } from "../dtos/HostelData";
+import { IHostResponse } from "../dtos/HostResponse";
 
 
 interface HostelData {
@@ -142,7 +143,6 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
 
     async resetPassword(hostData: { email: string, password: string }): Promise<{ message: string }> {
         try {
-            console.log("hello")
             const existingHost = await Host.findOne({ email: hostData.email });
 
             if (!existingHost || !existingHost.password) {
@@ -154,7 +154,6 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
             }
 
             const isMatch = await bcrypt.compare(hostData.password, existingHost.password);
-            console.log(isMatch, 'ismatch')
             if (isMatch) {
                 return { message: "Same password" };
             } else {
@@ -214,8 +213,6 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
 
     async newHost({ hostels, host_id, }: { hostels: IHostel[]; host_id: Types.ObjectId; }): Promise<string> {
         try {
-            console.log("Type of hostel.host_id:", typeof hostels[0].host_id, hostels[0].host_id);
-            console.log("Type of host_id:", typeof host_id, host_id);
             const hostApproved = await Host.findOne({ _id: host_id })
             if (hostApproved) {
                 if (hostApproved?.approvalRequest == '3') {
@@ -256,7 +253,7 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
         }
     }
 
-    
+
 
     async addGoogleHost(hostData: HostData): Promise<{ message: string, host?: IHost } | string> {
         try {
@@ -359,8 +356,6 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
 
     async findHostWallet(id: string): Promise<IWallet | string | null> {
         try {
-            console.log(id)
-            console.log(typeof id)
             const hostId = new mongoose.Types.ObjectId(id)
             const hostWallet = await Wallet.aggregate([
                 { $match: { userOrHostId: hostId } }
@@ -376,8 +371,7 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
 
     async changePassword(hostData: { hostId: Types.ObjectId; currentPassword: string; newPassword: string }): Promise<string> {
         try {
-            console.log("heeeee", hostData)
-            const findHost = await Host.findOne({ email: hostData.hostId })
+            const findHost = await Host.findOne({ _id: hostData.hostId })
             if (!findHost) {
                 return "No Host"
             }
@@ -407,7 +401,6 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
 
     async editProfile(hostData: { hostId: Types.ObjectId, name: string, mobile: string }): Promise<string> {
         try {
-            console.log("HOstData", hostData)
             const updatingHostDetails = await Host.updateOne(
                 { _id: hostData.hostId },
                 {
@@ -426,60 +419,6 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
             return error as string
         }
     }
-
-    // async walletDeposit({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
-    //     try {
-    //         console.log(id, amount, 'amount')
-    //         await Wallet.findOneAndUpdate(
-    //             { userOrHostId: id },
-    //             {
-    //                 $inc: { balance: parseFloat(amount) },
-    //                 $push: {
-    //                     transactionHistory: {
-    //                         type: "deposit",
-    //                         amount: parseFloat(amount),
-    //                         date: new Date(),
-    //                         description: "Wallet deposit",
-    //                     },
-    //                 },
-    //             }
-    //         );
-    //         const userWallet = await Wallet.findOne({ userOrHostId: id });
-    //         if (!userWallet) {
-    //             return "Wallet not found"
-    //         }
-    //         return { message: "Deposited", userWallet };
-    //     } catch (error) {
-    //         return error as string
-    //     }
-    // }
-
-    // async walletWithDraw({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
-    //     try {
-    //         console.log(id, amount, 'amount')
-    //         await Wallet.findOneAndUpdate(
-    //             { userOrHostId: id },
-    //             {
-    //                 $inc: { balance: -parseFloat(amount) },
-    //                 $push: {
-    //                     transactionHistory: {
-    //                         type: "withdraw",
-    //                         amount: parseFloat(amount),
-    //                         date: new Date(),
-    //                         description: "Wallet withdrawal",
-    //                     },
-    //                 },
-    //             }
-    //         );
-    //         const userWallet = await Wallet.findOne({ userOrHostId: id });
-    //         if (!userWallet) {
-    //             return "Wallet not found"
-    //         }
-    //         return { message: "Withdrawn", userWallet };
-    //     } catch (error) {
-    //         return error as string
-    //     }
-    // }
 
     async getAllUsers(): Promise<IUser[] | string | null> {
         try {
@@ -500,21 +439,28 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
     }
 
     async allHost(): Promise<IHost[] | string | null> {
-            try {
-                const getHost = await Host.find();
-                return getHost;
-            } catch (error) {
-                return error as string
-            }
-        }
-
-    
-
-    
-
-    async getHost(skip: number, limit: number): Promise<{ hosts: IHost[]; totalCount: number } | null> {
         try {
-            const hosts = await Host.find().skip(skip).limit(limit)
+            const getHost = await Host.find();
+            return getHost;
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getHost(skip: number, limit: number): Promise<{ hosts: IHostResponse[]; totalCount: number } | null> {
+        try {
+            const projection = {
+                _id: 1,
+                name: 1,
+                mobile: 1,
+                isAdmin: 1,
+                isBlock: 1,
+                email: 1,
+                approvalRequest: 1,
+                photo: 1,
+                documentType: 1
+            }
+            const hosts = await Host.find({}, projection).skip(skip).limit(limit).lean<IHostResponse[]>();
             const totalCount = await Host.countDocuments()
 
             return { hosts, totalCount };

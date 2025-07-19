@@ -6,7 +6,7 @@ import { Host } from '../../../interface/Host'
 import { Hostel } from '../../../interface/Hostel';
 import { Notification } from '../../../interface/Notification';
 import { io } from "socket.io-client";
-import { approveHost, getHostHostelData, getUserDetails, rejectHost } from '../../../hooks/adminHooks';
+import { approveHost, getHostHostelData, getUserDetails, rejectHost } from '../../../services/adminServices';
 const socket = io("http://localhost:4000");
 
 
@@ -42,7 +42,7 @@ const AdminHostDetailedBody = () => {
             message: `Your request has been approved on ${new Date().toLocaleDateString()}`,
             title: 'Request Approved',
             type: 'success',
-            isRead: false
+            isRead: true
           };
 
           socket.emit('send_notification', newNotification);
@@ -62,7 +62,7 @@ const AdminHostDetailedBody = () => {
             message: `Your request has been rejected on ${new Date().toLocaleDateString()}`,
             title: 'Request Rejected',
             type: 'warning',
-            isRead: false
+            isRead: true
           };
 
           socket.emit('send_notification', newNotification);
@@ -92,7 +92,7 @@ const AdminHostDetailedBody = () => {
   useEffect(() => {
     const fetchHostData = async () => {
       try {
-        if (!id) return; 
+        if (!id) return;
         const response = await getUserDetails(id);
         const hostHostelData = await getHostHostelData(id);
         setHostel(hostHostelData.data.message)
@@ -120,11 +120,11 @@ const AdminHostDetailedBody = () => {
           <h1 className="text-xl font-bold text-white">Host Details</h1>
         </div>
 
-   
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
-           
+
             <div className="relative bg-gradient-to-r from-[#212936] to-[#45B8F2] p-6 flex flex-col items-center">
               <div className="mb-2">
                 <CreditCard size={32} className="text-white" />
@@ -133,7 +133,7 @@ const AdminHostDetailedBody = () => {
               <p className="text-white text-sm opacity-80">Document Type: {host?.documentType}</p>
             </div>
 
-     
+
             <div className="p-6 flex flex-col items-center border-b border-gray-100">
               <div
                 className="w-[180px] h-[100px] bg-gray-50 p-2 rounded-lg border border-gray-200 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow duration-300"
@@ -146,7 +146,7 @@ const AdminHostDetailedBody = () => {
                 />
               </div>
 
-            
+
               <div className="mt-3 flex items-center">
                 <div className={`w-2 h-2 rounded-full mr-2 ${host?.status === 'verified' ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
                 <span className="text-sm font-medium">
@@ -154,11 +154,11 @@ const AdminHostDetailedBody = () => {
                 </span>
               </div>
 
-            
+
               <p className="text-xs text-gray-400 mt-1">Click to view full size</p>
             </div>
 
-          
+
             {showImageModal && (
               <div
                 className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
@@ -172,7 +172,7 @@ const AdminHostDetailedBody = () => {
                     onClick={(e) => e.stopPropagation()}
                   />
 
-      
+
                   <button
                     onClick={() => setShowImageModal(false)}
                     className="absolute top-4 right-4 bg-white bg-opacity-20 hover:bg-opacity-30 
@@ -183,14 +183,14 @@ const AdminHostDetailedBody = () => {
                     </svg>
                   </button>
 
-            
+
                   <div className="absolute bottom-4 left-4 bg-black bg-opacity-50 text-white px-3 py-2 rounded-lg">
                     <p className="text-sm font-medium">{host?.documentType} - {host?.name}</p>
                   </div>
                 </div>
               </div>
             )}
-      
+
             <div className="p-6 text-center">
               <h2 className="text-2xl font-bold text-gray-800">{host?.name}</h2>
               <p className="text-gray-500 text-sm mt-1">Host ID: {host?._id?.toString()}</p>
@@ -209,7 +209,7 @@ const AdminHostDetailedBody = () => {
                 </div>
               </div>
 
-            
+
 
 
             </div>
@@ -217,7 +217,7 @@ const AdminHostDetailedBody = () => {
 
 
           <div className="space-y-6">
-    
+
             <div className="bg-white rounded-xl shadow-md p-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                 <User className="text-[#45B8F2] mr-2" size={20} />
@@ -296,7 +296,7 @@ const AdminHostDetailedBody = () => {
                 </div>
               )}
 
-              {(host?.approvalRequest === '1' && host.photo) && (
+              {host?.approvalRequest == "1" && host?.photo ? (
                 <div className="mt-6 text-center py-4">
                   <div className="bg-red-50 rounded-full p-3 inline-flex mb-3">
                     <XCircle size={24} className="text-red-500" />
@@ -305,21 +305,22 @@ const AdminHostDetailedBody = () => {
                   <p className="text-gray-500 text-sm">
                     This host verification request has been rejected.
                   </p>
-                  
                 </div>
+              ) : (
+                host?.approvalRequest == "1" && (
+                  <div className="mt-6 text-center py-4">
+                    <div className="bg-yellow-50 rounded-full p-3 inline-flex mb-3">
+                      <AlertCircle size={24} className="text-yellow-500" />
+                    </div>
+                    <h4 className="text-gray-800 font-medium mb-2">No Request Sent</h4>
+                    <p className="text-gray-500 text-sm">
+                      No request has been made yet.
+                    </p>
+                  </div>
+                )
               )}
 
-              {(host?.approvalRequest === '1') && (
-                <div className="mt-6 text-center py-4">
-                  <div className="bg-yellow-50 rounded-full p-3 inline-flex mb-3">
-                    <AlertCircle size={24} className="text-yellow-500" />
-                  </div>
-                  <h4 className="text-gray-800 font-medium mb-2">No Request Sent</h4>
-                  <p className="text-gray-500 text-sm">
-                    No request has been made yet.
-                  </p>
-                </div>
-              )}
+
 
 
               {host?.approvalRequest === '3' && (
@@ -339,7 +340,7 @@ const AdminHostDetailedBody = () => {
             </div>
           </div>
 
-     
+
           <div className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
               <Building className="text-[#45B8F2] mr-2" size={20} />
@@ -362,7 +363,7 @@ const AdminHostDetailedBody = () => {
                           <h3 className="text-md font-semibold text-gray-800 group-hover:text-blue-700 transition-colors">
                             {property.hostelname}
                           </h3>
-                         
+
                         </div>
                         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
                           <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
@@ -372,7 +373,7 @@ const AdminHostDetailedBody = () => {
                   ))}
                 </div>
 
-            
+
               </>
             ) : (
               <div className="text-center py-8">
@@ -387,7 +388,7 @@ const AdminHostDetailedBody = () => {
           </div>
         </div>
 
-        
+
       </div>
     </div>
   );

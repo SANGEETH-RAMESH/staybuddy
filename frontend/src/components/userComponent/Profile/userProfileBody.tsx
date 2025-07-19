@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUserDetails, getWalletDetails } from '../../../hooks/userHooks';
+import { getUserDetails, getWalletDetails } from '../../../services/userServices';
 
 
 const UserProfileBody = () => {
@@ -203,7 +203,7 @@ const UserProfileBody = () => {
                   marginTop: '5px',
                 }}
               >
-                Balance: ${balance??'0'}
+                Balance:₹{balance??'0'}
               </div>
             </div>
           </div>

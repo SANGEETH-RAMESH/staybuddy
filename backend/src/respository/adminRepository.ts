@@ -15,6 +15,7 @@ import baseRepository from "./baseRespository";
 import Review, { IReview } from "../model/reviewModel";
 import Order, { IOrder } from "../model/orderModel";
 import { IUserResponse } from "../dtos/UserResponse";
+import { IHostResponse } from "../dtos/HostResponse";
 
 class adminRespository extends baseRepository<IUser> implements IAdminRepository {
     constructor() {
@@ -48,30 +49,20 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
         }
     }
 
-    async AdminVerifyLogin(adminData: { email: string, password: string }): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
-        try {
-            const checkAdmin = await User.findOne({ email: adminData.email, isAdmin: true });
-            if (checkAdmin) {
-                const isAdmin = await bcrypt.compare(adminData.password, checkAdmin.password);
-                if (isAdmin) {
-                    const adminPayload: adminPayload = {
-                        _id: checkAdmin._id as Types.ObjectId,
-                       role:'admin'
-                    }
-                    const accessToken = generateAccessToken(adminPayload);
-                    const refreshToken = generateRefreshToken(adminPayload)
-                    return { message: "Success", accessToken, refreshToken }
-                } else {
-                    return 'Invalid Password'
-                }
-            } else {
-                return "Invalid Email"
-            }
-        } catch (error) {
-            console.log(error)
-            return error as string
+    async AdminVerifyLogin(email: string): Promise<IUser | string> {
+    try {
+        const admin = await User.findOne({ email, isAdmin: true });
+
+        if (!admin) {
+            return 'Admin not found';
         }
+
+        return admin;
+    } catch (error) {
+        console.log(error);
+        return error instanceof Error ? error.message : 'Internal server error';
     }
+}
 
     async getUser(page: number, limit: number): Promise<{ users: IUserResponse[]; totalCount: number } | string | null> {
         try {
@@ -99,7 +90,7 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
         }
     }
 
-    async userBlock(userId: ObjectId): Promise<string> {
+    async userBlock(userId: Types.ObjectId): Promise<string> {
         try {
             await User.updateOne(
                 { _id: userId },
@@ -127,7 +118,6 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
 
     async userDelete(userId: Types.ObjectId): Promise<string> {
         try {
-            console.log("hey")
             await this.deleteById(userId)
             return "user deleted"
         } catch (error) {
@@ -136,9 +126,9 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
         }
     }
 
-    async getHost(skip: number, limit: number): Promise<{ hosts: IHost[]; totalCount: number } | null> {
+    async getHost(skip: number, limit: number): Promise<{ hosts: IHostResponse[]; totalCount: number } | null> {
         try {
-            const hosts = await Host.find().skip(skip).limit(limit)
+            const hosts = await Host.find().skip(skip).limit(limit).lean<IHostResponse[]>();
             const totalCount = await Host.countDocuments()
 
             return { hosts, totalCount };
@@ -148,7 +138,7 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
         }
     }
 
-    async hostBlock(hostId: ObjectId): Promise<string> {
+    async hostBlock(hostId: Types.ObjectId): Promise<string> {
         try {
             await Host.updateOne(
                 { _id: hostId },
@@ -160,7 +150,7 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
         }
     }
 
-    async hostUnBlock(hostId: ObjectId): Promise<string> {
+    async hostUnBlock(hostId: Types.ObjectId): Promise<string> {
         try {
             await Host.updateOne(
                 { _id: hostId },
@@ -201,7 +191,6 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
 
     async rejectHost(hostId: mongoose.Types.ObjectId): Promise<string> {
         try {
-            console.log("iddd", hostId)
             const result = await Host.findByIdAndUpdate(
                 { _id: hostId },
                 { $set: { approvalRequest: 1 } },
@@ -289,7 +278,6 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
             const foundCategory = allCategories.find(
                 (category) => category.name.toLowerCase() == lowerName
             );
-            console.log("FOund", foundCategory)
             if (foundCategory) {
                 return "Category Already Exist";
             } else {
@@ -329,9 +317,20 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
         }
     }
 
-    async getHostDetails(userId: string): Promise<string | IHost | null> {
+    async getHostDetails(userId: string): Promise<string | IHostResponse | null> {
         try {
-            const getUserData = await Host.findOne({ _id: userId });
+            const projection = {
+                _id: 1,
+                name: 1,
+                mobile: 1,
+                isAdmin: 1,
+                isBlock: 1,
+                email: 1,
+                approvalRequest: 1,
+                photo: 1,
+                documentType: 1
+            }
+            const getUserData = await Host.findOne({ _id: userId },projection).lean<IHostResponse>();
             return getUserData;
         } catch (error) {
             return error as string
@@ -363,7 +362,6 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
 
     async deleteCategory(id: string): Promise<string | null> {
         try {
-            console.log("ID", id)
             const deleting = await Category.findOneAndDelete({ _id: id })
             if (deleting) {
                 return "Category Deleted"

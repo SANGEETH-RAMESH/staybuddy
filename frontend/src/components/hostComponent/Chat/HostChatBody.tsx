@@ -6,7 +6,7 @@ import VideoCall from '../../commonComponents/VideoCall'
 import { Message } from '../../../interface/Message';
 import { User } from '../../../interface/User';
 import { Chats } from '../../../interface/Chats';
-import { getAllUsers, getChat, getHostChat } from '../../../hooks/hostHooks';
+import { getAllUsers, getChat, getHostChat } from '../../../services/hostServices';
 const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 
 const socket: Socket = io(`${apiUrl}`)
@@ -80,11 +80,6 @@ const HostChatBody = () => {
     });
   };
 
-  
-
-  
-
-
   useEffect(() => {
     socket.emit("getOnlineUsers");
 
@@ -114,11 +109,16 @@ const HostChatBody = () => {
       
     });
 
+    socket.on('counted_read',({chatId,receiverId})=>{
+      console.log("heyyy")
+    })
+
     return () => {
       socket.off("onlineUsers");
       socket.off("userLoggedOut");
       socket.off("userLoggedIn");
-      socket.off("incoming_call")
+      socket.off("incoming_call");
+      socket.off("counted_read")
     };
   }, []);
 
@@ -251,26 +251,27 @@ const HostChatBody = () => {
 
     socket.on('receiveMessage', (newMessage) => {
       console.log("New message received:", newMessage);
-
+      
       setSelectedChat(prevChat => {
-        if (!prevChat || prevChat._id !== newMessage.chatId) return prevChat;
-        // console.log(prevChat.messages)
-        const updatedMessages = [...(prevChat.messages || []), newMessage];
+        if (!prevChat || prevChat._id !== newMessage.savedMessage.chatId) return prevChat;
+        const updatedMessages = [...(prevChat.messages || []), newMessage.savedMessage];
         const updatedChat = { ...prevChat, messages: updatedMessages };
         setMessages(updatedMessages);
         return updatedChat;
       });
-      console.log(chats, 'chatsss')
       setChats(prevChats => {
         const updatedChats = prevChats.map(chat => {
-          console.log("Matched:", chat._id, selectedChat?._id);
-          if (chat._id === newMessage?.chatId) {
+          const isMatched = chat._id === newMessage.savedMessage?.chatId;
+          // console.log("Matched:", chat._id, selectedChat?._id);
+          if (isMatched) {
             console.log("Matched Chat:", chat._id, selectedChat?._id);
+            console.log(newMessage,'sangee')
             return {
               ...chat,
-              latestMessage: newMessage.message,
-              latestMessageTime: newMessage.timestamp,
-              type: newMessage.type
+              latestMessage: newMessage.savedMessage.message,
+              latestMessageTime: newMessage.savedMessage.timestamp,
+              type: newMessage.savedMessage.type,
+              unreadCount:newMessage.readCount
             };
           } else {
             console.log("Unchanged Chat:", chat);
@@ -306,6 +307,18 @@ const HostChatBody = () => {
     // console.log("receiver", receiverId)
     socket.emit('join_room', chat._id);
     socket.emit("old_message", { chatId: chat._id });
+    const chatId = chat._id
+    socket.emit('count_read',{chatId,receiverId})
+    setChats(prevChats =>
+        prevChats.map(chat =>
+          chat._id === chatId
+            ? {
+              ...chat,
+              unreadCount:0
+            }
+            : chat
+        )
+      );
   };
 
   const handleSendMessage = async () => {
@@ -344,6 +357,7 @@ const HostChatBody = () => {
         timestamp: new Date().toISOString(),
         isRead: false,
         type: messageType,
+        count:1
       };
       socket.emit('send_message', message);
       setSelectedChat((prevChat) => {
@@ -395,6 +409,7 @@ const HostChatBody = () => {
             : 'bg-green-500 text-white'
             }`}
         >
+          
           {msg.messageType === 'image' && msg.fileUrl ? (
             <div className="mb-2">
               <div className="relative group">
@@ -447,15 +462,9 @@ const HostChatBody = () => {
     );
   };
   return (
-    <div className="flex h-screen max-h-[600px] bg-white border rounded-lg shadow-lg overflow-hidden">
+    <div className="flex h-screen max-h-[89vh] bg-white border rounded-lg shadow-lg overflow-hidden">
       <div className="w-1/3 border-r flex flex-col">
-        {/* <div className="bg-green-600 text-white p-4 flex justify-between items-center">
-          <h2 className="font-bold text-lg">Host Messages</h2>
-          <div className="flex space-x-2">
-            <Bell size={20} className="cursor-pointer" />
-            <Settings size={20} className="cursor-pointer" />
-          </div>
-        </div> */}
+
         <div className="p-4 border-b">
           <div className="relative">
             <input

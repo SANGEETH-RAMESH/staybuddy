@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff, Check, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-import { changePassword } from '../../../hooks/userHooks';
+import { changePassword } from '../../../services/userServices';
 
 const ChangePasswordBody = () => {
   const [formData, setFormData] = useState({

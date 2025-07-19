@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Search, ArrowLeft, RefreshCw, Wifi, UtensilsCrossed, Shirt, MapPin, Star, Users, Phone, Heart, Home, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
-
+import { Search, ArrowLeft, RefreshCw, Wifi, UtensilsCrossed, Shirt, MapPin, Star, Users, Phone, Heart, Home, Edit, Trash2, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { deleteHostel, getAllHostels } from '../../../hooks/hostHooks';
+import { deleteHostel, getAllHostels } from '../../../services/hostServices';
+import { SearchBarProps } from '../../../interface/Search';
+import DeleteConfirmationModal from '../../commonComponents/DeleteConfirmationModal';
 
 
 
-const ITEMS_PER_PAGE = 6; 
+const ITEMS_PER_PAGE = 6;
 
 
 type Facilities = {
@@ -21,7 +22,7 @@ interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-type Hostel = {
+interface Hostel {
   id: string;
   name: string;
   address: string;
@@ -32,9 +33,11 @@ type Hostel = {
   contact: string;
   facilities: Facilities;
   photos: string;
+  isActive: boolean
+  inactiveReason: string
 };
 
-type HostelData = {
+interface HostelData {
   _id: string;
   hostelname: string;
   location: string;
@@ -43,11 +46,13 @@ type HostelData = {
   facilities: string;
   photos: string[];
   beds: string;
+  isActive: boolean;
+  inactiveReason: string;
 };
 
 type HostelCardProps = {
   hostel: Hostel;
-  onDelete: (id: string) => Promise<void>;
+  onDelete: (hostel: Hostel) => Promise<void>;
 };
 
 type FacilityBadgeProps = {
@@ -171,12 +176,9 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel, onDelete }) => {
     navigate(`/host/edit-hostel/${hostel.id}`);
   };
 
-  const handleDelete = async (e: React.MouseEvent, id: string) => {
+  const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
-    if (window.confirm('Are you sure you want to delete this hostel?')) {
-      await onDelete(id);
-    }
+    onDelete(hostel); // Pass the entire hostel object
   };
 
   return (
@@ -200,7 +202,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel, onDelete }) => {
           </button>
 
           <button
-            onClick={(e) => handleDelete(e, hostel.id)}
+            onClick={handleDelete}
             className="p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors"
             title="Delete hostel"
           >
@@ -241,6 +243,58 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel, onDelete }) => {
           <MapPin size={16} className="mr-1" />
           <span>{hostel.address}</span>
         </div>
+
+        <div className="mb-3">
+          <div className="flex items-center justify-between">
+            {/* <div className="flex items-center gap-2">
+              <div className={`relative w-3 h-3 rounded-full ${hostel.isActive ? 'bg-green-500' : 'bg-red-500'}`}>
+                {hostel.isActive && (
+                  <div className="absolute inset-0 rounded-full bg-green-500 animate-pulse"></div>
+                )}
+              </div>
+              <span className={`text-sm font-semibold ${hostel.isActive ? 'text-green-700' : 'text-red-700'}`}>
+                {hostel.isActive ? 'Active' : 'Inactive'}
+              </span>
+            </div> */}
+
+            {/* Status Badge */}
+            <div className={`px-2 py-1 rounded-full text-xs font-medium ${hostel.isActive
+              ? 'bg-green-100 text-green-800 border border-green-200'
+              : 'bg-red-100 text-red-800 border border-red-200'
+              }`}>
+              {hostel.isActive ? '✓ Available' : '✗ Unavailable'}
+            </div>
+          </div>
+        </div>
+
+        {/* Enhanced inactive reason display */}
+        {!hostel.isActive && hostel.inactiveReason && (
+          <div className="mb-3 relative">
+            <div className="bg-gradient-to-r from-red-50 to-orange-50 border-l-4 border-red-400 p-3 rounded-r-lg shadow-sm">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-5 h-5 mt-0.5">
+                  <div className="w-5 h-5 bg-red-100 rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-red-900 mb-1 uppercase tracking-wide">
+                    Temporarily Unavailable
+                  </p>
+                  <p className="text-sm text-red-800 leading-relaxed">
+                    {hostel.inactiveReason}
+                  </p>
+                </div>
+              </div>
+
+              {/* Subtle decorative element */}
+              <div className="absolute top-2 right-2 w-1 h-1 bg-red-300 rounded-full opacity-50"></div>
+              <div className="absolute top-4 right-3 w-1 h-1 bg-red-300 rounded-full opacity-30"></div>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center space-x-4 mb-4 text-sm text-gray-600">
           <div className="flex items-center">
@@ -354,25 +408,150 @@ const HostelCardGrid: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalCount, setTotalCount] = useState<number>(0);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [isSearching, setIsSearching] = useState<boolean>(false);
 
-  const fetchHostels = async (page: number = 1, limit: number = ITEMS_PER_PAGE) => {
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [hostelToDelete, setHostelToDelete] = useState<string | null>(null);
+  const [hostelNameToDelete, setHostelNameToDelete] = useState<string>('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+
+  const useDebounce = (value: string, delay: number) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+
+
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+
+    return debouncedValue;
+  };
+
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  useEffect(() => {
+    if (debouncedSearchTerm !== searchTerm) return;
+
+    if (debouncedSearchTerm.length === 0 || debouncedSearchTerm.length >= 2) {
+      setCurrentPage(1);
+      fetchHostels(1, ITEMS_PER_PAGE, debouncedSearchTerm);
+    }
+  }, [debouncedSearchTerm]);
+
+  const handleDeleteClick = (hostel: Hostel) => {
+    setHostelToDelete(hostel.id);
+    setHostelNameToDelete(hostel.name);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (hostelToDelete) {
+      try {
+        await handleDeleteHostel(hostelToDelete);
+        handleCloseModal();
+      } catch (error) {
+        console.error('Error deleting hostel:', error);
+        handleCloseModal();
+      }
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsDeleteModalOpen(false);
+    setHostelToDelete(null);
+    setHostelNameToDelete('');
+  };
+
+  const SearchBar: React.FC<SearchBarProps> = ({ searchTerm, onSearchChange, totalResults, isSearching }) => {
+    return (
+      <div className="mb-4 flex justify-end">
+        <div className="relative w-80"> 
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Search hostels..."
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-all duration-300 text-sm bg-white shadow-sm"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => onSearchChange('')}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {searchTerm && (
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg p-2 shadow-sm z-10">
+              {isSearching ? (
+                <div className="flex items-center gap-2 text-blue-600">
+                  <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-xs">Searching...</span>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-600">
+                  {totalResults > 0
+                    ? `${totalResults} result${totalResults > 1 ? 's' : ''}`
+                    : 'No results found'
+                  }
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+
+    setCurrentPage(1);
+  };
+
+
+  const fetchHostels = async (page: number = 1, limit: number = ITEMS_PER_PAGE, search: string = '') => {
     try {
       setIsLoading(true);
+      setIsSearching(search.length > 0);
+
       const skip = (page - 1) * limit;
-      const response = await getAllHostels(limit,skip,page);
+
+      const params = new URLSearchParams();
+      params.append('limit', limit.toString());
+      params.append('skip', skip.toString());
+      params.append('page', page.toString());
+
+      // Only add search if it has value
+      if (search && search.length >= 2) {
+        params.append('search', search);
+      }
+
+      const response = await getAllHostels(params);
       const data = response.data.message;
+      console.log(data, 'API Response');
+
       const hostels = data.hostels.map((item: HostelData) => {
-        let facilitiesArray: string[] = [];
-        if (Array.isArray(item.facilities) && item.facilities.length === 1) {
-          facilitiesArray = item.facilities[0].split(',').map((facility: string) => facility.trim().toLowerCase());
-        } else if (typeof item.facilities === 'string') {
-          facilitiesArray = item.facilities.split(',').map((facility: string) => facility.trim().toLowerCase());
-        }
+        const facilitiesArray: string[] = Array.isArray(item.facilities)
+          ? item.facilities.map((f: string) => f.trim().toLowerCase())
+          : [];
 
         const facilitiesObj = {
           wifi: facilitiesArray.includes('wifi'),
           food: facilitiesArray.includes('food'),
-          laundry: facilitiesArray.includes('laundry')
+          laundry: facilitiesArray.includes('laundry'),
         };
 
         return {
@@ -383,7 +562,9 @@ const HostelCardGrid: React.FC = () => {
           contact: item.phone,
           facilities: facilitiesObj,
           photos: item.photos[0] || '',
-          occupancy: item.beds
+          occupancy: item.beds,
+          isActive: item.isActive,
+          inactiveReason: item.inactiveReason
         };
       });
 
@@ -392,20 +573,20 @@ const HostelCardGrid: React.FC = () => {
       setTotalCount(data.totalCount || 0);
       setCurrentPage(data.currentPage || page);
       setTotalPages(data.totalPages || Math.ceil((data.totalCount || 0) / limit));
-
     } catch (error) {
       console.error('Error fetching hostels:', error);
-
       setHostels([]);
       setTotalCount(0);
       setTotalPages(1);
     } finally {
       setIsLoading(false);
+      setIsSearching(false);
     }
   };
 
   const handleDeleteHostel = async (id: string) => {
     try {
+      setIsDeleting(true);
       const response = await deleteHostel(id);
       if (response.data.message === 'Hostel updated successfully' || response.status === 200) {
         const remainingItemsOnCurrentPage = hostels.length - 1;
@@ -417,6 +598,8 @@ const HostelCardGrid: React.FC = () => {
       }
     } catch (error) {
       console.error('Error deleting hostel:', error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -426,7 +609,7 @@ const HostelCardGrid: React.FC = () => {
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages && page !== currentPage) {
-      fetchHostels(page, ITEMS_PER_PAGE);
+      fetchHostels(page, ITEMS_PER_PAGE, debouncedSearchTerm);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -442,6 +625,13 @@ const HostelCardGrid: React.FC = () => {
           </div>
         )}
 
+        <SearchBar
+          searchTerm={searchTerm}
+          onSearchChange={handleSearchChange}
+          totalResults={totalCount}
+          isSearching={isSearching}
+        />
+
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
@@ -450,10 +640,10 @@ const HostelCardGrid: React.FC = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {hostels.map((hostel, index) => (
-                <HostelCard 
-                  key={`${hostel.id}-${index}`} 
-                  hostel={hostel} 
-                  onDelete={handleDeleteHostel}
+                <HostelCard
+                  key={`${hostel.id}-${index}`}
+                  hostel={hostel}
+                  onDelete={handleDeleteClick}
                 />
               ))}
             </div>
@@ -468,6 +658,15 @@ const HostelCardGrid: React.FC = () => {
           <EmptyState />
         )}
       </div>
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseModal}
+        onConfirm={handleConfirmDelete}
+        title="Delete Hostel"
+        message="Are you sure you want to delete this hostel? This action cannot be undone."
+        itemName={hostelNameToDelete}
+        isLoading={isDeleting}
+      />
     </div>
   );
 };

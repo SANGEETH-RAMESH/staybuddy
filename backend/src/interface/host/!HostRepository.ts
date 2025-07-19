@@ -6,6 +6,7 @@ import { IOrder } from "../../model/orderModel";
 import { IWallet } from "../../model/walletModel";
 import { IUser } from "../../model/userModel";
 import { IUpdateHostelInput } from "../../dtos/HostelData";
+import { IHostResponse } from "../../dtos/HostResponse";
 
 
 interface HostelData {
@@ -65,6 +66,6 @@ export interface IHostRepository {
     editProfile(hostData: { hostId: Types.ObjectId, name: string, mobile: string }): Promise<string>,
     getAllUsers(): Promise<IUser[] | string | null>,
     getAdmin(): Promise<IUser | string | null>,
-    getHost(skip: number, limit: number): Promise<{ hosts: IHost[]; totalCount: number } | null>,
+    getHost(skip: number, limit: number): Promise<{ hosts: IHostResponse[]; totalCount: number } | null>,
     allHost(): Promise<IHost[] | string | null>
 }

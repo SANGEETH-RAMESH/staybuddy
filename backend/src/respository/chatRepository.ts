@@ -11,7 +11,6 @@ class chatRepository implements IChatRepository {
 
     async createChat(userId: Types.ObjectId, ownerId: Types.ObjectId): Promise<IChat | string> {
         try {
-            console.log(userId, ownerId, "Idsss")
             const existingChat = await Chat.findOne({
                 $or: [
                     { participant1: userId, participant2: ownerId },
@@ -40,18 +39,15 @@ class chatRepository implements IChatRepository {
 
     async getChat(userId: Types.ObjectId, ownerId: Types.ObjectId): Promise<IChat[] | string> {
         try {
-            console.log(userId, 'OwnerId')
             const chat = await Chat.find({
                 $or: [
                     { participant1: userId },
                     { participant2: userId }
                 ]
             }).populate('participant2').sort({ updatedAt: -1 })
-            // console.log(chat)
             if (!chat) {
                 return 'No chat found'
             }
-            console.log(chat, 'Gettting')
             return chat
         } catch (error) {
             console.log(error)
@@ -68,15 +64,18 @@ class chatRepository implements IChatRepository {
     // }
 
     async saveMessage(messageData: {
-        senderId: string, receiverId: string, message: string, timestamp: number, chatId: string;
+        senderId: string;
+        receiverId: string;
+        message: string;
+        timestamp: number;
+        chatId: string;
         type: 'text' | 'image' | 'document';
         fileUrl?: string;
-    }): Promise<IMessage | string> {
+    }): Promise<{ savedMessage: IMessage; readCount: number } | string> {
         try {
-            // console.log(messageData, 'Saving Message')
-
+            console.log("Hey",messageData,'dfljsdflsjfdsf')
             const storedMessage = messageData.message;
-            console.log(messageData.timestamp, "Timestamp")
+
             const newMessage = new Message({
                 chatId: messageData.chatId,
                 senderId: messageData.senderId,
@@ -87,7 +86,7 @@ class chatRepository implements IChatRepository {
                 fileUrl: messageData.type !== 'text' ? messageData.fileUrl : undefined
             });
 
-            await Chat.updateOne(
+            const updatedChat = await Chat.findOneAndUpdate(
                 {
                     $or: [
                         { participant1: messageData.senderId, participant2: messageData.receiverId },
@@ -98,15 +97,29 @@ class chatRepository implements IChatRepository {
                     $set: {
                         latestMessage: storedMessage,
                         updatedAt: new Date(messageData.timestamp),
-                        type: messageData.type
+                        type: messageData.type,
+                    },
+                    $inc: {
+                        readCount: 1
                     }
-                }
+                },
+                { new: true }
             );
+            const getChat = await Chat.findOne({
+                $or: [
+                    { participant1: messageData.senderId, participant2: messageData.receiverId },
+                    { participant1: messageData.receiverId, participant2: messageData.senderId }
+                ]
+            })
+            const savedMessage = await newMessage.save();
 
-            return await newMessage.save();
+            return {
+                savedMessage,
+                readCount: getChat?.readCount ?? 0
+            };
         } catch (error) {
-            console.log(error)
-            return error as string
+            console.log(error);
+            return error as string;
         }
     }
 
@@ -141,17 +154,16 @@ class chatRepository implements IChatRepository {
                     { participant2: userId }
                 ]
             })
-            .populate('participant2')
-            .populate('participant1')
-            .sort({ updatedAt: -1 })
-            console.log(getChat, 'Gettting')
+                .populate('participant2')
+                .populate('participant1')
+                .sort({ updatedAt: -1 })
             return getChat;
         } catch (error) {
             return error as string
         }
     }
 
-    
+
 
     async createHostChat(hostId: string, userId: string): Promise<string> {
         try {
@@ -176,6 +188,22 @@ class chatRepository implements IChatRepository {
             }
         } catch (error) {
             return error as string;
+        }
+    }
+
+    async setCountRead(chatId: string): Promise<string> {
+        try {
+            const countRead = await Chat.updateOne(
+                { _id: chatId },
+                {
+                    $set: {
+                        readCount: 0
+                    }
+                }
+            );
+            return 'Count Updated'
+        } catch (error) {
+            return error as string
         }
     }
 }

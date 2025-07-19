@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { loginSuccess } from '../../../redux/adminAuthSlice';
 import { useDispatch } from 'react-redux';
 import axios from 'axios';
+import logo from '../../../assets/logo.png'
 import { LoginValues } from '../../../interface/Login';
 import { useState } from 'react';
 const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
@@ -39,7 +40,7 @@ const AdminLoginBody = () => {
         email: formValues.email,
         password: formValues.password
       });
-      console.log(res, 'responseeeee');
+      console.log(res.data.data, 'responseeeee');
 
       if (res.data.data === 'Invalid Password') {
         setErrors((prev) => ({
@@ -55,6 +56,7 @@ const AdminLoginBody = () => {
         dispatch(loginSuccess({
           accessToken: res.data.data.accessToken,
           refreshToken: res.data.data.refreshToken,
+          role:res.data.data.role,
           isLoggedIn: true
         }));
         toast.success('Login Successful', { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
@@ -87,8 +89,11 @@ const AdminLoginBody = () => {
 
   return (
     <div className="relative flex justify-center items-center h-screen bg-[#273142]">
-      <div className="absolute top-[30px] left-[100px] text-4xl font-semibold text-[#45B8F2]">
-        StayBuddy
+      <div className="flex items-center gap-x-2  absolute top-[30px] left-[100px] text-4xl font-semibold text-[#45B8F2]">
+        <img src={logo} alt="Logo" className="h-16 w-16" />
+        <div>
+        <p className="text-3xl">StayBuddy</p>
+        </div>
       </div>
       <div className="flex flex-col items-center justify-center space-y-6 p-8 border-2 rounded-lg shadow-lg w-full max-w-md border-[#45B8F2]">
         <h1 className="text-3xl font-semibold text-[#45B8F2]">Admin Login</h1>

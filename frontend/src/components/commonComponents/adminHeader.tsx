@@ -5,6 +5,7 @@ import admin_icon from '../../assets/settings.png';
 import { jwtDecode } from 'jwt-decode';
 import { User } from '../../interface/User'
 import { Notification } from '../../interface/Notification';
+import logo from '../../assets/logo.png'
 import { formatDistanceToNow } from 'date-fns';
 import { io } from "socket.io-client";
 const socket = io("http://localhost:4000");
@@ -21,7 +22,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
   const [isRead, setIsRead] = useState<boolean>(false)
   const [readCount, setReadCount] = useState<number>(0)
   const notificationRef = useRef<HTMLDivElement>(null);
-  const [adminIds,setAdminId] = useState('')
+  const [adminIds, setAdminId] = useState('')
 
   // Close notification dropdown when clicking outside
   useEffect(() => {
@@ -38,8 +39,11 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
   }, []);
 
   const toggleNotifications = () => {
+    console.log("notification", adminIds)
+    socket.emit('mark_all_notification', ({ receiverId:adminIds }))
     setNotificationOpen(!notificationOpen);
   };
+
 
   const markAsRead = (notificationId: string) => {
     setNotifications(prev =>
@@ -85,20 +89,23 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
 
       const handleNotification = (notificationss: Notification) => {
         console.log(' Notification received:', notificationss);
-        // /setNotification((prev) => [...prev, notificationss]);
+      
+
         setNotifications((prev) => {
-          console.log('Previous notifications:', prev);
-          console.log('Incoming notification:', notificationss);
+        const updated: Notification[] = [notificationss, ...prev];
+        console.log('Updated notifications:', updated);
 
-          const exists = prev.find((n) => n._id === notificationss._id);
-          console.log('Exists:', exists);
+        const unreadCount = updated.filter((n) => n.isRead).length;
+        console.log(unreadCount, 'unread');
 
-          if (exists) return prev;
-          return [notificationss,...prev ];
-        });
-        // setNotification([notifications])
-        setIsRead(notificationss.isRead)
-        setReadCount((prev) => prev + 1);
+        setIsRead(false);
+        setReadCount(unreadCount);
+
+        return updated;
+      });
+        // // setNotification([notifications])
+        // setIsRead(notificationss.isRead)
+        // setReadCount((prev) => prev + 1);
       };
 
       socket.on('receive_notification', handleNotification);
@@ -107,18 +114,26 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
         console.log(notifications, 'Siuu')
         setNotifications(notifications)
         setIsRead(notifications[0].isRead)
-        const unreadCount = notifications.filter(n => !n.isRead).length;
-
+        const unreadCount = notifications.filter(n => n.isRead).length;
+        setIsRead(false)
         setReadCount(unreadCount)
+      }
+
+      const handleMarkedAllNotification = (receiverId:string) => {
+        console.log(receiverId)
+        setNotifications([])
       }
 
       socket.emit('get_old_notifications', adminId);
 
       socket.on('receive_old_notifications', handleOldNotifications)
 
+      socket.on('marked_all_notifications', handleMarkedAllNotification)
+
       return () => {
         socket.off('receive_notification', handleNotification);
-        socket.off('receive_old_notifications', handleOldNotifications)
+        socket.off('receive_old_notifications', handleOldNotifications);
+        socket.off('')
       };
     }
 
@@ -136,8 +151,9 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
       </button>
 
       {/* Logo */}
-      <div className="text-lg sm:text-xl md:text-2xl font-bold text-[#45B8F2] ml-2 sm:ml-4 lg:ml-16 truncate">
-        StayBuddy
+      <div className="flex items-center gap-x-2 text-lg sm:text-xl md:text-2xl font-bold text-[#45B8F2] ml-2 sm:ml-4 lg:ml-16 truncate">
+       <img src={logo} alt="Logo" className="h-16 w-16" />
+            <p>StayBuddy</p>
       </div>
 
       {/* Right Section */}
@@ -154,7 +170,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
             ) : (
               <Bell size={18} className="sm:w-5 sm:h-5" />
             )}
-            {!isRead && (
+            {!isRead && readCount > 0 && (
               <span className="absolute -top-0.5 sm:-top-1 -right-0.5 sm:-right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white font-bold">
                 <span className="text-[8px] sm:text-[10px]">{readCount}</span>
               </span>

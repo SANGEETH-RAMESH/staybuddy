@@ -16,40 +16,19 @@ import {
     ChevronLeft,
     ChevronRight,
     Star,
-    MessageCircle
+    MessageCircle,
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { createChat, getSingleHostel } from '../../../hooks/userHooks';
+import { createChat, getOrderBookingByHostelId, getSingleHostel } from '../../../services/userServices';
+import LocationDisplay from '../../commonComponents/LocationDisplay';
+import BookingModal from '../../commonComponents/BookingModal';
+import { Host } from '../../../interface/Host'
+import mongoose from 'mongoose';
+import { jwtDecode } from 'jwt-decode';
+import { Hostel } from '../../../interface/Hostel';
+import { Order } from '../../../interface/Order';
 
-
-interface Host {
-    _id: string;
-    name: string;
-    email: string;
-    mobile: string;
-    isBlock: boolean;
-    approvalRequest: string;
-    tempExpires: string;
-}
-
-interface HostelDetail {
-    _id: string;
-    advanceamount: number;
-    bedShareRoom: number;
-    beds: number;
-    category: string;
-    facilities: string[] | string;
-    foodRate: number;
-    host_id: Host;
-    hostelname: string;
-    location: string;
-    nearbyaccess: string;
-    phone: string;
-    photos: string[];
-    policies: string;
-}
-
-const ImageGallery = ({ photos }: { photos: string[] }) => {
+const ImageGallery = ({ photos }: { photos: string[] | string }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const defaultImage = "/api/placeholder/800/400";
     const totalImages = photos?.length || 3;
@@ -92,7 +71,6 @@ const ImageGallery = ({ photos }: { photos: string[] }) => {
                     </div>
                 </div>
 
-                {/* Mobile Layout */}
                 <div className="md:hidden relative h-[400px]">
                     <img
                         src={photos[currentImageIndex] || defaultImage}
@@ -100,7 +78,6 @@ const ImageGallery = ({ photos }: { photos: string[] }) => {
                         className="w-full h-full object-cover"
                     />
 
-                    {/* Navigation Buttons */}
                     <button
                         onClick={prevImage}
                         className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full shadow-lg hover:bg-white transition-colors"
@@ -114,7 +91,6 @@ const ImageGallery = ({ photos }: { photos: string[] }) => {
                         <ChevronRight className="w-6 h-6" />
                     </button>
 
-                    {/* Image Indicators */}
                     <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
                         {Array.from({ length: totalImages }).map((_, index) => (
                             <button
@@ -133,18 +109,64 @@ const ImageGallery = ({ photos }: { photos: string[] }) => {
 
 const HostelDetailPage = () => {
     const { id } = useParams();
-    const [hostel, setHostel] = useState<HostelDetail | null>(null);
+    const [hostel, setHostel] = useState<Hostel | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [showBookingModal, setShowBookingModal] = useState(false);
+    const [orderDetails, setOrderDetails] = useState([]);
+    const [currentAvailableRooms, setCurrentAvailableRooms] = useState(0);
     const navigate = useNavigate();
-    
+
+    const calculateCurrentAvailableRooms = (totalRooms: number, bookings: any[]) => {
+        const today = new Date();
+        let occupiedRooms = 0;
+
+        bookings.forEach(booking => {
+            if (booking.active !== false) {
+                const bookingStart = new Date(booking.startDate);
+                const bookingEnd = new Date(booking.endDate);
+
+                if (today >= bookingStart && today <= bookingEnd) {
+                    const roomsInBooking = booking.selectedRooms || 1;
+                    occupiedRooms += roomsInBooking;
+                }
+            }
+        });
+
+        return Math.max(0, totalRooms - occupiedRooms);
+    };
 
     useEffect(() => {
         const fetchHostelDetails = async () => {
             try {
-                if(!id) return;
+                // const accessToken = localStorage.getItem('userAccessToken');
+                // let currentUserId = '';
+                // if (accessToken) {
+                //     const decoded = jwtDecode(accessToken);
+                //     currentUserId = decoded?._id || '';
+                // }
+                if (!id) return;
+
                 const response = await getSingleHostel(id);
+                console.log(response.data.message, 'Response')
                 setHostel(response.data.message);
+
+                const orderResponse = await getOrderBookingByHostelId(new mongoose.Types.ObjectId(response.data.message._id));
+                console.log(orderResponse.data.message, 'ldflsdfsdf')
+                const allBookings = orderResponse?.data?.message || [];
+
+                const hostelBookings = allBookings.filter(booking =>
+                    booking.hostel_id === id
+                );
+                console.log(hostelBookings, 'Hostel Bookings')
+
+                setOrderDetails(hostelBookings);
+
+                const hostelData = response.data.message;
+                // const totalRooms = hostelData.totalRooms || 0;
+                // const availableRooms = calculateCurrentAvailableRooms(totalRooms, hostelBookings);
+                // setCurrentAvailableRooms(availableRooms);
+
                 setLoading(false);
             } catch (err) {
                 setError('Failed to fetch hostel details');
@@ -157,53 +179,77 @@ const HostelDetailPage = () => {
     }, [id]);
 
     const handleBooking = () => {
-        console.log('Booking initiated for hostel:', id);
-        if(hostel && typeof hostel.beds === 'number' && hostel.beds > 0){
-        navigate(`/user/booking/${id}`)
 
-        }else{
-            toast.error("No Room Availbale")
+        if (!hostel) {
+            toast.error('Hostel data not available');
+            return;
         }
-        // console.log(hostel.beds,'hee')
+        if (typeof hostel.totalRooms !== 'number') {
+            toast.error('Room availability data missing');
+            return;
+        }
+        console.log('Booking initiated for hostel:', hostel?.beds);
+        if (hostel.beds < 0) {
+            toast.error('No rooms available at the moment');
+            return;
+        } else if (hostel?.isActive == false) {
+            toast.error('Hostel is Inactive')
+        } else if (hostel) {
+            console.log(hostel.totalRooms)
+            setShowBookingModal(true);
+        }
     };
 
-    const handleChatWithOwner = async(ownerId:string) => {
+    const handleChatWithOwner = async (ownerId: string) => {
         if (hostel?.host_id?._id) {
-            console.log(ownerId,'Owner id')
-            console.log(hostel?.host_id._id,"Hosttt")
+            console.log(ownerId, 'Owner id')
+            console.log(hostel?.host_id._id, "Hosttt")
             const response = await createChat(ownerId)
-            if(response.data.success){
+            if (response.data.success) {
                 console.log('Initiating chat with hostel owner:', hostel.host_id._id);
                 navigate(`/user/chat/${hostel.host_id._id}`, {
                     state: {
                         hostName: hostel.host_id.name,
                         hostelName: hostel.hostelname,
-                        hostId:hostel.host_id
+                        hostId: hostel.host_id
                     }
                 });
             }
-            
+
         } else {
             console.error('Host information not available');
         }
+    };
+
+    const handleBookingConfirm = (bookingData: Order) => {
+        setShowBookingModal(false);
+
+        navigate(`/user/booking/${id}`, {
+            state: {
+                fromDate: bookingData.fromDate,
+                toDate: bookingData.toDate,
+                guests: bookingData.guests,
+                hostelData: hostel
+            }
+        });
     };
 
     const navigateToRatingsAndReviews = () => {
         navigate(`/user/reviews/${id}`)
     }
 
-     if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="relative w-16 h-16">
-          {/* Outer circle */}
-          <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
-          {/* Spinning arc */}
-          <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
-        </div>
-      </div>
-    );
-  }
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="relative w-16 h-16">
+                    {/* Outer circle */}
+                    <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+                    {/* Spinning arc */}
+                    <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+                </div>
+            </div>
+        );
+    }
 
     if (error || !hostel) {
         return (
@@ -222,7 +268,6 @@ const HostelDetailPage = () => {
     return (
         <div className="bg-gray-50 min-h-screen py-8 px-4 md:px-8">
             <div className="max-w-6xl mx-auto">
-                {/* Sticky Header with Book Now and Chat Buttons */}
                 <div
                     className="sticky z-50 bg-white/80 backdrop-blur-md shadow-sm mb-6 -mx-4 px-4 py-4 md:rounded-lg"
                     style={{ top: '64px' }}
@@ -236,10 +281,20 @@ const HostelDetailPage = () => {
                                 <MapPin className="mr-2" size={18} />
                                 <span className="text-sm md:text-base">{hostel.location}</span>
                             </div>
+                            {/* <div className="flex items-center mt-1">
+                                <div className={`w-2 h-2 rounded-full mr-2 ${currentAvailableRooms > 0 ? 'bg-green-500' : 'bg-red-500'
+                                    }`}></div>
+                                {/* <span className="text-xs text-gray-500">
+                                    {currentAvailableRooms > 0
+                                        ? `${currentAvailableRooms} room(s) available`
+                                        : 'No rooms available'
+                                    }
+                                </span> */}
+                            {/* </div> */}
                         </div>
                         <div className="flex items-center gap-4">
-                            <button
-                                 onClick={() => handleChatWithOwner(hostel.host_id._id)}
+                             <button
+                                 onClick={() => handleChatWithOwner(hostel.host_id._id.toString())}
                                 className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
                             >
                                 <MessageCircle className="w-4 h-4" />
@@ -259,7 +314,6 @@ const HostelDetailPage = () => {
                 <ImageGallery photos={hostel.photos} />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Basic Information */}
                     <div className="bg-white rounded-lg shadow-md p-6">
                         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                             <Star className="text-blue-500" size={20} />
@@ -297,7 +351,6 @@ const HostelDetailPage = () => {
                         </div>
                     </div>
 
-                    {/* Pricing Information */}
                     <div className="bg-white rounded-lg shadow-md p-6">
                         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                             <IndianRupee className="text-green-500" size={20} />
@@ -328,7 +381,28 @@ const HostelDetailPage = () => {
                         </div>
                     </div>
 
-                    {/* Facilities */}
+
+
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                        <h2 className="text-xl font-semibold mb-4">Location & Accessibility</h2>
+                        <div className="flex items-center p-4 bg-gray-50 rounded-lg mb-4">
+                            <Train className="mr-3 text-blue-500 flex-shrink-0" />
+                            <div>
+                                <p className="text-sm text-gray-500">Nearby Access</p>
+                                <p className="font-medium">{hostel.nearbyaccess}</p>
+                            </div>
+                        </div>
+
+                        {hostel.latitude && hostel.longitude && (
+                            <LocationDisplay
+                                latitude={hostel.latitude}
+                                longitude={hostel.longitude}
+                                locationName={hostel.location}
+                                hostelName={hostel.hostelname}
+                            />
+                        )}
+                    </div>
+
                     <div className="bg-white rounded-lg shadow-md p-6">
                         <h2 className="text-xl font-semibold mb-4">Facilities</h2>
                         <div className="grid grid-cols-2 gap-4">
@@ -343,19 +417,8 @@ const HostelDetailPage = () => {
                         </div>
                     </div>
 
-                    {/* Location & Access */}
-                    <div className="bg-white rounded-lg shadow-md p-6">
-                        <h2 className="text-xl font-semibold mb-4">Location & Accessibility</h2>
-                        <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-                            <Train className="mr-3 text-blue-500 flex-shrink-0" />
-                            <div>
-                                <p className="text-sm text-gray-500">Nearby Access</p>
-                                <p className="font-medium">{hostel.nearbyaccess}</p>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Policies */}
+
                     <div className="bg-white rounded-lg shadow-md p-6 md:col-span-2">
                         <h2 className="text-xl font-semibold mb-4">Hostel Policies</h2>
                         <div className="flex items-start p-4 bg-gray-50 rounded-lg">
@@ -367,7 +430,27 @@ const HostelDetailPage = () => {
                         </div>
                     </div>
 
-                    {/* Review */}
+                    <div className="bg-white rounded-lg shadow-md p-6 md:col-span-2">
+                        <h2 className="text-xl font-semibold mb-4">Cancellation Policy</h2>
+                        <div className="flex items-start p-4 bg-gray-50 rounded-lg">
+                            <Shield className="mr-3 text-green-500 flex-shrink-0 mt-1" />
+                            <div>
+                                <p className="text-sm text-gray-500">Policy Type</p>
+                                <p className="font-medium mt-1">
+                                    {hostel.cancellationPolicy === 'freecancellation'
+                                        ? 'Free Cancellation Policy Available'
+                                        : hostel.cancellationPolicy || 'Standard Cancellation Policy'
+                                    }
+                                </p>
+                                {hostel.cancellationPolicy === 'freecancellation' && (
+                                    <p className="text-sm text-green-600 mt-2">
+                                        You can cancel your booking without any charges
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="bg-white rounded-lg shadow-md p-6 md:col-span-2">
                         <h2 className="text-xl font-semibold mb-4">Reviews</h2>
                         <button
@@ -379,6 +462,17 @@ const HostelDetailPage = () => {
                     </div>
                 </div>
             </div>
+            {showBookingModal && (
+                <BookingModal
+                    isOpen={showBookingModal}
+                    onClose={() => setShowBookingModal(false)}
+                    onConfirm={handleBookingConfirm}
+                    hostelName={hostel.hostelname}
+                    maxGuests={Number(hostel.beds) || 10}
+                    orderDetails={orderDetails}  // Add this line
+                    totalRooms={hostel.totalRooms || 10}  // Add this line
+                />
+            )}
         </div>
     );
 };

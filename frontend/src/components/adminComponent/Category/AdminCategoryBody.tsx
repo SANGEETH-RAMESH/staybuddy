@@ -4,7 +4,7 @@ import { ObjectId } from 'bson';
 import { Pencil, Trash2, Search, RefreshCw, PlusCircle, PackageX, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Category } from '../../../interface/Category';
-import { deleteCategory, getAllCategory, searchCategory } from '../../../hooks/categoryHooks';
+import { deleteCategory, getAllCategory, searchCategory } from '../../../services/categoryServices';
 
 const AdminCategoryBody = () => {
   const [categories, setCategories] = useState<Category[]>([]);

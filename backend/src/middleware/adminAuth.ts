@@ -20,8 +20,7 @@ declare module "express-serve-static-core" {
 
 const adminAuthMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const token = req.header('Authorization')?.split(' ')[1];
-  console.log(token,'daaaaaaaaaaaa')
-
+  console.log("TOkendfs",token)
   if (!token) {
     res.status(401).json({ message: "No token found" });
     return;
@@ -29,9 +28,9 @@ const adminAuthMiddleware = async (req: Request, res: Response, next: NextFuncti
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as AuthenticatedAdmin;
-
+    console.log(decoded,'dfljsdfljdsfljsd')
     if (decoded.role !== 'admin') {
-      res.status(403).json({ messag: 'Access denied:Not a admin' });
+      res.status(403).json({ messag: 'Access denied:Not a ADMIN' });
       return
     }
 

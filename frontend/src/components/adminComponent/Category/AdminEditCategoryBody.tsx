@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { Package, ArrowLeft, Save, Loader2, ToggleLeft, ToggleRight, Info, AlertCircle } from 'lucide-react';
 import AdminHeader from '../../commonComponents/adminHeader';
 import AdminSidebar from '../../commonComponents/adminSidebar';
-import { getCategory, updateCategory } from '../../../hooks/categoryHooks';
+import { getCategory, updateCategory } from '../../../services/categoryServices';
 
 
 const AdminEditCategoryPage = () => {

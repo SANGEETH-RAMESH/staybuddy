@@ -13,15 +13,22 @@ const orderService = new OrderService(orderRepository);
 const orderController = new OrderController(orderService);
 
 
-order_route.post('/bookings',userAuthMiddleware,orderController.orders.bind(orderController))
+
+order_route.post('/bookings',userAuthMiddleware,orderController.createBooking.bind(orderController))
+order_route.get('/bookings/:bookingId',userAuthMiddleware,orderController.getBookingDetails.bind(orderController))
+order_route.post('/bookings/:bookingId/end',userAuthMiddleware,orderController.endBooking.bind(orderController))
+order_route.get('/users/:userId/bookings',userAuthMiddleware,orderController.getSavedBookings.bind(orderController))
+order_route.get('/users/:hostelId/allbookings',userAuthMiddleware,orderController.getBookingByOrder.bind(orderController))
+
+
+order_route.get('/hosts/:hostId/bookings',hostAuthMiddleware,orderController.getBookings.bind(orderController))
+
+
 order_route.post('/payment',makeOrder)
-order_route.get('/getOrderDetails/:id',userAuthMiddleware,orderController.getOrderDetails.bind(orderController))
-order_route.post('/endBooking/:id',userAuthMiddleware,orderController.endBooking.bind(orderController))
-order_route.post('/submitReview',userAuthMiddleware,orderController.submitReview.bind(orderController))
-order_route.get('/getReviewDetails/:id',userAuthMiddleware,orderController.getReviewDetails.bind(orderController))
-order_route.get('/getReviewDetailsByOrderId/:id',userAuthMiddleware,orderController.getReviewDetailsByOrderid.bind(orderController))
-order_route.get('/getSavedBookings/:id',userAuthMiddleware,orderController.getSavedBookings.bind(orderController))
-order_route.get('/getBookings/:id',hostAuthMiddleware,orderController.getBookings.bind(orderController))
+
+order_route.post('/reviews',userAuthMiddleware,orderController.submitReview.bind(orderController))
+order_route.get('/reviews/:reviewId',userAuthMiddleware,orderController.getReviewDetails.bind(orderController))
+order_route.get('/bookings/:bookingId/review',userAuthMiddleware,orderController.getReviewDetailsByOrderid.bind(orderController))
 
 
 

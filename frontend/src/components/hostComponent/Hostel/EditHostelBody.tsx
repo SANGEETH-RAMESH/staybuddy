@@ -4,8 +4,9 @@ import { Building2, Bed, MapPin, Image, Wifi, ShowerHead, UtensilsCrossed, Users
 import { toast } from 'react-toastify';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Category } from '../../../interface/Category';
-import { editHostel, getAllCategory, getHost, getSingleHostel } from '../../../hooks/hostHooks';
-
+import { editHostel, getAllCategory, getHost, getSingleHostel } from '../../../services/hostServices';
+import LocationPicker from '../../commonComponents/locationPicker';
+import { checkDomainOfScale } from 'recharts/types/util/ChartUtils';
 
 const HostelEditForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,10 +15,13 @@ const HostelEditForm = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [existingPhotos, setExistingPhotos] = useState<string[]>([]);
   const [photosToDelete, setPhotosToDelete] = useState<string[]>([]);
+  const [showLocationPicker, setShowLocationPicker] = useState<boolean>(false);
 
   const [formData, setFormData] = useState<{
     name: string;
     location: string;
+    latitude: number;
+    longitude: number;
     mobile: string;
     photos: File[];
     facilities: {
@@ -33,9 +37,12 @@ const HostelEditForm = () => {
     bedShareRate: string;
     foodRate: string;
     host_id: string;
+    cancellationPolicy: string;
   }>({
     name: "",
     location: "",
+    latitude: 0,
+    longitude: 0,
     mobile: "",
     photos: [],
     facilities: {
@@ -51,6 +58,7 @@ const HostelEditForm = () => {
     bedShareRate: "",
     foodRate: "",
     host_id: "",
+    cancellationPolicy: ""
   });
 
   const [errors, setErrors] = useState<{
@@ -66,6 +74,7 @@ const HostelEditForm = () => {
     bedShareRate: string;
     foodRate: string;
     facilities: string;
+    cancellationPolicy: string;
   }>({
     name: '',
     location: '',
@@ -78,7 +87,8 @@ const HostelEditForm = () => {
     advance: '',
     bedShareRate: '',
     foodRate: '',
-    facilities: ''
+    facilities: '',
+    cancellationPolicy: ""
   });
 
   type Facilities = {
@@ -90,6 +100,8 @@ const HostelEditForm = () => {
   type FormDataType = {
     name: string;
     location: string;
+    latitude: number;
+    longitude: number;
     phoneNumber: string;
     photos: File[];
     facilities: { wifi: boolean; laundry: boolean; food: boolean };
@@ -100,6 +112,7 @@ const HostelEditForm = () => {
     advance: string;
     bedShareRate: string;
     foodRate: string;
+    cancellationPolicy: string;
   };
 
   const facilities = [
@@ -111,8 +124,8 @@ const HostelEditForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if(!id) return;
-        setLoading(false);
+        if (!id) return;
+        setLoading(true);
         const categoryResponse = await getAllCategory();
         const categoryData = categoryResponse.data.message;
         setCategories(categoryData);
@@ -120,7 +133,13 @@ const HostelEditForm = () => {
         const hostData = hostResponse.data.message
         const hostelResponse = await getSingleHostel(id);
         const hostelData = hostelResponse.data.message;
-        const facilitiesArray = Array.isArray(hostelData.facilities) ? hostelData.facilities[0]?.split(',') || [] : [];
+        console.log(hostelData, 'heyyyy')
+        console.log(hostelData.facilities)
+        const facilitiesArray = Array.isArray(hostelData.facilities)
+          ? hostelData.facilities
+          : typeof hostelData.facilities === 'string'
+            ? hostelData.facilities.split(',')
+            : [];
         const facilitiesObj = {
           wifi: facilitiesArray.includes('wifi'),
           laundry: facilitiesArray.includes('laundry'),
@@ -130,6 +149,8 @@ const HostelEditForm = () => {
         setFormData({
           name: hostelData.hostelname || "",
           location: hostelData.location || "",
+          latitude: hostelData.latitude || 0,
+          longitude: hostelData.longitude || 0,
           mobile: hostData.mobile || "",
           photos: [],
           facilities: facilitiesObj,
@@ -141,8 +162,8 @@ const HostelEditForm = () => {
           bedShareRate: hostelData.bedShareRoom || "",
           foodRate: hostelData.foodRate || "",
           host_id: hostelData.host_id || "",
+          cancellationPolicy: hostelData.cancellationPolicy || ""
         });
-
 
         setExistingPhotos(hostelData.photos || []);
 
@@ -154,20 +175,13 @@ const HostelEditForm = () => {
       }
     };
 
-
     fetchData();
-
-  }, []);
-
-  useEffect(() => {
-    console.log(formData, 'from')
-  })
+  }, [id]);
 
   const validateStep1 = (): boolean => {
     let isValid = true;
     const newErrors = { ...errors };
 
-    // Property name validation
     if (!formData.name.trim()) {
       newErrors.name = 'Property name is required';
       isValid = false;
@@ -178,7 +192,6 @@ const HostelEditForm = () => {
       newErrors.name = '';
     }
 
-    // Location validation
     if (!formData.location.trim()) {
       newErrors.location = 'Location is required';
       isValid = false;
@@ -186,7 +199,6 @@ const HostelEditForm = () => {
       newErrors.location = '';
     }
 
-    // Phone number validation
     const phoneRegex = /^\d{10}$/;
     if (!formData.mobile.trim()) {
       newErrors.phoneNumber = 'Phone number is required';
@@ -198,7 +210,6 @@ const HostelEditForm = () => {
       newErrors.phoneNumber = '';
     }
 
-    // Nearby access validation
     if (!formData.nearbyAccess.trim()) {
       newErrors.nearbyAccess = 'Nearby access details are required';
       isValid = false;
@@ -206,7 +217,11 @@ const HostelEditForm = () => {
       newErrors.nearbyAccess = '';
     }
 
-    // Beds per room validation
+    if (!formData.cancellationPolicy) {
+      newErrors.cancellationPolicy = 'Please select a cancellation policy';
+      isValid = false;
+    }
+
     if (!formData.bedsPerRoom) {
       newErrors.bedsPerRoom = 'Please select number of beds per room';
       isValid = false;
@@ -214,7 +229,6 @@ const HostelEditForm = () => {
       newErrors.bedsPerRoom = '';
     }
 
-    // Policies validation
     if (!formData.policies) {
       newErrors.policies = 'Please select a policy';
       isValid = false;
@@ -222,7 +236,6 @@ const HostelEditForm = () => {
       newErrors.policies = '';
     }
 
-    // Category validation
     if (!formData.category) {
       newErrors.category = 'Please select a category';
       isValid = false;
@@ -230,7 +243,6 @@ const HostelEditForm = () => {
       newErrors.category = '';
     }
 
-    // Advance amount validation
     if (!formData.advance) {
       newErrors.advance = 'Advance amount is required';
       isValid = false;
@@ -241,7 +253,6 @@ const HostelEditForm = () => {
       newErrors.advance = '';
     }
 
-    // Photos validation - allow existing photos or new uploads
     if (existingPhotos.length === 0 && formData.photos.length === 0) {
       newErrors.photos = 'Please keep existing photos or upload new ones';
       isValid = false;
@@ -249,7 +260,6 @@ const HostelEditForm = () => {
       newErrors.photos = '';
     }
 
-    // Facilities validation
     const selectedFacilities = Object.values(formData.facilities).filter(value => value).length;
     if (selectedFacilities === 0) {
       newErrors.facilities = 'Please select at least one facility';
@@ -334,14 +344,6 @@ const HostelEditForm = () => {
         facilities: newFacilities,
       };
 
-      // if (facilityId === 'food' && !newFacilities.food) {
-      //   updatedFormData.foodRate = '';
-      //   setErrors(prev => ({
-      //     ...prev,
-      //     foodRate: ''
-      //   }));
-      // }
-
       if (Object.values(newFacilities).some(value => value)) {
         setErrors(prev => ({
           ...prev,
@@ -351,6 +353,19 @@ const HostelEditForm = () => {
 
       return updatedFormData;
     });
+  };
+
+  const handleLocationSelect = (location: string, lat: number, lng: number) => {
+    setFormData(prevData => ({
+      ...prevData,
+      location,
+      latitude: lat,
+      longitude: lng
+    }));
+    setErrors(prev => ({
+      ...prev,
+      location: ''
+    }));
   };
 
   const handleRemoveExistingPhoto = (photoUrl: string) => {
@@ -383,7 +398,7 @@ const HostelEditForm = () => {
         return;
       }
 
-      if(!id) return ;
+      if (!id) return;
       const dataToSend = new FormData();
 
       (Object.keys(formData) as (keyof FormDataType)[]).forEach((key) => {
@@ -392,11 +407,13 @@ const HostelEditForm = () => {
         }
       });
 
+      // dataToSend.append('latitude', formData.latitude.toString());
+      // dataToSend.append('longitude', formData.longitude.toString());
+
       if (formData.facilities.food && formData.foodRate) {
         dataToSend.append('foodRate', formData.foodRate);
       }
 
-      // Add facilities
       if (formData.facilities) {
         const facilitiesArray = Object.keys(formData.facilities).filter(
           (key) => formData.facilities[key as keyof typeof formData.facilities]
@@ -404,8 +421,6 @@ const HostelEditForm = () => {
         dataToSend.append('facilities', facilitiesArray.join(','));
       }
 
-      // Add new photos if any
-      console.log(formData, 'phoot')
       if (formData.photos && formData.photos.length > 0) {
         formData.photos.forEach((photo) => {
           dataToSend.append('photos', photo);
@@ -414,8 +429,7 @@ const HostelEditForm = () => {
         dataToSend.append('existingPhotos', JSON.stringify(existingPhotos[0]));
       }
 
-
-      const response = await editHostel(id,dataToSend);
+      const response = await editHostel(id, dataToSend);
 
       if (response.data.message === 'Hostel updated successfully') {
         toast.success("Hostel updated successfully");
@@ -452,13 +466,22 @@ const HostelEditForm = () => {
             <MapPin className="w-4 h-4 text-[#31AFEF]" />
             <label htmlFor="location" className="text-sm font-medium">Location</label>
           </div>
-          <input
-            id="location"
-            value={formData.location}
-            onChange={(e) => handleChange('location', e.target.value)}
-            placeholder="Enter location"
-            className={`w-full px-3 py-2 border ${errors.location ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#31AFEF]`}
-          />
+          <div className="relative">
+            <input
+              id="location"
+              value={formData.location}
+              onChange={(e) => handleChange('location', e.target.value)}
+              placeholder="Enter location or click map to select"
+              className={`w-full px-3 py-2 border ${errors.location ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#31AFEF]`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowLocationPicker(!showLocationPicker)}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#31AFEF] hover:text-[#2A9FDF]"
+            >
+              <MapPin className="w-4 h-4" />
+            </button>
+          </div>
           {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
         </div>
 
@@ -576,7 +599,58 @@ const HostelEditForm = () => {
           />
           {errors.advance && <p className="text-red-500 text-xs mt-1">{errors.advance}</p>}
         </div>
+
+        <div className='w-full'>
+          <div className='flex items-center space-x-2 mb-2'>
+            <Info className='w-4 h-4 text-[#31AFEF]' />
+            <label htmlFor='cancellationPolicy' className='text-sm font-medium'>Cancellation Policy</label>
+          </div>
+          <select
+            id='cancellationPolicy'
+            value={formData.cancellationPolicy}
+            onChange={(e) => handleChange('cancellationPolicy', e.target.value)}
+            className={`w-full px-3 py-2 border ${errors.cancellationPolicy ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline focus:ring-2 focus:ring-[#31AFEF] bg-white`}
+          >
+            <option value="" disabled>Selection Cancellation policy</option>
+            <option value="freecancellation">Free Cancellation</option>
+            <option value="no free cancellation">No Free Cancellation</option>
+          </select>
+          {errors.cancellationPolicy && <p className='text-red-500 text-xs mt-1' >{errors.cancellationPolicy}</p>}
+
+        </div>
       </div>
+
+      {/* Location Map Section */}
+      {showLocationPicker && (
+        <div className="w-full mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <MapPin className="w-4 h-4 text-[#31AFEF]" />
+              <label className="text-sm font-medium">Select Location on Map</label>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowLocationPicker(false)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ×
+            </button>
+          </div>
+          <div className="border border-gray-300 rounded-lg overflow-hidden">
+            <LocationPicker
+              onLocationSelect={handleLocationSelect}
+              selectedLocation={formData.location}
+              initialLatitude={formData.latitude}
+              initialLongitude={formData.longitude}
+            />
+          </div>
+          {formData.latitude !== 0 && formData.longitude !== 0 && (
+            <div className="mt-2 text-sm text-gray-600">
+              <p>Current coordinates: {formData.latitude.toFixed(6)}, {formData.longitude.toFixed(6)}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Existing Photos Section */}
       {existingPhotos.length > 0 && (
@@ -607,33 +681,34 @@ const HostelEditForm = () => {
       )}
 
       {/* New Photos Upload Section */}
-      {existingPhotos.length == 0 && <div className="w-full mb-8">
-        <div className="flex items-center space-x-2 mb-2">
-          <Image className="w-4 h-4 text-[#31AFEF]" />
-          <label htmlFor="photos" className="text-sm font-medium">Add New Photos</label>
-        </div>
-        <div className={`border-2 border-dashed ${errors.photos ? 'border-red-500' : 'border-gray-300'} rounded-lg p-4 text-center w-[420px]`}>
-          <input
-            id="photos"
-            type="file"
-            multiple
-            onChange={handleFileChange}
-            className="hidden"
-            accept="image/*"
-          />
-          <label htmlFor="photos" className="cursor-pointer w-full">
-            <div className="space-y-1">
-              <div className="mx-auto w-8 h-8 rounded-full bg-[#31AFEF]/10 flex items-center justify-center">
-                <Image className="w-4 h-4 text-[#31AFEF]" />
+      {existingPhotos.length === 0 && (
+        <div className="w-full mb-8">
+          <div className="flex items-center space-x-2 mb-2">
+            <Image className="w-4 h-4 text-[#31AFEF]" />
+            <label htmlFor="photos" className="text-sm font-medium">Add New Photos</label>
+          </div>
+          <div className={`border-2 border-dashed ${errors.photos ? 'border-red-500' : 'border-gray-300'} rounded-lg p-4 text-center w-[420px]`}>
+            <input
+              id="photos"
+              type="file"
+              multiple
+              onChange={handleFileChange}
+              className="hidden"
+              accept="image/*"
+            />
+            <label htmlFor="photos" className="cursor-pointer w-full">
+              <div className="space-y-1">
+                <div className="mx-auto w-8 h-8 rounded-full bg-[#31AFEF]/10 flex items-center justify-center">
+                  <Image className="w-4 h-4 text-[#31AFEF]" />
+                </div>
+                <div className="text-sm text-gray-600">Click to upload or drag and drop</div>
+                <div className="text-xs text-gray-400">PNG, JPG up to 10MB</div>
               </div>
-              <div className="text-sm text-gray-600">Click to upload or drag and drop</div>
-              <div className="text-xs text-gray-400">PNG, JPG up to 10MB</div>
-            </div>
-          </label>
+            </label>
+          </div>
+          {errors.photos && <p className="text-red-500 text-xs mt-1">{errors.photos}</p>}
         </div>
-        {errors.photos && <p className="text-red-500 text-xs mt-1">{errors.photos}</p>}
-      </div>
-      }
+      )}
 
       {/* Facilities Section */}
       <div className="mb-8">

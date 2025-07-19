@@ -11,6 +11,7 @@ interface MessageData {
   timestamp: number;
   chatId: string
   fileData: string;
+  count:number
 }
 
 export const initializeSocket = (server: HttpServer, chatService: IChatService) => {
@@ -26,8 +27,8 @@ export const initializeSocket = (server: HttpServer, chatService: IChatService) 
   const onlineHosts = new Set<string>();
 
   io.on("connection", (socket: Socket) => {
-    console.log(`User connected: ${socket.id}`);
-    console.log("ONline", onlineUsers)
+    // console.log(`User connected: ${socket.id}`);
+    // console.log("ONline", onlineUsers)
 
     socket.on('userLoggedIn', (userId) => {
       onlineUsers.add(userId);
@@ -167,13 +168,16 @@ export const initializeSocket = (server: HttpServer, chatService: IChatService) 
           console.log("Error: userId is required");
           return
         }
-        console.log('hey daa')
         const oldNotification = await userService.getOldNotification(userId);
-        console.log(oldNotification, 'heeeem')
         socket.emit('receive_old_notifications', oldNotification)
       } catch (error) {
         console.error("Error fetching old notifications:", error);
       }
+    })
+
+    socket.on('mark_all_notification',async({receiverId})=>{
+      const readAll = await userService.markAllRead(receiverId);
+      socket.to(receiverId).emit('marked_all_notifications',{receiverId})
     })
 
     socket.on('initiate_call', ({ callerId, calleeId, callerName, chatId }) => {
@@ -230,8 +234,19 @@ export const initializeSocket = (server: HttpServer, chatService: IChatService) 
       socket.to(chatId).emit('call_cancelled')
     })
 
+    socket.on('video_call_end',async({chatId,senderId,receiverId,content,messageType,timestamp})=>{
+      socket.to(chatId).emit('video_call_ended',{
+        chatId,senderId,receiverId,content,messageType,timestamp
+      })
+    })
+
+    socket.on('count_read',async({chatId,receiverId})=>{
+      const countRead = await chatService.setCountRead(chatId);
+      socket.to(chatId).emit('counted_read',{receiverId})
+    })
+
     socket.on("disconnect", () => {
-      console.log(`User disconnected: ${socket.id}`);
+      // console.log(`User disconnected: ${socket.id}`);
     });
   });
 
