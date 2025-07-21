@@ -6,7 +6,7 @@ import { jwtDecode } from 'jwt-decode';
 import { io } from "socket.io-client";
 import createApiClient from '../../../apis/apiClient';
 const hostApiClient = createApiClient('host');
-const socket = io("http://localhost:4000");
+const socket = io(apiUrl);
 
 
 

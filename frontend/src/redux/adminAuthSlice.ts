@@ -1,7 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
-    isLoggedIn : false,
+    isLoggedIn :localStorage.getItem('adminAccessToken')?true:false,
     accessToken: localStorage.getItem("adminAccessToken") || "",
     refreshToken:localStorage.getItem("adminRefreshToken") || ""
 }

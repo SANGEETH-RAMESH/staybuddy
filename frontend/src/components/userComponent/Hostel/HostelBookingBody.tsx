@@ -6,7 +6,8 @@ import { toast } from 'react-toastify';
 import { Notification } from '../../../interface/Notification';
 import { io } from "socket.io-client";
 import { getSingleHostel, getUserDetails, getWalletDetails, payment, createBooking } from '../../../services/userServices';
-const socket = io("http://localhost:4000");
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const socket = io(apiUrl);
 import { RazorpayResponse, ValidationErrors } from '../../../interface/RazorpayOptions';
 import { RazorpayOptions } from '../../../interface/RazorpayOptions';
 

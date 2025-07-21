@@ -8,7 +8,8 @@ import { Notification } from '../../interface/Notification';
 import logo from '../../assets/logo.png'
 import { formatDistanceToNow } from 'date-fns';
 import { io } from "socket.io-client";
-const socket = io("http://localhost:4000");
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const socket = io(`${apiUrl}`);
 
 interface AdminHeaderProps {
   onMenuClick: () => void;

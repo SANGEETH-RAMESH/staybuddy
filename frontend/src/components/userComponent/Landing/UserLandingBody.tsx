@@ -7,7 +7,8 @@ import landing_1 from '../../../assets/landing_1.jpg'
 
 import { jwtDecode } from 'jwt-decode';
 import { io } from "socket.io-client";
-const socket = io("http://localhost:4000");
+const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const socket = io(apiUrl);
 import {Hostel} from '../../../interface/Hostel'
 import { getAllHostel } from '../../../services/userServices';
 
