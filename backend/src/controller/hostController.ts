@@ -272,7 +272,7 @@ class hostController {
             const hostData = { name: host?.displayName, email: host?.email };
             const response = await this.hostService.hostGoogleSignUp(hostData);
             if (typeof response !== 'string' && response?.message === 'Success') {
-                res.redirect(`http://localhost:5173/host/home/?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}`)
+                res.redirect(`${process.env.FRONTEND_URL}/host/home/?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}`)
             } else {
 
                 res.json({ message: response });
