@@ -199,7 +199,7 @@ const UserLoginBody = () => {
 
                             {/* Google Sign In */}
                             <a
-                                href={`${apiUrl}/auth/google`}
+                                href={`${apiUrl}/user/auth/google`}
                                 className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                             >
                                 <svg className="w-4 h-4" viewBox="0 0 24 24">
