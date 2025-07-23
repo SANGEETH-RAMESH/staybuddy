@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
-import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { loginSuccess } from '../../../redux/userAuthSlice';
 import { LoginValues } from '../../../interface/Login';
+import { loginUrl } from '../../../services/userServices';
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
+
 
 // interface LoginValues {
 //     email: string;
@@ -43,8 +44,7 @@ const UserLoginBody = () => {
 
         try {
             console.log(import.meta.env);
-            console.log(apiUrl, 'api')
-            const response = await axios.post(`${apiUrl}/user/auth/login`, { ...formValues });
+            const response = await loginUrl({...formValues})
             console.log(response.data.message, 'response');
 
             const { message, accessToken, refreshToken,role } = response.data.message;
@@ -74,7 +74,7 @@ const UserLoginBody = () => {
                     isLoggedIn: true
                 }));
                 toast.success("Login Successful", { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
-                navigate('/user/home');
+                navigate('/');
             } else {
                 toast.error("Unexpected error occurred", { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
             }
@@ -116,7 +116,7 @@ const UserLoginBody = () => {
                         <h2 className="text-2xl font-bold mb-2">Welcome Back!</h2>
                         <p className="text-sm text-center mb-4 text-white/90">Find your perfect stay with StayBuddy</p>
                         <button
-                            onClick={() => navigate('/user/signup')}
+                            onClick={() => navigate('/signup')}
                             className="px-6 py-2 border-2 border-white rounded-full text-sm font-semibold hover:bg-white hover:text-blue-600 transition-all duration-300"
                         >
                             Create Account
@@ -173,7 +173,7 @@ const UserLoginBody = () => {
                             </div>
 
                             <div className="flex justify-end">
-                                <a href="/user/forgotpassword" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                                <a href="/forgotpassword" className="text-xs text-blue-600 hover:text-blue-700 font-medium">
                                     Forgot Password?
                                 </a>
                             </div>
@@ -199,7 +199,7 @@ const UserLoginBody = () => {
 
                             {/* Google Sign In */}
                             <a
-                                href="http://localhost:4000/user/auth/google"
+                                href={`${apiUrl}/auth/google`}
                                 className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                             >
                                 <svg className="w-4 h-4" viewBox="0 0 24 24">

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import exclamation_mark from '../../../assets/danger.png';
 import emailIcon from '../../../assets/email.png';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { forgotPasswordValues } from '../../../interface/forgotPassword';
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import { forgotPassword } from '../../../services/hostServices';
+
 
 const HostForgotPasswordBody = () => {
     const [emailInput, setEmailInput] = useState('');
@@ -16,8 +16,7 @@ const HostForgotPasswordBody = () => {
         e.preventDefault();
 
         try {
-            const response = await axios.post(`${apiUrl}/host/forgotpassword`, { email: emailInput });
-            console.log("Res",response.data.message)
+            const response = await forgotPassword({email:emailInput})
             if (response.data.message === 'Host found') {
                 navigate('/host/forgotpasswordotp', { state: { email:emailInput } });
             } else if (response.data.message === 'Host not found') {

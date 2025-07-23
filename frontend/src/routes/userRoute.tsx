@@ -33,7 +33,7 @@ const UserRoute = () => {
         <Route path='/signup' element={<UserProtectiveCheck element={<UserSignUp/> }/>} />
         <Route path='/forgotpassword' element={<UserProtectiveCheck element={<UserForgotPassword/>}/>} />
         <Route path='/forgotpasswordotp' element={<UserProtectiveCheck element={<OtpUserForgotPasswordPage/>}/>} />
-        <Route path='/home' element={<UserLoginProtector element={<UserLandingPage/>}/>} />
+        <Route path='/' element={<UserLoginProtector element={<UserLandingPage/>}/>} />
         <Route path='/otp' element={<UserProtectiveCheck element={<OtpSignUpPage/>} />}/>
         <Route path='/resetpassword' element={<UserProtectiveCheck element={<UserResetPasswordPage/>}/>} />
         <Route path='/profile'  element={<UserLoginProtector element={<UserProfilePage/>}/>} />

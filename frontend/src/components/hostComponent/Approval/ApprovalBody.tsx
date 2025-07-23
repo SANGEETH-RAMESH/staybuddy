@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { AlertCircle, Mail, Clock, ArrowRight, Upload, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
-
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Host } from '../../../interface/Host';
 import { Notification } from '../../../interface/Notification';
-import { io } from "socket.io-client";
 import { getAdmin, getHost, submitHostApproval } from '../../../services/hostServices';
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
-const socket = io(apiUrl);
+import { socket } from '../../../utils/socket';
+
 
 
 const ApprovalBody = () => {

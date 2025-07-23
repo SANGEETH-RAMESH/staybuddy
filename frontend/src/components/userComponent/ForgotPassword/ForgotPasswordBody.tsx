@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import exclamation_mark from '../../../assets/danger.png';
 import email from '../../../assets/email.png';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { forgotPasswordValues } from '../../../interface/forgotPassword';
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import { forgotPassword } from '../../../services/userServices';
 
 
 
@@ -18,20 +17,16 @@ const ForgotPasswordBody = () => {
 
     const handleSubmit = async (e:React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        // setErrors('');
+        
         setIsSubmitting(true);
 
         try {
-            // Validate email using Yup
-            // await validationSchema.validate({ email: emailValue });
-
-            // Send API request
-            const response = await axios.post(`${apiUrl}/user/auth/forgot-password`, {
-                email: emailValue,
-            });
+            
+          
+            const response = await forgotPassword({email:emailValue})
 
             if (response.data.message === 'User found') {
-                navigate('/user/forgotpasswordotp', {
+                navigate('/forgotpasswordotp', {
                     state: { email: emailValue },
                 });
             } else if (response.data.message === 'User not found') {
@@ -119,7 +114,7 @@ const ForgotPasswordBody = () => {
                 </form>
 
                 <div className="text-center mt-4">
-                    <a href="/user/login" className="text-[#ACABAB] hover:underline">
+                    <a href="/login" className="text-[#ACABAB] hover:underline">
                         Back to Login
                     </a>
                 </div>

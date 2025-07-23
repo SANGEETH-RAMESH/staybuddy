@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
 import { Send, Search, Plus, Paperclip, Image, X, Clock, Video, ArrowLeft } from 'lucide-react';
 import dummy_profile from '../../../assets/dummy profile.png';
 import { useLocation } from 'react-router-dom';
 import VideoCall from '../../commonComponents/VideoCall'
 import { createChat, getAllHosts, getChat } from '../../../services/userServices';
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
-
+import { socket } from '../../../utils/socket';
 
 interface Message {
   chatId: string;
@@ -62,7 +60,7 @@ interface Chat {
   receiverId: string;
 }
 
-const socket: Socket = io(`${apiUrl}`);
+
 
 const ChatApplication: React.FC = () => {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);

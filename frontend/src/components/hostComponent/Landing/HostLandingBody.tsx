@@ -1,13 +1,9 @@
 import  { useEffect } from 'react';
 import host_landing from '../../../assets/seller1.webp';
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-import { io } from "socket.io-client";
-import createApiClient from '../../../apis/apiClient';
-const hostApiClient = createApiClient('host');
-const socket = io(apiUrl);
-
+import { socket } from '../../../utils/socket';
+import { addProperty } from '../../../services/hostServices';
 
 
 interface CustomJwtPayload {
@@ -19,10 +15,8 @@ const HostLandingBody = () => {
   const navigate = useNavigate();
 
   const handleAddNewProperty = async() =>{
-    const response = await hostApiClient.get(`${apiUrl}/host/newHost`)
-    console.log(response)
+    const response = await addProperty()
     if(response.data.message=='Not containing' || response.data.message == 'Host ID not found'){
-      console.log("hello")
       navigate('/host/approval')
     }else if(response.data.message == "Containing"){
       navigate('/host/addhostel')

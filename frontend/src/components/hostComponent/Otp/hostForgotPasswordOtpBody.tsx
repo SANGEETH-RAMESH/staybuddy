@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import OTPInput from "react-otp-input";
-import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { toast } from "react-toastify";
 import { OtpValues } from "../../../interface/Otp";
+import { resendOtp, verifyForgotPasswordOtp } from "../../../services/hostServices";
 
 const HostForgotPasswordOtpBody = () => {
   const [otp, setOtp] = useState("");
@@ -37,10 +36,7 @@ const HostForgotPasswordOtpBody = () => {
     // if (otp.length === 4) {
       setLoading(true);
       try {
-        const response = await axios.post(
-          `${apiUrl}/host/verifyforgotpasswordotp`,
-          { email, otp: numericOtp }
-        );
+        const response = await verifyForgotPasswordOtp({email,otp:numericOtp})
         if (response.data.message === "success") {
           toast.success("OTP verified successfully!");
           navigate("/host/resetpassword", { state: { email } });
@@ -80,20 +76,14 @@ const HostForgotPasswordOtpBody = () => {
       } finally {
         setLoading(false);
       }
-    // } else {
-    //   alert("Please enter a valid 4-digit OTP.");
-    // }
   };
 
   const handleResendOtp = async () => {
     setCanResend(false);
     setTimer(59);
-    console.log(email,'emaill')
+
     try {
-      const response = await axios.post(
-        "http://localhost:4000/host/resendOtp",
-        { email }
-      );
+      const response = await resendOtp({email})
       console.log(response)
       toast.success("OTP resent successfully!");
     } catch (error) {

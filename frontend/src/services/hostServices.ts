@@ -1,3 +1,4 @@
+import axios from "axios";
 import createApiClient from "../apis/apiClient";
 const hostApiClient = createApiClient('host');
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
@@ -70,3 +71,45 @@ export const deposit = (depositAmount:number) => hostApiClient.post(`${apiUrl}/w
 export const withdrew = (amount:string) => hostApiClient.post(`${apiUrl}/wallet/withdraw`, { amount });
 
 export const status = (data:{id:string,isActive:boolean,inactiveReason? :string}) => hostApiClient.patch(`${apiUrl}/hostel/host/status`,data);
+
+
+export const signUpOtp = ({ email, otp }: { email: string; otp: number }) => axios.post(`${apiUrl}/host/verifyotp`, {
+        email,
+        otp
+      });
+
+export const addProperty = () => hostApiClient.get(`${apiUrl}/host/newHost`)
+
+export const loginUrl = (formValues:{email:string,password:string}) => axios.post(`${apiUrl}/host/auth/login`,formValues)
+
+export const verifyForgotPasswordOtp =  ({ email, otp }: { email: string; otp: number }) => axios.post(
+          `${apiUrl}/host/verifyforgotpasswordotp`,
+          { email, otp }
+        );
+
+// export const resendOtp = (email:string) => axios.post(
+//         "http://localhost:4000/host/resendOtp",
+//         { email }
+//       );
+
+export const forgotPassword = ({ email }: { email: string }) => axios.post(`${apiUrl}/host/forgotpassword`, { email });
+
+export const resendOtp = ({email,name,mobile,password,}: {email: string;name?: string;mobile?: string;password?: string;}) =>
+  axios.post(`${apiUrl}/host/resendotp`, {
+    email,
+    ...(name && { name }),
+    ...(mobile && { mobile }),
+    ...(password && { password }),
+  });
+
+export const verifyOtp = (email:string,otp:number) => axios.post(`${apiUrl}/host/verifyotp`, {
+        email,
+        otp
+      });
+
+export const resetPassword = (email:string,password:string,confirmPassword:string) => axios.post(
+          `${apiUrl}/host/resetPassword`,
+          { email, password, confirmPassword }
+        );
+
+export const signUp = (formValues: { name: string; email: string; password: string; mobile?: string }) => axios.post(`${apiUrl}/host/signup`, formValues );

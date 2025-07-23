@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { loginSuccess } from '../../../redux/adminAuthSlice';
 import { useDispatch } from 'react-redux';
-import axios from 'axios';
 import logo from '../../../assets/logo.png'
 import { LoginValues } from '../../../interface/Login';
 import { useState } from 'react';
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import { loginUrl } from '../../../services/adminServices';
+
 
 const AdminLoginBody = () => {
 
@@ -35,13 +35,7 @@ const AdminLoginBody = () => {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
-      console.log(formValues.email,formValues.password,'email')
-      const res = await axios.post(`${apiUrl}/admin/login`, {
-        email: formValues.email,
-        password: formValues.password
-      });
-      console.log(res.data.data, 'responseeeee');
-
+      const res = await loginUrl({email:formValues.email,password:formValues.password})
       if (res.data.data === 'Invalid Password') {
         setErrors((prev) => ({
           ...prev,

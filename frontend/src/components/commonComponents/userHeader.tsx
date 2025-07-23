@@ -3,13 +3,12 @@ import { Menu, X, Heart, MessageCircle, Bell, User, LogOut } from 'lucide-react'
 import { useDispatch } from 'react-redux';
 import { logout } from '../../redux/userAuthSlice';
 import { useNavigate } from 'react-router-dom';
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { Notification } from '../../interface/Notification';
 import { formatDistanceToNow } from 'date-fns';
-import { io } from "socket.io-client";
+import { socket } from '../../utils/socket';
 import { getUserDetails } from '../../services/userServices';
 import logo from '../../assets/logo.png'
-const socket = io(`${apiUrl}`);
+
 
 export const UserHeader: React.FC = () => {
   const dispatch = useDispatch();
@@ -23,7 +22,7 @@ export const UserHeader: React.FC = () => {
   const handleLogout = () => {
     dispatch(logout({ isLoggedIn: false }));
     handleSocket()
-    navigate('/user/login');
+    navigate('/login');
   };
 
   const handleSocket = () => {
@@ -143,7 +142,7 @@ export const UserHeader: React.FC = () => {
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <button
-              onClick={() => navigate('/user/home')}
+              onClick={() => navigate('/')}
               className="flex items-center gap-x-2 text-xl font-bold bg-gradient-to-r from-[#31AFEF] to-[#2196F3] bg-clip-text text-transparent"
             >
               <img src={logo} alt="Logo" className="h-16 w-16" />
@@ -243,19 +242,19 @@ export const UserHeader: React.FC = () => {
               </div>
 
               <button
-                onClick={() => navigate(`/user/wishlist/${userId}`)}
+                onClick={() => navigate(`/wishlist/${userId}`)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
                 <Heart className="w-6 h-6 text-gray-600" />
               </button>
 
               <button
-                onClick={() => navigate(`/user/chat/${userId}`)}
+                onClick={() => navigate(`/chat/${userId}`)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
                 <MessageCircle className="w-6 h-6 text-gray-600" />
               </button>
 
               <button
-                onClick={() => navigate('/user/profile')}
+                onClick={() => navigate('/profile')}
                 className="flex items-center space-x-3 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors duration-200"
               >
                 <div className="w-8 h-8 rounded-full border-2 border-[#31AFEF] p-0.5">
@@ -309,7 +308,7 @@ export const UserHeader: React.FC = () => {
             </button>
 
             <button
-              onClick={() => navigate(`/user/wishlist/${userId}`)}
+              onClick={() => navigate(`/wishlist/${userId}`)}
               className="flex items-center w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200">
               <Heart className="w-5 h-5 mr-3" />
               <span className="text-sm font-medium">Wishlist</span>
@@ -318,7 +317,7 @@ export const UserHeader: React.FC = () => {
             <button
               onClick={() => {
                 console.log(userId, 'Userid')
-                navigate(`/user/chat/${userId}`)
+                navigate(`/chat/${userId}`)
               }}
               className="flex items-center w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200">
               <MessageCircle className="w-5 h-5 mr-3" />
@@ -326,7 +325,7 @@ export const UserHeader: React.FC = () => {
             </button>
 
             <button
-              onClick={() => navigate('/user/profile')}
+              onClick={() => navigate('/profile')}
               className="flex items-center w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200"
             >
               <User className="w-5 h-5 mr-3" />

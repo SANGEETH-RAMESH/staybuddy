@@ -33,7 +33,7 @@ const UserProfileBody = () => {
   }, []);
 
   const navigateToSavedBooking = () => {
-    navigate(`/user/savedbookings/${id}`)
+    navigate(`/savedbookings/${id}`)
   }
 
   return (
@@ -112,7 +112,7 @@ const UserProfileBody = () => {
               cursor: 'pointer',
               transition: 'transform 0.2s',
             }}
-            onClick={() => navigate('/user/changepassword')}
+            onClick={() => navigate('/changepassword')}
             onMouseOver={(e) =>
               (e.currentTarget.style.transform = 'translateY(-5px)')
             }
@@ -136,7 +136,7 @@ const UserProfileBody = () => {
               cursor: 'pointer',
               transition: 'transform 0.2s',
             }}
-            onClick={() => navigate('/user/editprofile')}
+            onClick={() => navigate('/editprofile')}
             onMouseOver={(e) =>
               (e.currentTarget.style.transform = 'translateY(-5px)')
             }
@@ -185,7 +185,7 @@ const UserProfileBody = () => {
               cursor: 'pointer',
               transition: 'transform 0.2s',
             }}
-            onClick={() => navigate('/user/wallet')}
+            onClick={() => navigate('/wallet')}
             onMouseOver={(e) =>
               (e.currentTarget.style.transform = 'translateY(-5px)')
             }

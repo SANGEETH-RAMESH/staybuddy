@@ -1,27 +1,94 @@
 import React, { useEffect, useState } from 'react';
-import { Wifi, RefreshCw, ArrowLeft, Search, Home, UtensilsCrossed, Shirt, MapPin, Star, Users, Phone, Heart, ChevronLeft, ChevronRight, X, ChevronDown } from 'lucide-react';
+import { Wifi, RefreshCw, ArrowLeft, Filter, Search, Home, UtensilsCrossed, Shirt, MapPin, Star, Users, Phone, Heart, ChevronLeft, ChevronRight, X, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { addToWishlist, checkWishlists, removeFromWishlist, getHostels } from '../../../services/userServices';
 import LocationPicker from '../../commonComponents/locationPicker';
-// import { CurrentLocation } from 'lucide-react';
-// import FilterSort from '../../commonComponents/FilterSort';
 import { Hostel } from '../../../interface/Hostel';
 import { SearchBarProps } from '../../../interface/Search';
 import { FacilityBadgeProps } from '../../../interface/FacilityBadgeProps';
 import { FilterState } from '../../../interface/FilterState';
 import { PaginationProps } from '../../../interface/PaginationProps';
 import { Facilities } from '../../../interface/Facilities';
+import FilterComponent from '../../commonComponents/FilterComponent';
 
 interface HostelCardProps {
   hostel: Hostel;
 }
 
+interface FilterModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  filters: FilterState;
+  onRatingChange: (rating: number) => void;
+  onFacilityChange: (facility: keyof FilterState['facilities']) => void;
+  onPriceChange: (type: 'min' | 'max', value: number) => void;
+  onClearAllFilters: () => void;
+  hasActiveFilters: () => boolean;
+}
+
+
+const FilterModal: React.FC<FilterModalProps> = ({
+  isOpen,
+  onClose,
+  filters,
+  onRatingChange,
+  onFacilityChange,
+  onPriceChange,
+  onClearAllFilters,
+  hasActiveFilters
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 lg:hidden">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        onClick={onClose}
+      />
+
+      {/* Modal */}
+      <div className="fixed inset-y-0 right-0 max-w-sm w-full bg-white shadow-xl">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4">
+          <FilterComponent
+            filters={filters}
+            onRatingChange={onRatingChange}
+            onFacilityChange={onFacilityChange}
+            onPriceChange={onPriceChange}
+            onClearAllFilters={onClearAllFilters}
+            hasActiveFilters={hasActiveFilters}
+          />
+        </div>
+
+        {/* Apply Button */}
+        <div className="p-4 border-t">
+          <button
+            onClick={onClose}
+            className="w-full bg-blue-600 text-white py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+          >
+            Apply Filters
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const SearchBar: React.FC<SearchBarProps> = ({ searchTerm, onSearchChange, totalResults, isSearching }) => {
   return (
     <div className="mb-4 flex justify-end">
-      <div className="relative w-80"> {/* Made smaller width */}
+      <div className="relative w-full sm:w-80 max-w-md">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <input
@@ -102,48 +169,52 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-center space-x-2 mt-8">
+    <div className="flex items-center justify-center space-x-1 sm:space-x-2 mt-6 sm:mt-8 px-2">
       {/* Previous Button */}
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className={`flex items-center px-3 py-2 rounded-lg border transition-all duration-200 ${currentPage === 1
-          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-          : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'
+        className={`flex items-center px-2 sm:px-3 py-2 rounded-lg border transition-all duration-200 text-xs sm:text-sm 
+          ${currentPage === 1
+            ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+            : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'
           }`}
       >
-        <ChevronLeft size={16} className="mr-1" />
-        Prev
+        <ChevronLeft size={14} className="mr-1" />
+        <span className="hidden sm:inline">Prev</span>
       </button>
 
-      {generatePageNumbers().map((page, index) => (
-        <React.Fragment key={index}>
-          {page === '...' ? (
-            <span className="px-3 py-2 text-gray-500">...</span>
-          ) : (
-            <button
-              onClick={() => onPageChange(page as number)}
-              className={`px-3 py-2 rounded-lg border transition-all duration-200 min-w-[40px] ${currentPage === page
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'
-                }`}
-            >
-              {page}
-            </button>
-          )}
-        </React.Fragment>
-      ))}
+      <div className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto max-w-[200px] sm:max-w-none">
+        {generatePageNumbers().map((page, index) => (
+          <React.Fragment key={index}>
+            {page === '...' ? (
+              <span className="px-2 sm:px-3 py-2 text-gray-500 text-xs sm:text-sm">...</span>
+            ) : (
+              <button
+                onClick={() => onPageChange(page as number)}
+                className={`px-2 sm:px-3 py-2 rounded-lg border transition-all duration-200 min-w-[32px] sm:min-w-[40px] text-xs sm:text-sm 
+                  ${currentPage === page
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'
+                  }`}
+              >
+                {page}
+              </button>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
 
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className={`flex items-center px-3 py-2 rounded-lg border transition-all duration-200 ${currentPage === totalPages
+        className={`flex items-center px-2 sm:px-3 py-2 rounded-lg border transition-all duration-200 text-xs sm:text-sm ${currentPage === totalPages
           ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
           : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-600'
           }`}
       >
-        Next
-        <ChevronRight size={16} className="ml-1" />
+        <span className="hidden sm:inline">Next</span>
+        <ChevronRight size={14} className="ml-1" />
       </button>
     </div>
   );
@@ -172,7 +243,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    navigate(`/user/singlehostel/${hostel._id}`);
+    navigate(`/singlehostel/${hostel._id}`);
   };
 
   const checkWishlist = async ({ hostelId }: { hostelId: string }, e: React.MouseEvent<HTMLButtonElement>) => {
@@ -241,23 +312,23 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
   };
 
   const facilitiesList = Array.isArray(hostel.facilities)
-  ? hostel.facilities
-  : typeof hostel.facilities === "string"
-  ? hostel.facilities.split(",").map(f => f.trim().toLowerCase())
-  : [];
+    ? hostel.facilities
+    : typeof hostel.facilities === "string"
+      ? hostel.facilities.split(",").map(f => f.trim().toLowerCase())
+      : [];
 
   const hasFacility = (name: string) => facilitiesList.includes(name.toLowerCase());
 
   return (
     <div
       onClick={handleClick}
-      className="w-full max-w-sm bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer"
+      className="w-full bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer"
     >
       <div className="relative">
         <img
           src={hostel.photos || "/api/placeholder/400/250"}
           alt={hostel.hostelname}
-          className="w-full h-48 object-cover rounded-t-lg"
+          className="w-full h-40 sm:h-48 object-cover rounded-t-lg"
         />
         <button
           onClick={(e) => checkWishlist({ hostelId: hostel._id }, e)}
@@ -274,9 +345,11 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
         </div>
       </div>
 
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <div className="flex justify-between items-start mb-2">
-          <h3 className="text-lg font-semibold text-gray-800">{hostel.hostelname}</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-800 line-clamp-1">
+            {hostel.hostelname}
+          </h3>
           <div className="flex items-center">
             <Star size={16} className="text-yellow-400 fill-yellow-400" />
             <span className="ml-1 text-sm font-medium text-gray-600">
@@ -285,9 +358,9 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
           </div>
         </div>
 
-        <div className="flex items-center text-gray-600 text-sm mb-3">
-          <MapPin size={16} className="mr-1" />
-          <span>{hostel.address}</span>
+        <div className="flex items-center text-gray-600 text-xs sm:text-sm mb-3">
+          <MapPin size={14} className="mr-1 flex-shrink-0" />
+          <span className="line-clamp-1">{hostel.address}</span>
         </div>
 
         <div className="mb-3">
@@ -354,9 +427,9 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1 sm:gap-2">
           <FacilityBadge
-            icon={<Wifi size={14} />}
+            icon={<Wifi size={12} />}
             label="WiFi"
             available={
               hostel.facilities
@@ -408,26 +481,26 @@ const EmptyState = ({ isSearching, searchTerm }: { isSearching?: boolean; search
   const navigate = useNavigate();
   console.log(isSearching, 'dfs')
   return (
-    <div className="col-span-full flex flex-col items-center justify-center min-h-[400px] p-8">
-      {/* Animated Illustration Container */}
-      <div className="relative mb-8">
+    <div className="col-span-full flex flex-col items-center justify-center min-h-[300px] sm:min-h-[400px] p-4 sm:p-8"> {/* Responsive height and padding */}
+
+      <div className="relative mb-6 sm:mb-8">
         <div className="absolute inset-0 bg-blue-100 rounded-full animate-pulse" />
-        <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 p-8 rounded-full">
+        <div className="relative bg-gradient-to-br from-blue-50 to-blue-100 p-6 sm:p-8 rounded-full">
           <div className="relative animate-bounce">
-            <Home className="w-16 h-16 text-blue-500" />
+            <Home className="w-12 h-12 sm:w-16 sm:h-16 text-blue-500" />
             <div className="absolute -top-1 -right-1">
-              <Search className="w-6 h-6 text-blue-700 animate-ping" />
+              <Search className="w-4 h-4 sm:w-6 sm:h-6 text-blue-700 animate-ping" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Text Content */}
-      <div className="text-center max-w-md mb-8">
-        <h3 className="text-2xl font-bold text-gray-900 mb-3 animate-fade-in">
+      <div className="text-center max-w-sm sm:max-w-md mb-6 sm:mb-8 px-4">
+        <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3 animate-fade-in">
           {searchTerm ? 'No Matching Hostels' : 'No Hostels Found'}
         </h3>
-        <p className="text-gray-600 leading-relaxed">
+        <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
           {searchTerm
             ? `We couldn't find any hostels matching "${searchTerm}". Try adjusting your search terms or browse all available hostels.`
             : "We couldn't find any hostels at the moment. Don't worry - new listings are added frequently. Try refreshing or head back to explore other options."
@@ -436,22 +509,23 @@ const EmptyState = ({ isSearching, searchTerm }: { isSearching?: boolean; search
       </div>
 
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full max-w-sm">
         <button
-          onClick={() => navigate('/user/home')}
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg"
+          onClick={() => navigate('/home')}
+          className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg text-sm sm:text-base"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           Back to Home
         </button>
         <button
           onClick={() => window.location.reload()}
-          className="flex items-center justify-center gap-2 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:-translate-y-0.5"
+          className="flex items-center justify-center gap-2 px-4 sm:px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 transform hover:-translate-y-0.5 text-sm sm:text-base"
         >
-          <RefreshCw className="w-5 h-5" />
+          <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5" />
           Refresh Page
         </button>
       </div>
+
 
       {/* Suggested Actions */}
       <div className="mt-8 text-sm text-gray-500 space-y-2">
@@ -517,6 +591,7 @@ const HostelCardGrid: React.FC = () => {
   const [selectedLng, setSelectedLng] = useState<number>(0);
   const [useCurrentLocation, setUseCurrentLocation] = useState<boolean>(false);
   const [currentLocationLoading, setCurrentLocationLoading] = useState<boolean>(false);
+  const [showFilterModal, setShowFilterModal] = useState<boolean>(false);
   const [filters, setFilters] = useState<FilterState>({
     rating: 0,
     facilities: {
@@ -596,13 +671,13 @@ const HostelCardGrid: React.FC = () => {
   const LocationFilter = () => {
     return (
       <div className="mb-6">
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-4">
           <h3 className="text-lg font-semibold text-gray-800">Filter by Location</h3>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               onClick={getCurrentLocation}
               disabled={currentLocationLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
             >
               {currentLocationLoading ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -919,15 +994,17 @@ const HostelCardGrid: React.FC = () => {
 
 
 
+
+
   return (
-    <div className="bg-gray-50 min-h-screen py-12 pt-20">
-      <div className="container mx-auto px-4 max-w-[90%]">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">
+    <div className="bg-gray-50 min-h-screen py-8 sm:py-12 pt-16 sm:pt-20">
+      <div className="container mx-auto px-4 max-w-[95%] sm:max-w-[90%]">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8 gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
             {searchTerm ? 'Search Results' : 'View Perfect Hostel'}
           </h1>
           {totalHostels > 0 && (
-            <div className="text-sm text-gray-600">
+            <div className="text-xs sm:text-sm text-gray-600">
               Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, totalHostels)} of {totalHostels} hostels
             </div>
           )}
@@ -942,10 +1019,26 @@ const HostelCardGrid: React.FC = () => {
 
         <LocationFilter />
 
-        <div className="flex gap-4">
-          <div className="w-64 bg-white rounded-lg shadow-md p-4 h-fit">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+          <div className="lg:hidden mb-4">
+            <button
+              onClick={() => setShowFilterModal(true)}
+              className="flex items-center justify-center gap-2 w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+            >
+              <Filter className="w-5 h-5" />
+              <span className="font-medium">Filters</span>
+              {hasActiveFilters() && (
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              )}
+            </button>
+          </div>
+
+          {/* Desktop Filters Sidebar - Hidden on mobile */}
+          <div className="hidden lg:block w-full lg:w-64 bg-white rounded-lg shadow-md p-4 h-fit order-2 lg:order-1">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
+              <h2 className="text-base sm:text-lg font-semibold text-gray-800">
+                Filters
+              </h2>
               {hasActiveFilters() && (
                 <button
                   onClick={clearAllFilters}
@@ -957,6 +1050,7 @@ const HostelCardGrid: React.FC = () => {
               )}
             </div>
 
+            {/* Rating Filter */}
             <div className="mb-4">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Rating</h3>
               <div className="space-y-2">
@@ -980,12 +1074,12 @@ const HostelCardGrid: React.FC = () => {
                         />
                       ))}
                     </div>
-                    {/* <span className="text-sm text-gray-600">& above</span> */}
                   </button>
                 ))}
               </div>
             </div>
 
+            {/* Facilities Filter */}
             <div className="mb-4">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Facilities</h3>
               <div className="space-y-2">
@@ -1028,6 +1122,7 @@ const HostelCardGrid: React.FC = () => {
               </div>
             </div>
 
+            {/* Price Range Filter */}
             <div className="mb-4">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Price Range</h3>
               <div className="space-y-4">
@@ -1063,7 +1158,7 @@ const HostelCardGrid: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1">
+          <div className="flex-1 order-1 lg:order-2">
             {loading && !isSearching ? (
               // Loader UI
               <div className="mb-4 flex items-center justify-center h-40">
@@ -1073,19 +1168,19 @@ const HostelCardGrid: React.FC = () => {
                 </div>
               </div>
             ) : (
-              // Actual UI when not loading
+
               <>
-                <div className="mb-4 flex items-center justify-between">
-                  <div className="text-sm text-gray-600">
+                <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+                  <div className="text-xs sm:text-sm text-gray-600">
                     {totalHostels > 0 && `${totalHostels} results found`}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-600">Sort by:</span>
+                    <span className="text-xs sm:text-sm text-gray-600">Sort by:</span>
                     <div className="relative">
                       <select
                         value={sortOption}
                         onChange={(e) => handleSortChange(e.target.value)}
-                        className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm focus:border-blue-500 focus:outline-none cursor-pointer"
+                        className="appearance-none bg-white border border-gray-300 rounded-lg px-3 sm:px-4 py-2 pr-6 sm:pr-8 text-xs sm:text-sm focus:border-blue-500 focus:outline-none cursor-pointer"
                       >
                         {sortOptions.map((option) => (
                           <option key={option.value} value={option.value}>
@@ -1098,7 +1193,7 @@ const HostelCardGrid: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                   {hostels.length > 0 ? (
                     hostels.map((hostel, index) => (
                       <HostelCard key={index} hostel={hostel} />
@@ -1121,6 +1216,19 @@ const HostelCardGrid: React.FC = () => {
             )}
           </div>
         </div>
+
+        {showFilterModal && (
+          <FilterModal
+            isOpen={showFilterModal}
+            onClose={() => setShowFilterModal(false)}
+            filters={filters}
+            onRatingChange={handleRatingChange}
+            onFacilityChange={handleFacilityChange}
+            onPriceChange={handlePriceChange}
+            onClearAllFilters={clearAllFilters}
+            hasActiveFilters={hasActiveFilters}
+          />
+        )}
       </div>
     </div>
   );

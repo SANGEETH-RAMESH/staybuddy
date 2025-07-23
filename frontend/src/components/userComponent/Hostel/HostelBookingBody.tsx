@@ -1,13 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Wallet, CreditCard, AlertCircle, AlertTriangle } from 'lucide-react';
-
+import { Wallet, CreditCard, AlertCircle, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Notification } from '../../../interface/Notification';
-import { io } from "socket.io-client";
 import { getSingleHostel, getUserDetails, getWalletDetails, payment, createBooking } from '../../../services/userServices';
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
-const socket = io(apiUrl);
+import { socket } from '../../../utils/socket';
 import { RazorpayResponse, ValidationErrors } from '../../../interface/RazorpayOptions';
 import { RazorpayOptions } from '../../../interface/RazorpayOptions';
 
@@ -18,7 +15,7 @@ declare class Razorpay {
 }
 
 
-const calculateMonthsDifference = (startDate:string, endDate:string) => {
+const calculateMonthsDifference = (startDate: string, endDate: string) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
 
@@ -316,7 +313,7 @@ const BookingForm = () => {
         socket.emit('send_notification', newNotification)
         toast.success('Hostel Booked Successfully');
 
-        navigate('/user/hostel');
+        navigate('/hostel');
       } else {
         toast.error('Booking failed');
       }
@@ -436,7 +433,7 @@ const BookingForm = () => {
         socket.emit('send_notification', newNotification)
         socket.emit('send_notification', hostNotification)
         toast.success('Hostel Booked Successfully');
-        navigate('/user/hostel');
+        navigate('/hostel');
       } else {
         toast.error('Booking failed');
       }
@@ -458,9 +455,21 @@ const BookingForm = () => {
     return null;
   };
 
+  const handleGoBack = () => {
+    navigate(`/singlehostel/${id}`)
+  }
+
   return (
     <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
+      <button
+        onClick={handleGoBack}
+        className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-3 transition-colors"
+      >
+        <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+        <span className="text-sm sm:text-base font-medium">Back</span>
+      </button>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
         {/* Left Column */}
         <div className="space-y-4">
           <div>

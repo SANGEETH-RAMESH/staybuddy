@@ -5,10 +5,8 @@ import toast from 'react-hot-toast';
 import { Host } from '../../../interface/Host'
 import { Hostel } from '../../../interface/Hostel';
 import { Notification } from '../../../interface/Notification';
-import { io } from "socket.io-client";
 import { approveHost, getHostHostelData, getUserDetails, rejectHost } from '../../../services/adminServices';
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
-const socket = io(apiUrl);
+import { socket } from '../../../utils/socket';
 
 
 

@@ -4,11 +4,8 @@ import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../../../redux/userAuthSlice';
 import { ArrowRight, Shield, Zap, Users, MapPin } from 'lucide-react';
 import landing_1 from '../../../assets/landing_1.jpg'
-
 import { jwtDecode } from 'jwt-decode';
-import { io } from "socket.io-client";
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
-const socket = io(apiUrl);
+import { socket } from '../../../utils/socket';
 import {Hostel} from '../../../interface/Hostel'
 import { getAllHostel } from '../../../services/userServices';
 
@@ -122,7 +119,7 @@ const UserLandingBody = () => {
                 Discover amazing experiences and connect with people around the world
               </p>
               <button
-                onClick={() => navigate('/user/hostel')}
+                onClick={() => navigate('/hostel')}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-semibold flex items-center gap-2 transition-colors"
               >
                 Get Started <ArrowRight className="w-5 h-5" />
@@ -197,7 +194,7 @@ const UserLandingBody = () => {
                         ))} */}
                       </div>
                       <button
-                        onClick={() => navigate(`/user/singlehostel/${room._id}`)}
+                        onClick={() => navigate(`/singlehostel/${room._id}`)}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-colors flex items-center justify-center gap-1"
                       >
                         View Details <ArrowRight className="w-4 h-4" />
@@ -208,7 +205,7 @@ const UserLandingBody = () => {
               </div>
               <div className="mt-8 text-center">
                 <button
-                  onClick={() => navigate('/user/hostel')}
+                  onClick={() => navigate('/hostel')}
                   className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-6 py-3 rounded-lg font-semibold transition-colors inline-flex items-center gap-2"
                 >
                   Browse All Rooms <ArrowRight className="w-5 h-5" />
@@ -223,7 +220,7 @@ const UserLandingBody = () => {
                 Join thousands of satisfied customers who have found their ideal accommodations through our platform.
               </p>
               <button
-                onClick={() => navigate('/user/hostel')}
+                onClick={() => navigate('/hostel')}
                 className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 rounded-lg text-lg font-semibold transition-colors inline-flex items-center gap-2"
               >
                 Explore Now <ArrowRight className="w-5 h-5" />

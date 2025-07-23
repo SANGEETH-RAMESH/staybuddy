@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { Building2, Bed, MapPin, Image, Wifi, ShowerHead, UtensilsCrossed, Users, Info, BadgeDollarSign, Phone } from 'lucide-react';
-// import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Category } from '../../../interface/Category';

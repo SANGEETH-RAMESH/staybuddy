@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import createApiClient from "../apis/apiClient";
+import axios from "axios";
 const userApiClient = createApiClient('user');
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -52,10 +53,20 @@ export const getSingleHostel = (id: mongoose.Types.ObjectId | string) => userApi
 
 export const getHostels = (params?: URLSearchParams) => userApiClient.get(`${apiUrl}/hostel/user?${params?.toString()}`);
 
+export const loginUrl = (formValues: { email: string, password: string }) => axios.post(`${apiUrl}/user/auth/login`, formValues)
 
 export const getNearbyHostels = () => userApiClient.get(`${apiUrl}/hostel/user/all`)
 
+export const signUpOtp = ({ email, otp }: { email: string; otp: number }) => axios.post(`${apiUrl}/user/auth/verify-otp`, {
+  email,
+  otp
+});
 
+
+export const forgotPasswordOtp = ({ email, otp }: { email: string; otp: number }) => axios.post(`${apiUrl}/user/auth/verify-forgot-otp`, {
+  email,
+  otp
+})
 export const createBooking = (bookingDetails: BookingDetails) => userApiClient.post(`${apiUrl}/order/bookings`, bookingDetails)
 
 export const getOrderDetails = (id: mongoose.Types.ObjectId | string) => userApiClient.get(`${apiUrl}/order/bookings/${id}`);
@@ -122,7 +133,6 @@ export const createChat = (id: mongoose.Types.ObjectId | string) => userApiClien
 
 
 
-
 export const payment = (totalAmount: number) => userApiClient.post('/order/payment', {
   totalAmount: totalAmount * 100,
   currency: 'INR',
@@ -130,7 +140,22 @@ export const payment = (totalAmount: number) => userApiClient.post('/order/payme
   notes: {},
 });
 
+export const forgotPassword = ({ email }: { email: string }) => axios.post(`${apiUrl}/user/auth/forgot-password`, { email });
 
+export const resendOtp = ({ email, name, mobile, password, }: { email: string; name?: string; mobile?: string; password?: string; }) =>
+  axios.post(`${apiUrl}/user/auth/resend-otp"`, {
+    email,
+    ...(name && { name }),
+    ...(mobile && { mobile }),
+    ...(password && { password }),
+  });
+
+export const resetPassword = (email: string, password: string) => axios.post(
+  `${apiUrl}/user/auth/reset-password`,
+  { email, password }
+);
+
+export const signUp = (formValues: { name: string; email: string; password: string; mobile?: string }) => axios.post(`${apiUrl}/user/auth/signup`, formValues );
 
 // export const deleteWishlist = (id: mongoose.Types.ObjectId | string) => userApiClient.delete(`${apiUrl}/wishlist/removeFromWishlist/${id}`);
 

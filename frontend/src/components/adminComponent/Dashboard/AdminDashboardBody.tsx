@@ -9,9 +9,6 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from 'recharts';
-// import createApiClient from '../../../services/apiClient';
-// const AdminApiClient = createApiClient('admin');
-// const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
 import { Order } from '../../../interface/Order';
 import { User } from '../../../interface/User';
 import { getSales, getUser } from '../../../services/adminServices';
@@ -19,11 +16,11 @@ import { HostelStat } from '../../../interface/HostelStat';
 import { UserStat } from '../../../interface/UserStat';
 
 const AdminDashboardBody = () => {
-  // Sample data - replace with actual API calls
+  
   const [dashboardStats, setDashboardStats] = useState({
-    roomsBooked: 124,
-    revenue: 45680,
-    activeUsers: 89
+    roomsBooked: 0,
+    revenue: 0,
+    activeUsers: 0
   });
 
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",

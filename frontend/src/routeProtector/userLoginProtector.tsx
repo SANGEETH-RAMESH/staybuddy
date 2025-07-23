@@ -19,7 +19,6 @@ const UserLoginProtector: React.FC<ProtectivePropsCheck> = ({ element }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   
   useEffect(() => {
-    // If tokens are in URL, save them
     if (accessToken && refreshToken) {
       localStorage.setItem("userRefreshToken", refreshToken);
       dispatch(
@@ -31,11 +30,9 @@ const UserLoginProtector: React.FC<ProtectivePropsCheck> = ({ element }) => {
       );
     }
     
-    // Check authentication status
     const storedRefreshToken = localStorage.getItem("userRefreshToken");
-    console.log(storedRefreshToken,"Stored")
     if (!storedRefreshToken) {
-      navigate('/user/login');
+      navigate('/login');
       setIsAuthenticated(false);
     } else {
       setIsAuthenticated(true);

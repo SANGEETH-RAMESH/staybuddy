@@ -1,15 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Menu, X, Bell, BellRing } from 'lucide-react';
 import admin_icon from '../../assets/settings.png';
-// import edit_icon from '../../assets/edit.png'
 import { jwtDecode } from 'jwt-decode';
 import { User } from '../../interface/User'
 import { Notification } from '../../interface/Notification';
 import logo from '../../assets/logo.png'
 import { formatDistanceToNow } from 'date-fns';
-import { io } from "socket.io-client";
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
-const socket = io(`${apiUrl}`);
+import { socket } from '../../utils/socket';
+
 
 interface AdminHeaderProps {
   onMenuClick: () => void;

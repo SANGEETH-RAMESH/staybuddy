@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Phone, ArrowRight } from 'lucide-react';
-import axios from 'axios';
 import { toast } from 'react-toastify';
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import { signUp } from '../../../services/hostServices';
+
 
 const HostSignUpBody = () => {
     const navigate = useNavigate();
@@ -37,7 +37,7 @@ const HostSignUpBody = () => {
 
         try {
 
-            const res = await axios.post(`${apiUrl}/host/signup`, { hostData: formValues });
+            const res = await signUp(formValues);
             if (res.data.message === 'Otp success') {
                 navigate('/host/otp', { state: formValues });
             } else if (res.data.message === 'host exist') {

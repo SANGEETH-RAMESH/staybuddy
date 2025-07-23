@@ -12,7 +12,6 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-
 import {  useParams } from 'react-router-dom';
 import { getBookings } from '../../../services/hostServices';
 

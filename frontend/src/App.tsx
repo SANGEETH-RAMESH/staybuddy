@@ -12,7 +12,7 @@ function App() {
   return (
     <Routes>
       <Route path='/admin/*' element={<AdminRoute/>}/>
-      <Route path='/user/*' element={<UserRoute/>} />
+      <Route path='/*' element={<UserRoute/>} />
       <Route path='/host/*' element={<HostRoute/>} />
     </Routes>
   )

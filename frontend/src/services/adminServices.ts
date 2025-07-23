@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import createApiClient from "../apis/apiClient";
+import axios from "axios";
 const AdminApiClient = createApiClient('admin');
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
@@ -63,3 +64,6 @@ export const fetchUser = (page:number,limit:number) =>  AdminApiClient.get(
 export const searchUser = (newSearchTerm: string,itemsPerPage:number) =>  AdminApiClient.get(
           `${apiUrl}/admin/users/search?name=${newSearchTerm}&page=1&limit=${itemsPerPage}`
         );
+
+
+export const loginUrl =  ({ email, password }: { email: string; password: string }) => axios.post(`${apiUrl}/admin/auth/login`,{email,password})

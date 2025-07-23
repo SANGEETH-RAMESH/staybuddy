@@ -1,9 +1,8 @@
 import  { useState } from "react";
-import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import lock_icon from '../../../assets/lock.png'
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import { resendOtp } from "../../../services/userServices";
 
 const ResetPasswordBody = () => {
   const [password, setPassword] = useState("");
@@ -18,15 +17,12 @@ const ResetPasswordBody = () => {
     if (password === confirmPassword) {
       setLoading(true);
       try {
-        const response = await axios.post(
-          `${apiUrl}/user/auth/reset-password`,
-          { email,password }
-        );
+        const response = await resendOtp({email,password})
         if (response.data.message === "Same password") {
           toast.error("Cannot use existing password")
         } else if (response.data.message === "Password Changed") {
           toast.success("Password changed successfully");
-          navigate('/user/login')
+          navigate('/login')
         }
       } catch (error) {
         console.error("Error resetting password:", error);

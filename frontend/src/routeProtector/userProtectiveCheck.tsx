@@ -11,7 +11,7 @@ const UserProtectiveCheck: React.FC<UserProtectiveCheckProps> = ({ element }) =>
     const accessToken = useSelector((state: RootState) => state.userAuth.accessToken);
     const location = useLocation();
 
-    return !accessToken?(<>{element}</>):(<Navigate to="/user/home" state={{from:location}} />) 
+    return !accessToken?(<>{element}</>):(<Navigate to="/home" state={{from:location}} />) 
 
 };
 

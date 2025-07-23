@@ -87,7 +87,7 @@ const UserEditProfileBody: React.FC = () => {
       } else if (response.data.message == "User details updated") {
         setSuccess(true)
         toast.success("User details updated")
-        navigate("/user/profile")
+        navigate("/profile")
       }
     } catch (error) {
       console.error(error);

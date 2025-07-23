@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import OTPInput from "react-otp-input";
-import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { OtpValues } from "../../../interface/Otp";
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import { resendOtp, signUpOtp } from "../../../services/userServices";
 
 const SignupOtpBody = () => {
   const [otp, setOtp] = useState("");
@@ -42,12 +41,7 @@ const SignupOtpBody = () => {
     setCanResend(false);
     setTimer(59);
     try {
-      const response = await axios.post("http://localhost:4000/user/resendotp", {
-        email,
-        password,
-        mobile,
-        name
-      });
+      const response = await resendOtp({email,password,mobile,name})
       console.log(response.data.message, 'response');
       toast.success("OTP resent successfully!");
     } catch (error) {
@@ -60,14 +54,10 @@ const SignupOtpBody = () => {
     setLoading(true);
     try {
       const numericOtp = Number(otp);
-      console.log(email, otp, "Sdfdsfs");
-      const response = await axios.post(`${apiUrl}/user/auth/verify-otp`, {
-        email,
-        otp: numericOtp,
-      });
+      const response = await signUpOtp({ email, otp: numericOtp });
       console.log(response.data, "response");
       if (response.data.message === "success") {
-        navigate("/user/login");
+        navigate("/login");
       } else if (response.data.message === "Invalid OTP") {
         setErrors((prev)=>({
           ...prev,

@@ -275,7 +275,7 @@ const WalletTracker = () => {
 
         <div>
           <button
-            onClick={() => window.location.href = '/user/wallet/transactions'}
+            onClick={() => window.location.href = '/wallet/transactions'}
             className="w-full bg-blue-500 text-white p-2 rounded flex items-center justify-center hover:bg-blue-600 transition-colors"
           >
             Show Transactions

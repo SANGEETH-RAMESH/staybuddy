@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Search, UserPlus, Loader2, Clock, Paperclip, Image, X,  Video } from 'lucide-react';
 import dummy_profile from '../../../assets/dummy profile.png'
-import { io, Socket } from 'socket.io-client';
 import VideoCall from '../../commonComponents/VideoCall'
 import { Message } from '../../../interface/Message';
 import { User } from '../../../interface/User';
 import { Chats } from '../../../interface/Chats';
 import { getAllUsers, getChat, getHostChat } from '../../../services/hostServices';
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import { socket } from '../../../utils/socket';
 
-const socket: Socket = io(`${apiUrl}`)
 
 const HostChatBody = () => {
   const [chats, setChats] = useState<Chats[]>([]);

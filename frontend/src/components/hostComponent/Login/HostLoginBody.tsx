@@ -1,12 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Mail, Lock, ArrowRight, EyeOff, Eye } from 'lucide-react';
-import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import { loginSuccess } from '../../../redux/hostAuthSlice';
 import { LoginValues } from '../../../interface/Login';
 import { useState } from 'react';
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import { loginUrl } from '../../../services/hostServices';
 
 
 const HostLoginBody = () => {
@@ -37,7 +36,7 @@ const HostLoginBody = () => {
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
-            const response = await axios.post(`${apiUrl}/host/verifylogin`, { ...formValues });
+            const response = await loginUrl({...formValues})
             console.log(response.data, 'hello')
             if (response.data.message === 'Invalid password') {
                 setErrors((prev) => ({

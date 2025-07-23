@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import lock_icon from "../../../assets/lock.png";
 const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { changePasswordValues } from "../../../interface/ChangePassword";
+import { resetPassword } from "../../../services/hostServices";
 
 const HostResetPasswordBody = () => {
   const [password, setPassword] = useState("");
@@ -28,10 +29,7 @@ const HostResetPasswordBody = () => {
   const handleSubmit = async () => {
       setLoading(true);
       try {
-        const response = await axios.post(
-          `${apiUrl}/host/resetPassword`,
-          { email, password, confirmPassword }
-        );
+        const response = await resetPassword(email,password,confirmPassword)
         if (response.data.message === "Same password") {
           setErrors((prev)=>({
             ...prev,

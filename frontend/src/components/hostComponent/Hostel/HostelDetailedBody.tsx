@@ -17,7 +17,6 @@ import {
   Power,
   X
 } from 'lucide-react';
-
 import { Hostel } from '../../../interface/Hostel';
 import { getSingleHostel, status } from '../../../services/hostServices';
 import toast from 'react-hot-toast';

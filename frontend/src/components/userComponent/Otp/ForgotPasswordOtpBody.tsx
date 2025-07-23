@@ -1,10 +1,9 @@
 import  { useState, useEffect } from "react";
 import OTPInput from "react-otp-input";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import { forgotPasswordOtp, resendOtp } from "../../../services/userServices";
 
 const ForgotPasswordOtpBody = () => {
   const [otp, setOtp] = useState("");
@@ -32,20 +31,19 @@ const ForgotPasswordOtpBody = () => {
   const handleSubmit = async () => {
     const numericOtp = Number(otp);
     
-    // Clear any previous error
     setError("");
     
     if (otp.length === 4) {
       setLoading(true);
       try {
-        const response = await axios.post(
-          `${apiUrl}/user/auth/verify-forgot-otp`,
-          { email, otp: numericOtp }
-        );
+        const response = await forgotPasswordOtp({
+          email,
+          otp:numericOtp
+        });
         console.log(response.data.message, "sd");
         if (response.data.message === "success") {
           toast.success("OTP verified successfully!");
-          navigate('/user/resetpassword', { state: { email } });
+          navigate('/resetpassword', { state: { email } });
         } else if (response.data.message == 'Invalid OTP') {
           toast.error("Invalid OTP. Please try again!");
         } else {
@@ -58,7 +56,6 @@ const ForgotPasswordOtpBody = () => {
         setLoading(false);
       }
     } else {
-      // Set error message instead of alert
       setError("Please enter a valid 4-digit OTP.");
     }
   };
@@ -68,10 +65,7 @@ const ForgotPasswordOtpBody = () => {
     setTimer(59);
 
     try {
-      const response = await axios.post(
-        "http://localhost:4000/user/auth/resend-otp",
-        { email }
-      );
+      const response = await resendOtp({email})
       console.log(response.data.message, "response");
       toast.success("OTP resent successfully!");
     } catch (error) {

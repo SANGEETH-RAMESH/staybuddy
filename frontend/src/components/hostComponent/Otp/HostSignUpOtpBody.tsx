@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import OTPInput from "react-otp-input";
-import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { OtpValues } from "../../../interface/Otp";
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import { resendOtp, verifyOtp } from "../../../services/hostServices";
 
 const HostSignUpOtpBody = () => {
   const [otp, setOtp] = useState("");
@@ -46,12 +45,7 @@ const HostSignUpOtpBody = () => {
     setCanResend(false);
     setTimer(59);
     try {
-      const response = await axios.post(`${apiUrl}/host/resendotp`, {
-        email,
-        name,
-        password,
-        mobile
-      });
+      const response = await resendOtp({email,name,password,mobile})
       console.log(response.data.message, "response");
       toast.success("OTP resent successfully!");
     } catch (error) {
@@ -65,10 +59,7 @@ const HostSignUpOtpBody = () => {
     setLoading(true);
     try {
       const numericOtp = Number(otp);
-      const response = await axios.post("http://localhost:4000/host/verifyotp", {
-        email,
-        otp: numericOtp,
-      });
+      const response = await verifyOtp(email,numericOtp)
       console.log(response.data.message, "response");
       if (response.data.message === "success") {
         navigate("/host/login");

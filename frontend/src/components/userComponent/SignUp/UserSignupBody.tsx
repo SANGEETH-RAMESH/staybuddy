@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Lock, Phone, ArrowRight } from 'lucide-react';
-import axios from 'axios';
 import { toast } from 'react-toastify';
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import { signUp } from '../../../services/userServices';
 
 interface SignupValues {
     name: string;
@@ -45,12 +44,11 @@ const UserSignUpBody = () => {
 
         try {
            
-            const res = await axios.post(`${apiUrl}/user/auth/signup`, formValues);
-            console.log(res, 'hello');
+            const res = await signUp(formValues)
             const {message} = res.data;
 
             if (message === 'Otp sent successfully') {
-                navigate('/user/otp', {
+                navigate('/otp', {
                     state: {
                         email: formValues.email,
                         name: formValues.name,
@@ -100,7 +98,7 @@ const UserSignUpBody = () => {
                         <h2 className="text-2xl font-bold mb-2">Welcome to StayBuddy!</h2>
                         <p className="text-sm text-center mb-4 text-white/90">Already have an account?</p>
                         <button
-                            onClick={() => navigate('/user/login')}
+                            onClick={() => navigate('/login')}
                             className="px-6 py-2 border-2 border-white rounded-full text-sm font-semibold hover:bg-white hover:text-blue-600 transition-all duration-300"
                         >
                             Sign In

@@ -65,13 +65,11 @@ const ChangePasswordBody = () => {
         console.log("Response",response)
         if (response.data.message === 'Current password does not match') {
           setErrors((prev) => ({ ...prev, currentPassword: 'Current password does not match' }));
-          // toast.error("Current Password Does Not match")
         } else if (response.data.message === 'New password cannot be the same as the current password') {
           setErrors((prev) => ({ ...prev, newPassword: 'New password cannot be same as current password' }));
         } else if (response.data.message === 'Password changed successfully') {
-          // Handle success (e.g., reset form or show success message)
           toast.success("Password changed")
-          navigate('/user/profile')
+          navigate('/profile')
           console.log('Password changed successfully!');
         }
       } catch (error) {

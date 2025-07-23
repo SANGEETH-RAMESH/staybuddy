@@ -104,7 +104,7 @@ export default function WishlistPage() {
               <h2 className="text-2xl font-semibold text-gray-800 mb-3">Your wishlist is empty</h2>
               <p className="text-gray-500 mb-8 max-w-md">No rooms have been added to your wishlist yet. Explore our hostels to find your perfect accommodation.</p>
               <a
-                href="/user/hostel"
+                href="/hostel"
                 className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition shadow-md hover:shadow-lg"
               >
                 <ArrowLeft className="mr-2 h-5 w-5" />
@@ -176,7 +176,7 @@ export default function WishlistPage() {
                       {/* Action Button */}
                       <div className="md:col-span-2 flex justify-center md:justify-end gap-2">
                         <button
-                          onClick={() => navigate(`/user/singlehostel/${hostel.hostel_id}`)}
+                          onClick={() => navigate(`/singlehostel/${hostel.hostel_id}`)}
                           className="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition shadow-sm hover:shadow"
                         >
                           <Eye/>
@@ -192,7 +192,7 @@ export default function WishlistPage() {
               {/* Action Buttons */}
               <div className="p-6 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4">
                 <a
-                  href="/user/hostel"
+                  href="/hostel"
                   className="inline-flex items-center px-5 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition shadow-sm hover:shadow w-full sm:w-auto justify-center"
                 >
                   <ArrowLeft size={16} className="mr-2" />
