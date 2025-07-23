@@ -4,7 +4,7 @@ import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { OtpValues } from "../../../interface/Otp";
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 const HostSignUpOtpBody = () => {
   const [otp, setOtp] = useState("");

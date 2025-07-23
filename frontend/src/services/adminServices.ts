@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import createApiClient from "../apis/apiClient";
 const AdminApiClient = createApiClient('admin');
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 export const getUserDetails = (id: string) => AdminApiClient.get(`${apiUrl}/admin/hosts/${id}`);
 

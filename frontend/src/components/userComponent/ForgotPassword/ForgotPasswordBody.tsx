@@ -5,7 +5,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { forgotPasswordValues } from '../../../interface/forgotPassword';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 
 

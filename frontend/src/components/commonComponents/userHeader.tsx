@@ -3,7 +3,7 @@ import { Menu, X, Heart, MessageCircle, Bell, User, LogOut } from 'lucide-react'
 import { useDispatch } from 'react-redux';
 import { logout } from '../../redux/userAuthSlice';
 import { useNavigate } from 'react-router-dom';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { Notification } from '../../interface/Notification';
 import { formatDistanceToNow } from 'date-fns';
 import { io } from "socket.io-client";

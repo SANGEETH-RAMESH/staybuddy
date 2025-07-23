@@ -1,6 +1,6 @@
 import createApiClient from "../apis/apiClient";
 const hostApiClient = createApiClient('host');
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import mongoose from "mongoose";
 // import hostapiClient from "../apis/hostapiClient";
 

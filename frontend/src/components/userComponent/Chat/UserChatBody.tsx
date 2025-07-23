@@ -5,7 +5,7 @@ import dummy_profile from '../../../assets/dummy profile.png';
 import { useLocation } from 'react-router-dom';
 import VideoCall from '../../commonComponents/VideoCall'
 import { createChat, getAllHosts, getChat } from '../../../services/userServices';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 
 interface Message {

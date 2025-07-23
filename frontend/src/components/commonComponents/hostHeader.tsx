@@ -5,7 +5,7 @@ import { logout } from '../../redux/hostAuthSlice';
 import { MessageCircle, Building2, User, LogOut, Menu, X, Bell, BellRing } from 'lucide-react';
 import logo from '../../assets/logo.png'
 import { formatDistanceToNow } from 'date-fns';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { Notification } from '../../interface/Notification';
 
 import { io } from "socket.io-client";

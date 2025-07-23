@@ -1,6 +1,6 @@
 import  { useEffect } from 'react';
 import host_landing from '../../../assets/seller1.webp';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { io } from "socket.io-client";

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import OTPInput from "react-otp-input";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { toast } from "react-toastify";
 import { OtpValues } from "../../../interface/Otp";
 

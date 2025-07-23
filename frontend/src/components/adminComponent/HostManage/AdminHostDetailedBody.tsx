@@ -7,7 +7,8 @@ import { Hostel } from '../../../interface/Hostel';
 import { Notification } from '../../../interface/Notification';
 import { io } from "socket.io-client";
 import { approveHost, getHostHostelData, getUserDetails, rejectHost } from '../../../services/adminServices';
-const socket = io("http://localhost:4000");
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
+const socket = io(apiUrl);
 
 
 

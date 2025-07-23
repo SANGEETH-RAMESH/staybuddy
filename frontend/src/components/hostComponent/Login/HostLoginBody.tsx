@@ -6,7 +6,7 @@ import { toast } from 'react-hot-toast';
 import { loginSuccess } from '../../../redux/hostAuthSlice';
 import { LoginValues } from '../../../interface/Login';
 import { useState } from 'react';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 
 const HostLoginBody = () => {

@@ -8,7 +8,7 @@ import { Notification } from '../../interface/Notification';
 import logo from '../../assets/logo.png'
 import { formatDistanceToNow } from 'date-fns';
 import { io } from "socket.io-client";
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 const socket = io(`${apiUrl}`);
 
 interface AdminHeaderProps {

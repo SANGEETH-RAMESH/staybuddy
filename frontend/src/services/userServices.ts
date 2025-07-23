@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import createApiClient from "../apis/apiClient";
 const userApiClient = createApiClient('user');
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 interface BookingDetails {
   customerName: string;

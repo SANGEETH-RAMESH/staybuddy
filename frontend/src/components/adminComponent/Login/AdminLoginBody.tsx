@@ -7,7 +7,7 @@ import axios from 'axios';
 import logo from '../../../assets/logo.png'
 import { LoginValues } from '../../../interface/Login';
 import { useState } from 'react';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 const AdminLoginBody = () => {
 

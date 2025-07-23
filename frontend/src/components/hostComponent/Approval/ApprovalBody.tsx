@@ -7,7 +7,7 @@ import { Host } from '../../../interface/Host';
 import { Notification } from '../../../interface/Notification';
 import { io } from "socket.io-client";
 import { getAdmin, getHost, submitHostApproval } from '../../../services/hostServices';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 const socket = io(apiUrl);
 
 

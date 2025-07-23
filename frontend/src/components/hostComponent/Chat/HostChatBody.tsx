@@ -7,7 +7,7 @@ import { Message } from '../../../interface/Message';
 import { User } from '../../../interface/User';
 import { Chats } from '../../../interface/Chats';
 import { getAllUsers, getChat, getHostChat } from '../../../services/hostServices';
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 const socket: Socket = io(`${apiUrl}`)
 

@@ -3,7 +3,7 @@ import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import lock_icon from "../../../assets/lock.png";
-const apiUrl = import.meta.env.VITE_LOCALHOST_URL;
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { changePasswordValues } from "../../../interface/ChangePassword";
 
 const HostResetPasswordBody = () => {
