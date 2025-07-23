@@ -13,8 +13,8 @@ const UserLoginProtector: React.FC<ProtectivePropsCheck> = ({ element }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   
-  const accessToken = queryParams.get('userAccessToken');
-  const refreshToken = queryParams.get('userRefreshToken');
+  const accessToken = queryParams.get('accessToken');
+  const refreshToken = queryParams.get('refreshToken');
   
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   
