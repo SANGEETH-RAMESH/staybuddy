@@ -249,6 +249,7 @@ class UserController {
             const userData = { name: user?.displayName, email: user?.email };
             const response = await this.userService.googleSignUp(userData)
             if (typeof response !== 'string' && response?.message === 'Success') {
+                console.log(response,'Respons')
                 console.log(process.env.FRONTEND_URL,'FRONTENDURL')
                 res.redirect(`${process.env.FRONTEND_URL}/?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}`)
             } else {

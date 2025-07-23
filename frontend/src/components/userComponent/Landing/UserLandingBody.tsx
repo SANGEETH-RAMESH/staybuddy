@@ -31,8 +31,8 @@ const UserLandingBody = () => {
   const [loading, setLoading] = useState(true);
   const [hostel, setHostel] = useState<Hostel[]>([]);
 
-  const accessToken = queryParams?.get('accessToken');
-  const refreshToken = queryParams?.get('refreshToken');
+  const accessToken = queryParams?.get('userAccessToken');
+  const refreshToken = queryParams?.get('userRefreshToken');
 
   if (accessToken && refreshToken) {
     dispatch(
