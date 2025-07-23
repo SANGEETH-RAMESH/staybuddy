@@ -249,7 +249,7 @@ class UserController {
             const userData = { name: user?.displayName, email: user?.email };
             const response = await this.userService.googleSignUp(userData)
             if (typeof response !== 'string' && response?.message === 'Success') {
-                res.redirect(`http://localhost:5173/user/home/?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}`)
+                res.redirect(`http://localhost:5173/?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}`)
             } else {
                 res.json({ message: response });
             }
