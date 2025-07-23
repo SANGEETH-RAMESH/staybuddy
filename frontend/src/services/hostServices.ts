@@ -80,7 +80,7 @@ export const signUpOtp = ({ email, otp }: { email: string; otp: number }) => axi
 
 export const addProperty = () => hostApiClient.get(`${apiUrl}/host/newHost`)
 
-export const loginUrl = (formValues:{email:string,password:string}) => axios.post(`${apiUrl}/host/auth/login`,formValues)
+export const loginUrl = (formValues:{email:string,password:string}) => axios.post(`${apiUrl}/host/verifylogin`,formValues)
 
 export const verifyForgotPasswordOtp =  ({ email, otp }: { email: string; otp: number }) => axios.post(
           `${apiUrl}/host/verifyforgotpasswordotp`,
