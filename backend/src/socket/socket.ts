@@ -17,7 +17,7 @@ interface MessageData {
 export const initializeSocket = (server: HttpServer, chatService: IChatService) => {
   const io = new Server(server, {
     cors: {
-      origin: ["http://localhost:5173", "http://localhost:3000"],
+      origin:  process.env.FRONTEND_URL as string,
       methods: ["GET", "POST"],
       credentials: true,
     },
