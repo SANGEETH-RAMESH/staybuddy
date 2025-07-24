@@ -244,8 +244,8 @@ const HostelDetailPage = () => {
             <div className="max-w-6xl mx-auto">
                 {/* Sticky Header */}
                 <div
-                    className="sticky z-40 bg-white/95 backdrop-blur-md shadow-sm mb-4 sm:mb-6 -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:rounded-lg"
-                    style={{ top: '60px' }}
+                    className="sticky z-20 bg-white/95 backdrop-blur-md shadow-sm mb-4 sm:mb-6 -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:rounded-lg"
+                    style={{ top: '64px' }}
                 >
                     <div className="max-w-6xl mx-auto">
 

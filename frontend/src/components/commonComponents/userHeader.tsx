@@ -137,7 +137,7 @@ export const UserHeader: React.FC = () => {
 
   return (
     <>
-      <header className="fixed top-0 left-0 w-full bg-white shadow-sm z-50">
+      <header className="fixed top-0 left-0 w-full bg-white shadow-sm z-[100]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -288,7 +288,7 @@ export const UserHeader: React.FC = () => {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-x-0 top-16 bg-white shadow-lg md:hidden z-40">
+        <div className="fixed inset-x-0 top-16 bg-white shadow-lg md:hidden z-[9998]">
           <div className="px-4 py-2 space-y-1">
             {/* Mobile Notifications */}
             <button
@@ -343,7 +343,7 @@ export const UserHeader: React.FC = () => {
 
           {/* Mobile Notification Dropdown */}
           {isNotificationOpen && (
-            <div className="mx-4 mb-4 bg-gray-50 rounded-lg shadow-inner z-[60]">
+            <div className="mx-4 mb-4 bg-gray-50 rounded-lg shadow-inner relative z-[9999]">
               <div className="max-h-64 overflow-y-auto">
                 {notification && notification.length > 0 ? (
                   notification.slice(0, 5).map((notif) => (
