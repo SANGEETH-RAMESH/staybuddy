@@ -292,7 +292,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
         console.log(response.data.message, 'removed');
 
         if (response.data.message === 'Hostel Removed From Wishlist') {
-          toast.success("Removed from wishlist!");
+          toast.error("Removed from wishlist!");
         }
       } catch (error) {
         console.error("Error removing from wishlist:", error);
