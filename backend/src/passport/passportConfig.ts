@@ -27,7 +27,7 @@ passport.use(
       {
         clientID: process.env.USER_GOOGLE_CLIENT_ID || '',
         clientSecret: process.env.USER_GOOGLE_CLIENT_SECRET || '',
-        callbackURL: "http://localhost:4000/user/auth/google/callback",
+        callbackURL:  "https://api-staybuddy.sangeethramesh.online/user/auth/google/callback",
         passReqToCallback: true,
       },
       (
@@ -49,7 +49,7 @@ passport.use(
       {
         clientID: process.env.HOST_GOOGLE_CLIENT_ID || '',
         clientSecret: process.env.HOST_GOOGLE_CLIENT_SECRET || '',
-        callbackURL: "http://localhost:4000/host/auth/google/callback",
+        callbackURL: "https://api-staybuddy.sangeethramesh.online/host/auth/google/callback",
         passReqToCallback: true,
       },
       (
