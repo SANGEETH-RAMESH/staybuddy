@@ -12,6 +12,7 @@ import { IHost } from "../model/hostModel";
 import { INotification } from "../model/notificationModel";
 import { IWalletRepository } from "../interface/wallet/!WalletRepository";
 import { IHostRepository } from "../interface/host/!HostRepository";
+import jwt from 'jsonwebtoken';
 
 
 interface ResetPasswordData {
@@ -118,8 +119,8 @@ class UserService implements IUserService {
     }> {
         try {
             const checkingUser = await this.userRepository.UserVerifyLogin(userData.email);
-            if(!checkingUser){
-                return {message:"Invalid email"}
+            if (!checkingUser) {
+                return { message: "Invalid email" }
             }
             if (typeof checkingUser === 'string') {
                 return { message: checkingUser };
@@ -295,7 +296,7 @@ class UserService implements IUserService {
         try {
             console.log(refreshToken)
             const decoded = verifyToken(refreshToken)
-            console.log(decoded,'dfldjfldfjdf')
+            console.log(decoded, 'dfldjfldfjdf')
             if (typeof decoded === 'object' && decoded !== null) {
                 const response = await this.userRepository.FindUserById(decoded._id);
                 if (!response) {
@@ -353,6 +354,45 @@ class UserService implements IUserService {
         try {
             const response = await this.userRepository.markAllRead(userId);
             return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async createGoogleAuth(credential: string): Promise<{ message: string; accessToken: string; refreshToken: string; role: string } | string> {
+        try {
+            const payload = jwt.decode(credential);
+            if (!payload || typeof payload === 'string') {
+                return 'No user'
+            }
+            const checkUser = await this.userRepository.FindUserByEmail(payload.email)
+            console.log(payload, 'Payload')
+            if (checkUser) {
+                const userPayload = {
+                    _id: checkUser._id as Types.ObjectId,
+                    role: 'user' as const
+                };
+                const accessToken = generateAccessToken(userPayload);
+                const refreshToken = generateRefreshToken(userPayload);
+                return { message: "User Already Exist", accessToken, refreshToken, role: 'user' }
+            }
+
+            const data = {
+                email: payload.email,
+                name: payload?.name,
+                userType: 'google',
+                mobile: '',
+            }
+            const id = await this.userRepository.createGoogleAuth(data)
+            await this.walletRepository.createWallet(payload.email)
+            console.log("Id", id)
+            const userPayload = {
+                _id: new Types.ObjectId(id),
+                role: 'user' as const
+            };
+            const accessToken = generateAccessToken(userPayload);
+            const refreshToken = generateRefreshToken(userPayload);
+            return { message: "User Created", accessToken, refreshToken, role: 'user' }
         } catch (error) {
             return error as string
         }

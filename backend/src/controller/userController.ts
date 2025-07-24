@@ -294,6 +294,16 @@ class UserController {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
         }
     }
+
+    async createGoogleAuth(req:Request,res:Response):Promise<void>{
+        try {
+            const {credential} = req.body;
+            const response = await this.userService.createGoogleAuth(credential);
+            res.status(StatusCode.OK).json(response)
+        } catch (error) {
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+        }
+    }
 }
 
 export default UserController;

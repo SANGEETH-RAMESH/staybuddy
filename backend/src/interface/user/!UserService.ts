@@ -36,5 +36,6 @@ export interface IUserService {
     allHost(): Promise<IHost[] | string | null>,
     sendNotification(notification:INotification):Promise<INotification | string | null>,
     getOldNotification(userId:string):Promise<INotification [] | string | null>,
-    markAllRead(userId: string): Promise<string>
+    markAllRead(userId: string): Promise<string>,
+    createGoogleAuth(credential: string): Promise<{ message: string; accessToken: string; refreshToken: string;role:string } | string> 
 }

@@ -136,6 +136,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
                     email: userData.email,
                     password: hashedPassword,
                     temp: true,
+                    userType:'local'
                 });
                 await tempAddingUser.save();
                 return 'added';
@@ -164,7 +165,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async UserVerifyLogin(email:string): Promise< IUser | string> {
+    async UserVerifyLogin(email: string): Promise<IUser | string> {
         try {
             const checkuser = await User.findOne({ email: email, isAdmin: false }) as IUser
             return checkuser
@@ -297,13 +298,13 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
     }
 
 
-    
 
-    
 
-    
 
-    
+
+
+
+
     async sendNotification(notification: INotification): Promise<INotification | string | null> {
         try {
             const newNotification = new Notification({
@@ -369,6 +370,22 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
             return { users, totalCount };
         } catch (error) {
             console.log(error)
+            return error as string
+        }
+    }
+
+    async createGoogleAuth(data:{email:string,name:string,userType:string,mobile:string}): Promise<string> {
+        try {
+           const createUser = new User({
+            email:data.email,
+            name:data.name,
+            userType:data.userType,
+            mobile:data.mobile,
+            tempExpires:null,
+           })
+           await createUser.save()
+           return createUser._id.toString();
+        } catch (error) {
             return error as string
         }
     }

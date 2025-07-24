@@ -143,7 +143,7 @@ export const payment = (totalAmount: number) => userApiClient.post(`${apiUrl}/or
 export const forgotPassword = ({ email }: { email: string }) => axios.post(`${apiUrl}/user/auth/forgot-password`, { email });
 
 export const resendOtp = ({ email, name, mobile, password, }: { email: string; name?: string; mobile?: string; password?: string; }) =>
-  axios.post(`${apiUrl}/user/auth/resend-otp"`, {
+  axios.post(`${apiUrl}/user/auth/resend-otp`, {
     email,
     ...(name && { name }),
     ...(mobile && { mobile }),
@@ -159,6 +159,8 @@ export const signUp = (formValues: { name: string; email: string; password: stri
 
 // export const deleteWishlist = (id: mongoose.Types.ObjectId | string) => userApiClient.delete(`${apiUrl}/wishlist/removeFromWishlist/${id}`);
 
+
+export const googleLogin = async (credential:string) =>  axios.post(`${apiUrl}/user/google/callback`,{credential});
 
 
 

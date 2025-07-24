@@ -12,6 +12,7 @@ export interface IUser extends Document {
     wallet_id:Types.ObjectId,
     temp: boolean,
     tempExpires?: Date;
+    userType?:string
 }
 
 
@@ -28,11 +29,9 @@ const userModel: Schema = new Schema(
         },
         password: {
             type: String,
-            required: true,
         },
         mobile: {
             type: String,
-            required: true,
         },
         isAdmin: {
             type: Boolean,
@@ -55,6 +54,9 @@ const userModel: Schema = new Schema(
             default:Date.now,
             expires:60
         },
+        userType:{
+            type:String
+        }
     },
     { timestamps: false }
 );

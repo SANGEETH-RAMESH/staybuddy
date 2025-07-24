@@ -54,6 +54,7 @@ export interface IUserRespository{
      sendNotification(notification:INotification):Promise<INotification | string | null>,
     getOldNotification(userId:string):Promise<INotification [] | string | null>,
     markAllRead(userId: string): Promise<string>,
-    getUser(page: number, limit: number): Promise<{ users: IUserResponse[]; totalCount: number } | string | null>
+    getUser(page: number, limit: number): Promise<{ users: IUserResponse[]; totalCount: number } | string | null>,
+    createGoogleAuth(data:{email:string,name:string,userType:string,mobile:string}): Promise<string>
     
 }

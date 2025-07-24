@@ -5,8 +5,9 @@ import { Mail, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { loginSuccess } from '../../../redux/userAuthSlice';
 import { LoginValues } from '../../../interface/Login';
-import { loginUrl } from '../../../services/userServices';
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
+import { googleLogin, loginUrl } from '../../../services/userServices';
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google"
+// const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 
 // interface LoginValues {
@@ -39,15 +40,42 @@ const UserLoginBody = () => {
         });
     };
 
+    const handleGoogleLogin = async (credentialResponse: any) => {
+        // console.log("hety",credentialResponse.credential)
+        try {
+            const response = await googleLogin(credentialResponse.credential);
+            console.log(response.data, 'Response')
+            const { message, accessToken, refreshToken, role } = response.data
+            if (message === 'User Already Exist' || message === 'User Created') {
+                dispatch(loginSuccess({
+                    accessToken: accessToken,
+                    refreshToken: refreshToken,
+                    role: role,
+                    isLoggedIn: true
+                }));
+                navigate('/')
+                toast.success("Login Successful", { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
+            } else {
+                toast.error("Unexpected response from server");
+            }
+        } catch (error: any) {
+            console.error("Google login error:", error);
+            toast.error("Login failed. Please try again later.");
+        }
+
+
+
+    }
+
     const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         try {
-            console.log(import.meta.env);
-            const response = await loginUrl({...formValues})
+            console.log(import.meta.env.VITE_GOOGLE_CLIENT_ID);
+            const response = await loginUrl({ ...formValues })
             console.log(response.data.message, 'response');
 
-            const { message, accessToken, refreshToken,role } = response.data.message;
+            const { message, accessToken, refreshToken, role } = response.data.message;
             console.log(message, "MEssage")
 
             if (response.data?.message?.message === 'Invalid password') {
@@ -70,7 +98,7 @@ const UserLoginBody = () => {
                 dispatch(loginSuccess({
                     accessToken: accessToken,
                     refreshToken: refreshToken,
-                    role:role,
+                    role: role,
                     isLoggedIn: true
                 }));
                 toast.success("Login Successful", { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
@@ -197,7 +225,7 @@ const UserLoginBody = () => {
                                 </div>
                             </div>
 
-                            {/* Google Sign In */}
+                            {/* Google Sign In
                             <a
                                 href={`${apiUrl}/user/auth/google`}
                                 className="w-full flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -221,7 +249,22 @@ const UserLoginBody = () => {
                                     />
                                 </svg>
                                 <span className="text-sm font-medium text-gray-800">Sign in with Google</span>
-                            </a>
+                            </a> */}
+                            <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID as string}>
+                                <GoogleLogin
+                                    onSuccess={handleGoogleLogin}
+                                    onError={() => {
+                                        toast.error("Login failed")
+                                    }}
+                                    useOneTap
+                                    type='standard'
+                                    theme="outline"
+                                    size="large"
+                                    text="continue_with"
+                                    shape="rectangular"
+                                    width="100%"
+                                />
+                            </GoogleOAuthProvider>
                         </form>
                     </div>
                 </div>

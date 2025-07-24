@@ -24,6 +24,7 @@ user_route.post('/auth/verify-forgot-otp', userController.verifyForgotPasswordOt
 user_route.post('/auth/reset-password', userController.resetPassword.bind(userController))
 user_route.post('/token/refresh',userController.validaterefreshToken.bind(userController))
 
+user_route.post('/google/callback',userController.createGoogleAuth.bind(userController))
 
 user_route.get('/users', userAuthMiddleware, userController.getUserDetails.bind(userController));
 
