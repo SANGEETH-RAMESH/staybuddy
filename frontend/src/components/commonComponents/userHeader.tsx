@@ -152,7 +152,7 @@ export const UserHeader: React.FC = () => {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-4">
               {/* Notification Button with Dropdown */}
-              <div className="relative notification-container">
+              <div className="relative notification-container z-[60]">
                 <button
                   onClick={() => setIsNotificationOpen(!isNotificationOpen)}
                   className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
@@ -173,7 +173,7 @@ export const UserHeader: React.FC = () => {
 
                 {/* Notification Dropdown */}
                 {isNotificationOpen && (
-                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-[70]">
                     {/* Header */}
                     <div className="px-4 py-3 border-b border-gray-200">
                       <div className="flex items-center justify-between">
@@ -343,7 +343,7 @@ export const UserHeader: React.FC = () => {
 
           {/* Mobile Notification Dropdown */}
           {isNotificationOpen && (
-            <div className="mx-4 mb-4 bg-gray-50 rounded-lg shadow-inner">
+            <div className="mx-4 mb-4 bg-gray-50 rounded-lg shadow-inner z-[60]">
               <div className="max-h-64 overflow-y-auto">
                 {notification && notification.length > 0 ? (
                   notification.slice(0, 5).map((notif) => (
