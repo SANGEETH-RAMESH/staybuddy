@@ -133,7 +133,7 @@ export const createChat = (id: mongoose.Types.ObjectId | string) => userApiClien
 
 
 
-export const payment = (totalAmount: number) => userApiClient.post('/order/payment', {
+export const payment = (totalAmount: number) => userApiClient.post(`${apiUrl}/order/payment`, {
   totalAmount: totalAmount * 100,
   currency: 'INR',
   receipt: `receipt_${Date.now()}`,
