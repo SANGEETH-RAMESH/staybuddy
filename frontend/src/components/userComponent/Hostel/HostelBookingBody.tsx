@@ -311,7 +311,8 @@ const BookingForm = () => {
         }
         console.log('rece', newNotification)
         socket.emit('send_notification', newNotification)
-        toast.success('Hostel Booked Successfully');
+        // toast.success('Hostel Booked Successfully');
+        toast.success("Hostel Booked Successfully", { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
 
         navigate('/hostel');
       } else {
@@ -432,7 +433,8 @@ const BookingForm = () => {
         console.log('rece', newNotification)
         socket.emit('send_notification', newNotification)
         socket.emit('send_notification', hostNotification)
-        toast.success('Hostel Booked Successfully');
+        // toast.success('Hostel Booked Successfully');
+        toast.success("Hostel Booked Successfully", { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
         navigate('/hostel');
       } else {
         toast.error('Booking failed');
