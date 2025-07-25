@@ -11,8 +11,8 @@ class HostelController {
     async getHostels(req: Request, res: Response): Promise<void> {
         try {
             const { page, limit, search, lat, lng, radius, rating, minPrice, maxPrice, sort } = req.query
-            const pageStr = typeof page === 'string' ? page : '1';
-            const limitStr = typeof limit === 'string' ? limit : '10';
+            const pageStr = typeof page === 'string' ? page : '0';
+            const limitStr = typeof limit === 'string' ? limit : '0';
             const searchStr = typeof search === 'string' ? search : '';
             const latNum = lat && typeof lat === 'string' ? parseFloat(lat) : undefined;
             const lngNum = lng && typeof lng === 'string' ? parseFloat(lng) : undefined;

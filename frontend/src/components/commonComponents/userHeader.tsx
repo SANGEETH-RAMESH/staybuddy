@@ -49,7 +49,7 @@ export const UserHeader: React.FC = () => {
     const handleOldNotifications = (notifications: Notification[]) => {
       console.log(notifications, 'Siuu')
       setNotification(notifications)
-      setIsRead(notifications[0].isRead)
+      setIsRead(notifications[0]?.isRead)
       const unreadCount = notifications.filter(n => n.isRead).length;
       console.log(unreadCount,'Read')
       setReadCount(unreadCount)

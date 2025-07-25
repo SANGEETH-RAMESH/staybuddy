@@ -76,10 +76,10 @@ const ChatApplication: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [onlineHosts, setOnlineHosts] = useState<string[]>([]);
   const [isMobileView, setIsMobileView] = useState<boolean>(false);
-  
+
   const [isCallActive, setIsCallActive] = useState<boolean>(false);
   const [isCallInitiator, setIsCallInitiator] = useState<boolean>(false);
-  
+
   const location = useLocation();
   const hostId = location.state?.hostId || null;
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -96,7 +96,7 @@ const ChatApplication: React.FC = () => {
     const handleResize = () => {
       setIsMobileView(window.innerWidth < 768);
     };
-    
+
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -129,16 +129,16 @@ const ChatApplication: React.FC = () => {
     });
 
     socket.on('incoming_call', ({ callerId, callerName, chatId }) => {
-      console.log('Incoming call from:', callerName,callerId);
+      console.log('Incoming call from:', callerName, callerId);
       if (selectedChat && selectedChat.id === chatId) {
         setIsCallActive(true);
         setIsCallInitiator(false);
       }
     });
 
-    socket.on('counted_read',({chatId,receiverId})=>{
-          console.log(chatId,receiverId,"heyyy")
-        })
+    socket.on('counted_read', ({ chatId, receiverId }) => {
+      console.log(chatId, receiverId, "heyyy")
+    })
 
     return () => {
       socket.off("onlineHosts");
@@ -179,7 +179,7 @@ const ChatApplication: React.FC = () => {
         const id = hostId?._id;
         const res = await getChat(id);
         const chatData = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
-        
+
         const formattedChats = chatData.map((chat: Chats) => ({
           id: chat._id,
           name: chat.participant2.name,
@@ -220,14 +220,14 @@ const ChatApplication: React.FC = () => {
     socket.on('receiveMessage', (newMessage) => {
       console.log("New message received:", newMessage);
       console.log(chats, 'Before')
-      
+
       setSelectedChat(prevChat => {
         if (!prevChat || prevChat.id !== newMessage.savedMessage.chatId) return prevChat;
         const updatedMessages = [...(prevChat.messages || []), newMessage.savedMessage];
         const updatedChat = { ...prevChat, messages: updatedMessages };
         return updatedChat;
       });
-      
+
       console.log(newMessage, 'heee')
       setChats(prevChats =>
         prevChats.map(chat => {
@@ -244,14 +244,14 @@ const ChatApplication: React.FC = () => {
               lastMessage: newMessage.savedMessage.message,
               lastMessageTime: newMessage.savedMessage.timestamp,
               type: newMessage.savedMessage.type,
-              unreadCount:newMessage.readCount
+              unreadCount: newMessage.readCount
             };
           } else {
             return chat;
           }
         })
       );
-      
+
       setTimeout(scrollToBottom, 100);
     });
 
@@ -270,23 +270,23 @@ const ChatApplication: React.FC = () => {
   }, [selectedChat?.messages]);
 
   const handleSelectChat = (chat: Chat, receiverId: string) => {
-    console.log('fdlf',selectedFile)
+    console.log('fdlf', selectedFile)
     setSelectedChat(chat);
     setReceiverId(receiverId);
     socket.emit('join_room', chat.id);
     socket.emit("old_message", { chatId: chat.id });
     const chatId = chat.id
-    socket.emit('count_read',{chatId,receiverId})
+    socket.emit('count_read', { chatId, receiverId })
     setChats(prevChats =>
-        prevChats.map(chat =>
-          chat.id === chatId
-            ? {
-              ...chat,
-              unreadCount:0
-            }
-            : chat
-        )
-      );
+      prevChats.map(chat =>
+        chat.id === chatId
+          ? {
+            ...chat,
+            unreadCount: 0
+          }
+          : chat
+      )
+    );
   };
 
   const handleBackToChats = () => {
@@ -334,7 +334,7 @@ const ChatApplication: React.FC = () => {
           messages: [...prevChat.messages, message],
         };
       });
-      
+
       setChats(prevChats =>
         prevChats.map(chat =>
           chat.id === selectedChat.id
@@ -346,7 +346,7 @@ const ChatApplication: React.FC = () => {
             : chat
         )
       );
-      
+
       setTimeout(scrollToBottom, 100);
     };
     reader.readAsDataURL(file);
@@ -465,7 +465,7 @@ const ChatApplication: React.FC = () => {
 
   const renderMessage = (msg: Message, index: number) => {
     const isOwnMessage = msg.senderId === userId;
-    
+
     return (
       <div
         key={index}
@@ -482,7 +482,7 @@ const ChatApplication: React.FC = () => {
               <img
                 src={msg.message}
                 alt={msg.message}
-                className="max-w-full h-auto rounded-lg mb-2 cursor-pointer"
+                className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 object-cover rounded-lg mb-2 cursor-pointer"
                 onClick={() => window.open(msg.fileUrl, '_blank')}
               />
             </div>
@@ -593,10 +593,10 @@ const ChatApplication: React.FC = () => {
                   <ArrowLeft size={20} className="text-gray-600" />
                 </button>
               )}
-              <img 
-                src={dummy_profile} 
-                alt={selectedChat.name} 
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full mr-2 sm:mr-4 flex-shrink-0" 
+              <img
+                src={dummy_profile}
+                alt={selectedChat.name}
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full mr-2 sm:mr-4 flex-shrink-0"
               />
               <div className="min-w-0 flex-grow">
                 <h2 className="font-semibold text-sm sm:text-base truncate">{selectedChat.name}</h2>
@@ -620,11 +620,10 @@ const ChatApplication: React.FC = () => {
               <button
                 onClick={initiateVideoCall}
                 disabled={!onlineHosts.includes(selectedChat.receiverId)}
-                className={`p-1.5 sm:p-2 rounded-full transition-colors ${
-                  onlineHosts.includes(selectedChat.receiverId)
+                className={`p-1.5 sm:p-2 rounded-full transition-colors ${onlineHosts.includes(selectedChat.receiverId)
                     ? 'bg-blue-500 hover:bg-blue-600 text-white'
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
+                  }`}
                 title={onlineHosts.includes(selectedChat.receiverId) ? 'Start video call' : 'User is offline'}
               >
                 <Video size={16} className="sm:w-5 sm:h-5" />

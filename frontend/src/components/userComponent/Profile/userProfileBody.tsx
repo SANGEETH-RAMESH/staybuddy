@@ -1,4 +1,4 @@
-import  { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getUserDetails, getWalletDetails } from '../../../services/userServices';
 
@@ -10,19 +10,19 @@ const UserProfileBody = () => {
   const [email, setEmail] = useState('');
   const [balance, setBalance] = useState(0)
   const [id, setId] = useState('')
+  const [userType, setUserType] = useState('')
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await getUserDetails();
         const walletDetails = await getWalletDetails();
-        console.log("User details:", response.data.data.name);
-        console.log("walllet", walletDetails.data.message)
-        setId(response.data.data._id)
-        setBalance(walletDetails.data.message?.balance)
-        setName(response.data.data.name);
-        console.log(name,'hee')
-        setEmail(response.data.data.email)
+        console.log(response.data.data, 'fffdszfd')
+        setId(response?.data?.data?._id)
+        setBalance(walletDetails?.data.message?.balance)
+        setName(response?.data.data?.name);
+        setEmail(response?.data?.data?.email)
+        setUserType(response?.data?.data?.userType)
         console.log(email, name)
       } catch (error) {
         console.error("Error fetching user details:", error);
@@ -103,28 +103,31 @@ const UserProfileBody = () => {
           }}
         >
           {/* Change Password */}
-          <div
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '8px',
-              padding: '20px',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              cursor: 'pointer',
-              transition: 'transform 0.2s',
-            }}
-            onClick={() => navigate('/changepassword')}
-            onMouseOver={(e) =>
-              (e.currentTarget.style.transform = 'translateY(-5px)')
-            }
-            onMouseOut={(e) =>
-              (e.currentTarget.style.transform = 'translateY(0)')
-            }
-          >
-            <div style={{ textAlign: 'center', padding: '20px' }}>
-              <div style={{ fontSize: '24px', marginBottom: '10px' }}>🔑</div>
-              <div style={{ fontWeight: 'bold' }}>Change Password</div>
+          {userType === 'local' && (
+            <div
+              style={{
+                backgroundColor: 'white',
+                borderRadius: '8px',
+                padding: '20px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+              }}
+              onClick={() => navigate('/changepassword')}
+              onMouseOver={(e) =>
+                (e.currentTarget.style.transform = 'translateY(-5px)')
+              }
+              onMouseOut={(e) =>
+                (e.currentTarget.style.transform = 'translateY(0)')
+              }
+            >
+              <div style={{ textAlign: 'center', padding: '20px' }}>
+                <div style={{ fontSize: '24px', marginBottom: '10px' }}>🔑</div>
+                <div style={{ fontWeight: 'bold' }}>Change Password</div>
+              </div>
             </div>
-          </div>
+          )}
+
 
           {/* Edit Profile */}
           <div
@@ -203,7 +206,7 @@ const UserProfileBody = () => {
                   marginTop: '5px',
                 }}
               >
-                Balance:₹{balance??'0'}
+                Balance:₹{balance ?? '0'}
               </div>
             </div>
           </div>

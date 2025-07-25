@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { CreditCard, ArrowUpRight, ArrowDownRight, AlertCircle } from 'lucide-react';
+import { CreditCard, ArrowUpRight, ArrowDownRight, AlertCircle, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { deposit, getUserDetails, getWalletDetails, payment, withdrew } from '../../../services/userServices';
 
 
@@ -55,6 +56,8 @@ const WalletTracker = () => {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
+
+  const navigate = useNavigate();
 
   // No longer need pagination states
 
@@ -225,11 +228,26 @@ const WalletTracker = () => {
     }
   };
 
+  const handleBack = () => {
+    navigate('/profile');
+  };
+
 
 
   return (
     <div className="h-screen flex items-center justify-center bg-gray-100">
       <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-4">
+        {/* Back Button */}
+        <div className="mb-4">
+          <button
+            onClick={handleBack}
+            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </button>
+        </div>
+
         <div className="flex items-center mb-4">
           <CreditCard className="mr-2" />
           <h2 className="text-xl font-bold">StayBuddy</h2>

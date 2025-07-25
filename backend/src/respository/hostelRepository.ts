@@ -24,8 +24,9 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
         super(Hostel)
     }
 
-    async getHostels(query: Record<string, any>, sortOption: any = {}): Promise<IHostel[]> {
-        return await Hostel.find(query).sort(sortOption);
+    async getHostels(query: Record<string, any>,projection:IUpdateHostelInput, sortOption: any = {}): Promise<IHostel[]> {
+
+        return await Hostel.find(query,projection).sort(sortOption);
     }
 
     async findAverageRatedHostelIds(rating: number): Promise<{ hostelId: mongoose.Types.ObjectId; rating: number }[]> {

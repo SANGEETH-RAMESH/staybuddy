@@ -77,11 +77,12 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
             const userResponse: IUserResponse = {
                 _id: userData._id,
                 name: userData.name,
-                email: userData.email,
+                email: userData.email, 
                 mobile: userData.mobile,
                 isAdmin: userData.isAdmin,
                 isBlock: userData.isBlock,
                 wallet_id: userData.wallet_id ? userData.wallet_id : null,
+                userType:userData.userType 
             };
             return userResponse;
         } catch (error) {
@@ -358,7 +359,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
                 mobile: 1,
                 isAdmin: 1,
                 isBlock: 1,
-                email: 1
+                email: 1,
             }
 
             const users = await User.find({ isAdmin: false }, projection)

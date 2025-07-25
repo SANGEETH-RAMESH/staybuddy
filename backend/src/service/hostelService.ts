@@ -88,8 +88,34 @@ class hostelService implements IHostelService {
                     sortOption = { hostelname: -1 };
                     break;
             }
-            let allHostels = await this.hostelRepository.getHostels(query, sortOption);
-
+            let projection: any
+            if ( Number(page) > 0 || Number(limit) > 0  ) {
+                projection = {
+                    _id: 1,
+                    totalRooms: 1,
+                    isActive: 1,
+                    latitude: 1,
+                    longitude: 1,
+                    photos: 1,
+                    cancellationPolicy: 1,
+                    hostelname: 1,
+                    location: 1,
+                    facilities: 1,
+                    phone: 1,
+                    inactiveReason:1,
+                    bedShareRoom:1
+                }
+            } else {
+                projection = {
+                    _id: 1,
+                    hostelname: 1,
+                    location: 1,
+                    bedShareRoom: 1,
+                    photos: 1,
+                    rating:1
+                }
+            }
+            let allHostels = await this.hostelRepository.getHostels(query, projection, sortOption);
             if (lat && lng && radius) {
                 allHostels = allHostels.filter((hostel) => {
                     if (typeof hostel.latitude === 'number' && typeof hostel.longitude === 'number') {
@@ -99,7 +125,6 @@ class hostelService implements IHostelService {
                     return false;
                 });
             }
-
             if (ratedHostels.length > 0) {
                 allHostels = allHostels.map(hostel => {
                     const plainHostel = hostel.toObject?.() || hostel;
@@ -122,7 +147,13 @@ class hostelService implements IHostelService {
             }
             const totalCount = allHostels.length;
             const start = (pageNumber - 1) * limitNumber;
-            const paginated = allHostels.slice(start, start + limitNumber);
+            let paginated: typeof allHostels;
+            if(start>0 && limitNumber>0){
+             paginated = allHostels.slice(start, start + limitNumber);
+
+            }else{
+                paginated  = allHostels
+            }
 
             return { hostels: paginated, totalCount };
         } catch (err) {

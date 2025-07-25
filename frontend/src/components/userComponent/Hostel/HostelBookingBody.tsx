@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Wallet, CreditCard, AlertCircle, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Wallet, CreditCard, AlertCircle, AlertTriangle, ArrowLeft, Loader } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { Notification } from '../../../interface/Notification';
 import { getSingleHostel, getUserDetails, getWalletDetails, payment, createBooking } from '../../../services/userServices';
@@ -63,6 +63,7 @@ const BookingForm = () => {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const [bookingMonths, setBookingMonths] = useState(1);
+  const [isLoading, setIsLoading] = useState(false)
   // const [facilityError, setFacilityError] = useState<string>('');
 
   const { id } = useParams();
@@ -183,6 +184,7 @@ const BookingForm = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true)
       try {
         if (!id) return;
         const [hostelResponse, userResponse, walletResponse] = await Promise.all([
@@ -194,7 +196,7 @@ const BookingForm = () => {
         const hostelData = hostelResponse.data.message;
         const userData = userResponse.data.data;
         const walletData = walletResponse.data.message;
-        console.log(walletData, 'hee')
+        console.log(userData, 'hee')
         setCancellationPolicy(hostelData.cancellationPolicy);
         setWalletBalance(walletData.balance);
         setUserId(userData._id)
@@ -202,7 +204,7 @@ const BookingForm = () => {
         setIsActive(hostelData.isActive)
         setCustomerName(userData.name);
         setCustomerPhone(userData.mobile);
-        setMaxBeds(parseInt(hostelData.beds));
+        setMaxBeds(parseInt(hostelData.totalRooms));
         // setSelectedBeds(1);
         setBaseRentAmount(hostelData.bedShareRoom);
         setBaseDepositAmount(hostelData.advanceamount);
@@ -218,6 +220,7 @@ const BookingForm = () => {
             ? hostelData.facilities.split(',')
             : [];
         setAvailableFacilities(facilitiesArray);
+        setIsLoading(false)
       } catch (error) {
         console.error('Error fetching data:', error);
         toast.error('Error loading hostel details');
@@ -382,8 +385,6 @@ const BookingForm = () => {
   const handlePaymentSelection = () => {
     if (isActive == false) {
       toast.error("Hostel is InActive")
-    } else if (maxBeds < 1) {
-      toast.error("No Rooms Available")
     }
     else if (paymentMethod === 'wallet') {
       handleWalletPayment();
@@ -461,320 +462,346 @@ const BookingForm = () => {
     navigate(`/singlehostel/${id}`)
   }
 
-  return (
-    <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
-      <button
-        onClick={handleGoBack}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-3 transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-        <span className="text-sm sm:text-base font-medium">Back</span>
-      </button>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-        {/* Left Column */}
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-blue-600 mb-1">Name</label>
-            <input
-              type="text"
-              value={customerName}
-              onChange={(e) => {
-                setCustomerName(e.target.value);
-                validateField('customerName');
-              }}
-              onBlur={() => handleBlur('customerName')}
-              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${touched.customerName && errors.customerName ? 'border-red-500' : ''
-                }`}
-            />
-            {renderError('customerName')}
-          </div>
-
-          <div>
-            <label className="block text-sm text-blue-600 mb-1">From Date</label>
-            <input
-              type="text"
-              value={startDate}
-              disabled
-              className="w-full p-2 border rounded-lg bg-gray-50"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-blue-600 mb-1">Rent Amount / Month</label>
-            <input
-              type="text"
-              value={totalRentAmount}
-              disabled
-              className="w-full p-2 border rounded-lg bg-gray-50"
-            />
-          </div>
-
-
-
-          {cancellationPolicy === 'freecancellation' && (
-            <div className="p-3 bg-green-50 border  mb-1 border-green-200 rounded-lg">
-              <div className="flex items-center text-green-700">
-                <AlertCircle className="h-4 w-4 mr-2" />
-                <span className="text-sm font-medium">Free Cancellation Policy Available</span>
-              </div>
-            </div>
-          )}
-
-          {cancellationPolicy === 'no free cancellation' && (
-            <div className="p-3 bg-red-50 border mb-1 border-red-200 rounded-lg">
-              <div className="flex items-center text-red-700">
-                <AlertCircle className="h-4 w-4 mr-2" />
-                <span className="text-sm font-medium">No Free Cancellation — Charges may apply</span>
-              </div>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm text-blue-600 mb-1">Number of Beds (Max: {maxBeds})</label>
-            <input
-              type="number"
-              value={selectedBeds}
-              onChange={handleBedsChange}
-              onBlur={() => handleBlur('selectedBeds')}
-              min="1"
-              max={maxBeds}
-              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${touched.selectedBeds && errors.selectedBeds ? 'border-red-500' : ''
-                }`}
-            />
-            {renderError('selectedBeds')}
-          </div>
-
-          <div>
-            <label className="block text-sm text-blue-400 mb-1">Category</label>
-            <input
-              type="text"
-              readOnly
-              value={category.toUpperCase()}
-              className="w-full p-2 border rounded-lg bg-gray-50"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-blue-400 mb-1">Preferred</label>
-            <input
-              type="text"
-              readOnly
-              value={tenantPreferred}
-              className="w-full p-2 border rounded-lg bg-gray-50"
-            />
-          </div>
-
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <h3 className="text-sm text-blue-600 mb-2">Available Facilities</h3>
-            <div className="space-y-2">
-              {['Washing Machine', 'Food', 'Stove', 'Wifi', 'Refrigerator', 'Laundry'].map((facility) => {
-                const facilityKey = facility.toLowerCase();
-                const isAvailable = availableFacilities.includes(facilityKey);
-                return (
-                  <div key={facility} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={facility}
-                      name={facilityKey}
-                      checked={selectedFacilities[facilityKey] || false}
-                      onChange={handleFacilityChange}
-                      disabled={!isAvailable}
-                      className={`mr-2 ${touched.facilities && errors.facilities ? 'border-red-500' : ''}`}
-                    />
-                    <label
-                      htmlFor={facility}
-                      className={`text-sm ${isAvailable ? 'text-gray-700' : 'text-gray-400 line-through'}`}
-                    >
-                      {facility}
-                      {!isAvailable && ' (Unavailable)'}
-                    </label>
-                  </div>
-                );
-              })}
-            </div>
-            {touched.facilities && errors.facilities && (
-              <div className="flex items-center text-red-500 text-sm mt-2">
-                <AlertTriangle className="h-4 w-4 mr-1" />
-                <span>{errors.facilities}</span>
-              </div>
-            )}
+  if (loading) {
+    return (
+      <div className="p-6 bg-white border rounded-lg">
+        <div className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <Loader size="lg" className="text-blue-600 mx-auto mb-2" />
+            <p className="text-gray-600">Loading...</p>
           </div>
         </div>
+      </div>
+    );
+  }
 
-        {/* Right Column */}
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-blue-600 mb-1">Phone</label>
-            <input
-              type="tel"
-              value={customerPhone}
-              onChange={(e) => {
-                setCustomerPhone(e.target.value);
-                validateField('customerPhone');
-              }}
-              onBlur={() => handleBlur('customerPhone')}
-              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${touched.customerPhone && errors.customerPhone ? 'border-red-500' : ''
-                }`}
-            />
-            {renderError('customerPhone')}
-          </div>
+  return isLoading ? (
+    <div className="mb-4 flex items-center justify-center h-40">
+      <div className="relative w-16 h-16">
+        <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
+        <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
+      </div>
+    </div>
+  ) : (
+    <>
+      <div className="max-w-4xl p-6 mx-auto bg-white rounded-lg shadow-lg">
 
-          <div>
-            <label className="block text-sm text-blue-600 mb-1">End Date</label>
-            <input
-              type="text"
-              value={endDate}
-              disabled
-              className="w-full p-2 border rounded-lg bg-gray-50"
-            />
-          </div>
+        <button
+          onClick={handleGoBack}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-3 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="text-sm sm:text-base font-medium">Back</span>
+        </button>
 
-          <div>
-            <label className="block text-sm text-blue-600 mb-1">Email</label>
-            <input
-              type="email"
-              value={customerEmail}
-              onChange={(e) => {
-                setCustomerEmail(e.target.value);
-                validateField('customerEmail');
-              }}
-              onBlur={() => handleBlur('customerEmail')}
-              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${touched.customerEmail && errors.customerEmail ? 'border-red-500' : ''
-                }`}
-            />
-            {renderError('customerEmail')}
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          {selectedFacilities.food && (
+          {/* Left Column */}
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm text-blue-600 mb-1">Food Rate / Month</label>
+              <label className="block text-sm text-blue-600 mb-1">Name</label>
               <input
-                type="number"
-                value={totalFoodRate}
-                readOnly
+                type="text"
+                value={customerName}
+                onChange={(e) => {
+                  setCustomerName(e.target.value);
+                  validateField('customerName');
+                }}
+                onBlur={() => handleBlur('customerName')}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${touched.customerName && errors.customerName ? 'border-red-500' : ''
+                  }`}
+              />
+              {renderError('customerName')}
+            </div>
+
+            <div>
+              <label className="block text-sm text-blue-600 mb-1">From Date</label>
+              <input
+                type="text"
+                value={startDate}
+                disabled
                 className="w-full p-2 border rounded-lg bg-gray-50"
               />
             </div>
-          )}
 
-
-
-          <div>
-            <label className="block text-sm text-blue-600 mb-1">Deposit</label>
-            <input
-              type="text"
-              value={totalDepositAmount}
-              disabled
-              className="w-full p-2 border rounded-lg bg-gray-50"
-            />
-          </div>
-
-          {/* Payment Method Selection */}
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <h3 className="text-sm font-medium text-gray-900 mb-4">Select Payment Method</h3>
-            <div className="space-y-3">
-              <div
-                className="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                onClick={() => setPaymentMethod('online')}
-              >
-                <input
-                  type="radio"
-                  id="online"
-                  name="paymentMethod"
-                  checked={paymentMethod === 'online'}
-                  onChange={() => setPaymentMethod('online')}
-                  className="h-4 w-4 text-blue-600"
-                />
-                <label htmlFor="online" className="ml-3 flex items-center cursor-pointer">
-                  <CreditCard className="h-5 w-5 text-blue-500 mr-2" />
-                  <span>Online Payment (Razorpay)</span>
-                </label>
-              </div>
-
-              <div
-                className="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
-                onClick={() => setPaymentMethod('wallet')}
-              >
-                <input
-                  type="radio"
-                  id="wallet"
-                  name="paymentMethod"
-                  checked={paymentMethod === 'wallet'}
-                  onChange={() => setPaymentMethod('wallet')}
-                  className="h-4 w-4 text-blue-600"
-                />
-                <label htmlFor="wallet" className="ml-3 flex items-center cursor-pointer">
-                  <Wallet className="h-5 w-5 text-blue-500 mr-2" />
-                  <span>Wallet Balance (₹{walletBalance})</span>
-                </label>
-                {paymentMethod === 'wallet' && walletBalance < totalAmount && (
-                  <div className="ml-2 flex items-center text-red-500">
-                    <AlertCircle className="h-4 w-4 mr-1" />
-                    <span className="text-sm">Insufficient balance</span>
-                  </div>
-                )}
-              </div>
+            <div>
+              <label className="block text-sm text-blue-600 mb-1">Rent Amount / Month</label>
+              <input
+                type="text"
+                value={totalRentAmount}
+                disabled
+                className="w-full p-2 border rounded-lg bg-gray-50"
+              />
             </div>
-          </div>
 
-          {/* Amount Summary */}
-          <div className="p-4 bg-blue-50 rounded-lg">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Rent Amount ({bookingMonths} month{bookingMonths > 1 ? 's' : ''}):</span>
-                <span>₹{totalRentAmount}</span>
+
+
+            {cancellationPolicy === 'freecancellation' && (
+              <div className="p-3 bg-green-50 border  mb-1 border-green-200 rounded-lg">
+                <div className="flex items-center text-green-700">
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  <span className="text-sm font-medium">Free Cancellation Policy Available</span>
+                </div>
               </div>
-              <div className="flex justify-between text-sm">
-                <span>Deposit Amount:</span>
-                <span>₹{totalDepositAmount}</span>
+            )}
+
+            {cancellationPolicy === 'no free cancellation' && (
+              <div className="p-3 bg-red-50 border mb-1 border-red-200 rounded-lg">
+                <div className="flex items-center text-red-700">
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  <span className="text-sm font-medium">No Free Cancellation — Charges may apply</span>
+                </div>
               </div>
-              {selectedFacilities.food && (
-                <div className="flex justify-between text-sm">
-                  <span>Food Charges ({bookingMonths} month{bookingMonths > 1 ? 's' : ''}):</span>
-                  <span>₹{totalFoodRate}</span>
+            )}
+
+            <div>
+              <label className="block text-sm text-blue-600 mb-1">Number of Beds (Max: {maxBeds})</label>
+              <input
+                type="number"
+                value={selectedBeds}
+                onChange={handleBedsChange}
+                onBlur={() => handleBlur('selectedBeds')}
+                min="1"
+                max={maxBeds}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${touched.selectedBeds && errors.selectedBeds ? 'border-red-500' : ''
+                  }`}
+              />
+              {renderError('selectedBeds')}
+            </div>
+
+            <div>
+              <label className="block text-sm text-blue-400 mb-1">Category</label>
+              <input
+                type="text"
+                readOnly
+                value={category.toUpperCase()}
+                className="w-full p-2 border rounded-lg bg-gray-50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-blue-400 mb-1">Preferred</label>
+              <input
+                type="text"
+                readOnly
+                value={tenantPreferred}
+                className="w-full p-2 border rounded-lg bg-gray-50"
+              />
+            </div>
+
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <h3 className="text-sm text-blue-600 mb-2">Available Facilities</h3>
+              <div className="space-y-2">
+                {['Washing Machine', 'Food', 'Stove', 'Wifi', 'Refrigerator', 'Laundry'].map((facility) => {
+                  const facilityKey = facility.toLowerCase();
+                  const isAvailable = availableFacilities.includes(facilityKey);
+                  return (
+                    <div key={facility} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={facility}
+                        name={facilityKey}
+                        checked={selectedFacilities[facilityKey] || false}
+                        onChange={handleFacilityChange}
+                        disabled={!isAvailable}
+                        className={`mr-2 ${touched.facilities && errors.facilities ? 'border-red-500' : ''}`}
+                      />
+                      <label
+                        htmlFor={facility}
+                        className={`text-sm ${isAvailable ? 'text-gray-700' : 'text-gray-400 line-through'}`}
+                      >
+                        {facility}
+                        {!isAvailable && ' (Unavailable)'}
+                      </label>
+                    </div>
+                  );
+                })}
+              </div>
+              {touched.facilities && errors.facilities && (
+                <div className="flex items-center text-red-500 text-sm mt-2">
+                  <AlertTriangle className="h-4 w-4 mr-1" />
+                  <span>{errors.facilities}</span>
                 </div>
               )}
-              <div className="border-t pt-2 mt-2">
-                <div className="flex justify-between font-semibold">
-                  <span>Total Amount:</span>
-                  <span>₹{totalAmount}</span>
-                </div>
-              </div>
             </div>
           </div>
 
-          {/* Payment Button */}
-          <button
-            onClick={handlePaymentSelection}
-            disabled={loading || (paymentMethod === 'wallet' && walletBalance < totalAmount)}
-            className={`w-full py-3 px-4 rounded-lg flex items-center justify-center space-x-2 
+          {/* Right Column */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-blue-600 mb-1">Phone</label>
+              <input
+                type="tel"
+                value={customerPhone}
+                onChange={(e) => {
+                  setCustomerPhone(e.target.value);
+                  validateField('customerPhone');
+                }}
+                onBlur={() => handleBlur('customerPhone')}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${touched.customerPhone && errors.customerPhone ? 'border-red-500' : ''
+                  }`}
+              />
+              {renderError('customerPhone')}
+            </div>
+
+            <div>
+              <label className="block text-sm text-blue-600 mb-1">End Date</label>
+              <input
+                type="text"
+                value={endDate}
+                disabled
+                className="w-full p-2 border rounded-lg bg-gray-50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-blue-600 mb-1">Email</label>
+              <input
+                type="email"
+                value={customerEmail}
+                onChange={(e) => {
+                  setCustomerEmail(e.target.value);
+                  validateField('customerEmail');
+                }}
+                onBlur={() => handleBlur('customerEmail')}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-400 ${touched.customerEmail && errors.customerEmail ? 'border-red-500' : ''
+                  }`}
+              />
+              {renderError('customerEmail')}
+            </div>
+
+            {selectedFacilities.food && (
+              <div>
+                <label className="block text-sm text-blue-600 mb-1">Food Rate / Month</label>
+                <input
+                  type="number"
+                  value={totalFoodRate}
+                  readOnly
+                  className="w-full p-2 border rounded-lg bg-gray-50"
+                />
+              </div>
+            )}
+
+
+
+            <div>
+              <label className="block text-sm text-blue-600 mb-1">Deposit</label>
+              <input
+                type="text"
+                value={totalDepositAmount}
+                disabled
+                className="w-full p-2 border rounded-lg bg-gray-50"
+              />
+            </div>
+
+            {/* Payment Method Selection */}
+            <div className="p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-sm font-medium text-gray-900 mb-4">Select Payment Method</h3>
+              <div className="space-y-3">
+                <div
+                  className="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                  onClick={() => setPaymentMethod('online')}
+                >
+                  <input
+                    type="radio"
+                    id="online"
+                    name="paymentMethod"
+                    checked={paymentMethod === 'online'}
+                    onChange={() => setPaymentMethod('online')}
+                    className="h-4 w-4 text-blue-600"
+                  />
+                  <label htmlFor="online" className="ml-3 flex items-center cursor-pointer">
+                    <CreditCard className="h-5 w-5 text-blue-500 mr-2" />
+                    <span>Online Payment (Razorpay)</span>
+                  </label>
+                </div>
+
+                <div
+                  className="flex items-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                  onClick={() => setPaymentMethod('wallet')}
+                >
+                  <input
+                    type="radio"
+                    id="wallet"
+                    name="paymentMethod"
+                    checked={paymentMethod === 'wallet'}
+                    onChange={() => setPaymentMethod('wallet')}
+                    className="h-4 w-4 text-blue-600"
+                  />
+                  <label htmlFor="wallet" className="ml-3 flex items-center cursor-pointer">
+                    <Wallet className="h-5 w-5 text-blue-500 mr-2" />
+                    <span>Wallet Balance (₹{walletBalance})</span>
+                  </label>
+                  {paymentMethod === 'wallet' && walletBalance < totalAmount && (
+                    <div className="ml-2 flex items-center text-red-500">
+                      <AlertCircle className="h-4 w-4 mr-1" />
+                      <span className="text-sm">Insufficient balance</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Amount Summary */}
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Rent Amount ({bookingMonths} month{bookingMonths > 1 ? 's' : ''}):</span>
+                  <span>₹{totalRentAmount}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span>Deposit Amount:</span>
+                  <span>₹{totalDepositAmount}</span>
+                </div>
+                {selectedFacilities.food && (
+                  <div className="flex justify-between text-sm">
+                    <span>Food Charges ({bookingMonths} month{bookingMonths > 1 ? 's' : ''}):</span>
+                    <span>₹{totalFoodRate}</span>
+                  </div>
+                )}
+                <div className="border-t pt-2 mt-2">
+                  <div className="flex justify-between font-semibold">
+                    <span>Total Amount:</span>
+                    <span>₹{totalAmount}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Button */}
+            <button
+              onClick={handlePaymentSelection}
+              disabled={loading || (paymentMethod === 'wallet' && walletBalance < totalAmount)}
+              className={`w-full py-3 px-4 rounded-lg flex items-center justify-center space-x-2 
               ${loading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'} 
               ${paymentMethod === 'wallet' && walletBalance < totalAmount ? 'bg-gray-400' : ''}
               text-white font-medium transition-colors duration-200`}
-          >
-            {loading ? (
-              <span>Processing...</span>
-            ) : (
-              <>
-                {paymentMethod === 'wallet' ? (
-                  <>
-                    <Wallet className="h-5 w-5" />
-                    <span>Pay with Wallet</span>
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="h-5 w-5" />
-                    <span>Pay Online</span>
-                  </>
-                )}
-              </>
-            )}
-          </button>
+            >
+              {loading ? (
+                <span>Processing...</span>
+              ) : (
+                <>
+                  {paymentMethod === 'wallet' ? (
+                    <>
+                      <Wallet className="h-5 w-5" />
+                      <span>Pay with Wallet</span>
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-5 w-5" />
+                      <span>Pay Online</span>
+                    </>
+                  )}
+                </>
+              )}
+            </button>
 
+          </div>
         </div>
       </div>
-    </div>
+    </>
+
+
   );
 };
 

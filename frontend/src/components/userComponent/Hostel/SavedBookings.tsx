@@ -11,7 +11,8 @@ import {
   CreditCard,
   ClipboardX,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ArrowLeft
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -149,11 +150,23 @@ const HostBookings = () => {
       </div>
     );
   }
+  const handleBack = () => {
+    navigate('/profile');
+  };
 
 
   if (paginationData.totalCount === 0) {
     return (
       <div className="max-w-7xl mx-auto p-6 bg-gray-50">
+        <div className="mb-4">
+                  <button
+                    onClick={handleBack}
+                    className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back
+                  </button>
+                </div>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
           <div className="flex items-center gap-2">
             <Building2 className="w-6 h-6 text-blue-600" />
@@ -176,6 +189,15 @@ const HostBookings = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6 bg-gray-50">
+      <div className="mb-4">
+          <button
+            onClick={handleBack}
+            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </button>
+        </div>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
         <div className="flex items-center gap-2">
           <Building2 className="w-6 h-6 text-blue-600" />

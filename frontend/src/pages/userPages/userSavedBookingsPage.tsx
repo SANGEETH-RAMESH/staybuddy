@@ -4,8 +4,10 @@ import SavedBookings from '../../components/userComponent/Hostel/SavedBookings'
 const userSavedBookings = () => {
   return (
     <div>
-      <UserHeader/>
-        <SavedBookings/>
+      <UserHeader />
+      <div className="mt-16">
+        <SavedBookings />
+      </div>
     </div>
   )
 }

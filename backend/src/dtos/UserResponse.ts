@@ -9,4 +9,5 @@ export interface IUserResponse {
   isBlock: boolean;
   wallet_id?: Types.ObjectId | null;
   temp?:boolean;
+  userType?:string;
 }

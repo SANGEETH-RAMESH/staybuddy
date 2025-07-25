@@ -249,8 +249,8 @@ class UserController {
             const userData = { name: user?.displayName, email: user?.email };
             const response = await this.userService.googleSignUp(userData)
             if (typeof response !== 'string' && response?.message === 'Success') {
-                console.log(response,'Respons')
-                console.log(process.env.FRONTEND_URL,'FRONTENDURL')
+                console.log(response, 'Respons')
+                console.log(process.env.FRONTEND_URL, 'FRONTENDURL')
                 res.redirect(`${process.env.FRONTEND_URL}/?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}`)
             } else {
                 res.json({ message: response });
@@ -295,15 +295,17 @@ class UserController {
         }
     }
 
-    async createGoogleAuth(req:Request,res:Response):Promise<void>{
+    async createGoogleAuth(req: Request, res: Response): Promise<void> {
         try {
-            const {credential} = req.body;
+            const { credential } = req.body;
             const response = await this.userService.createGoogleAuth(credential);
             res.status(StatusCode.OK).json(response)
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
         }
     }
+
+    
 }
 
 export default UserController;

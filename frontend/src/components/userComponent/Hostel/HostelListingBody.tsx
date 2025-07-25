@@ -815,6 +815,7 @@ const HostelCardGrid: React.FC = () => {
       }
 
       const response = await getHostels(params)
+      
       const data = response.data.response;
       console.log(data, 'dataaaaa')
 
@@ -822,7 +823,7 @@ const HostelCardGrid: React.FC = () => {
       const hostelData = data.hostels;
       const total = data.totalCount;
       const pages = Math.ceil(total / limit);
-
+      console.log(hostelData[3],'Hiltop')
       const formattedHostels = hostelData.map((item: Hostel) => {
         const facilitiesArray: string[] = Array.isArray(item.facilities)
           ? item.facilities.map((f: string) => f.trim().toLowerCase())
@@ -842,7 +843,7 @@ const HostelCardGrid: React.FC = () => {
           contact: item.phone,
           facilities: facilitiesObj,
           photos: item.photos[0] || '',
-          beds: item.beds,
+          beds: item.totalRooms,
           rating: item.rating,
           isActive: item.isActive,
           inactiveReason: item.inactiveReason,

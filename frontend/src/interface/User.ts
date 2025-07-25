@@ -7,5 +7,7 @@ export interface User {
   email: string;
   location: string | null;
   isBlock: boolean;
-  isAdmin:boolean
+  isAdmin:boolean;
+  userType:string;
+  mobile:string;
 }

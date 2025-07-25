@@ -5,7 +5,7 @@ import { IUpdateHostelInput } from "../../dtos/HostelData";
 
 
 export interface IHostelRepository {
-    getHostels(query: Record<string, any>, sortOption: any): Promise<IHostel[]>,
+    getHostels(query: Record<string, any>,projection:IUpdateHostelInput, sortOption: any): Promise<IHostel[]>,
     getSingleHostel(id: Types.ObjectId): Promise<IHostel | string>,
     addHostel(hostelData: IUpdateHostelInput): Promise<string>,
     getHostHostels(id: Types.ObjectId, limit: number, skip: number, search: string): Promise<{ hostels: IHostel[]; totalCount: number } | string>,

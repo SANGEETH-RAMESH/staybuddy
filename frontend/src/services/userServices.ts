@@ -38,6 +38,11 @@ export const changePassword = (formData: {
   confirmPassword: string;
 }) => userApiClient.patch(`${apiUrl}/user/profile/change-password`, formData);
 
+export const addPassword = (formData:{
+  password:string;
+  confirmPassword:string
+}) => userApiClient.patch(`${apiUrl}/user/profile/add-password`,formData)
+
 
 
 

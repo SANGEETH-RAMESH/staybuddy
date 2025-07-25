@@ -9,7 +9,7 @@ import {
     Phone,
     IndianRupee,
     Building,
-    User,
+    UserCircle,
     Train,
     Shield,
     Calendar,
@@ -20,12 +20,13 @@ import {
     ArrowLeft
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-import { createChat, getOrderBookingByHostelId, getSingleHostel } from '../../../services/userServices';
+import { createChat, getOrderBookingByHostelId, getSingleHostel, getUserDetails } from '../../../services/userServices';
 import LocationDisplay from '../../commonComponents/LocationDisplay';
 import BookingModal from '../../commonComponents/BookingModal';
 import mongoose from 'mongoose';
 import { Hostel } from '../../../interface/Hostel';
 import { Order } from '../../../interface/Order';
+import { User } from '../../../interface/User';
 
 interface BookingData {
     fromDate: string;
@@ -120,6 +121,7 @@ const HostelDetailPage = () => {
     const [error, setError] = useState('');
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [orderDetails, setOrderDetails] = useState([]);
+    const [userData, setUserData] = useState<User | null>(null)
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -130,7 +132,8 @@ const HostelDetailPage = () => {
                 const response = await getSingleHostel(id);
                 console.log(response.data.message, 'Response')
                 setHostel(response.data.message);
-
+                const userData = await getUserDetails();
+                setUserData(userData?.data?.data)
                 const orderResponse = await getOrderBookingByHostelId(new mongoose.Types.ObjectId(response.data.message._id));
                 console.log(orderResponse.data.message, 'ldflsdfsdf')
                 const allBookings = orderResponse?.data?.message || [];
@@ -153,6 +156,14 @@ const HostelDetailPage = () => {
     }, [id]);
 
     const handleBooking = () => {
+        if (!userData) {
+            toast.error('User data not available');
+            return;
+        }
+        if (userData.userType == 'google' && userData.mobile == '') {
+            toast.error('Updated Mobile Number in Profile')
+            return
+        }
         if (!hostel) {
             toast.error('Hostel data not available');
             return;
@@ -161,8 +172,8 @@ const HostelDetailPage = () => {
             toast.error('Room availability data missing');
             return;
         }
-        console.log('Booking initiated for hostel:', hostel?.beds);
-        if (hostel.beds < 0) {
+        console.log('Booking initiated for hostel:', hostel?.totalRooms);
+        if (hostel.totalRooms < 0) {
             toast.error('No rooms available at the moment');
             return;
         } else if (hostel?.isActive == false) {
@@ -336,11 +347,11 @@ const HostelDetailPage = () => {
                                 <Users className="mr-3 text-green-500 flex-shrink-0" size={18} />
                                 <div>
                                     <p className="text-xs sm:text-sm text-gray-500">Occupancy</p>
-                                    <p className="font-medium text-sm sm:text-base">{hostel.beds} per room</p>
+                                    <p className="font-medium text-sm sm:text-base">{hostel.totalRooms} per room</p>
                                 </div>
                             </div>
                             <div className="flex items-center">
-                                <User className="mr-3 text-purple-500 flex-shrink-0" size={18} />
+                                <UserCircle className="mr-3 text-purple-500 flex-shrink-0" size={18} />
                                 <div>
                                     <p className="text-xs sm:text-sm text-gray-500">Host</p>
                                     <p className="font-medium text-sm sm:text-base">{hostel.host_id?.name}</p>
@@ -478,7 +489,7 @@ const HostelDetailPage = () => {
                     onClose={() => setShowBookingModal(false)}
                     onConfirm={handleBookingConfirm}
                     hostelName={hostel.hostelname}
-                    maxGuests={Number(hostel.beds) || 10}
+                    maxGuests={Number(hostel.totalRooms) || 10}
                     orderDetails={orderDetails}
                     totalRooms={hostel.totalRooms || 10}
                 />

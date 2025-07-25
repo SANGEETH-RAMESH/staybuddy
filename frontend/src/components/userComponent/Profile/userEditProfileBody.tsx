@@ -1,5 +1,5 @@
 import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
-import { User, Phone, Loader2, CheckCircle } from 'lucide-react';
+import { User, Phone, Loader2, CheckCircle, ArrowLeft } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { editProfile, getUserDetails } from '../../../services/userServices';
@@ -19,6 +19,8 @@ const UserEditProfileBody: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [nameError, setNameError] = useState<string | null>(null);
   const [mobileError, setMobileError] = useState<string | null>(null);
+
+  const navigate = useNavigate();
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -73,8 +75,6 @@ const UserEditProfileBody: React.FC = () => {
     fetchData();
   }, []);
 
-  const navigate = useNavigate();
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -97,11 +97,24 @@ const UserEditProfileBody: React.FC = () => {
     }
   };
 
-  // const isValidMobile = formData.mobile.length > 0;
+  const handleBack = () => {
+    navigate('/profile');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white shadow-md rounded-lg p-6">
+        {/* Back Button */}
+        <div className="mb-4">
+          <button
+            onClick={handleBack}
+            className="flex items-center text-gray-600 hover:text-gray-800 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </button>
+        </div>
+
         <div className="text-center">
           <h2 className="text-2xl font-bold">Edit Profile</h2>
           <p className="text-gray-500">Update your personal information</p>
@@ -139,7 +152,7 @@ const UserEditProfileBody: React.FC = () => {
             </div>
             {nameError && <p className="text-red-500 text-sm mt-1">{nameError}</p>}
           </div>
-
+          
           <div>
             <label htmlFor="mobile" className="block text-sm font-medium text-gray-700">
               Mobile Number
@@ -153,7 +166,7 @@ const UserEditProfileBody: React.FC = () => {
                 value={formData.mobile}
                 onChange={handleChange}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring focus:ring-indigo-200"
-                placeholder="+1 (555) 000-0000"
+                placeholder="Enter you mobile"
               />
             </div>
             {mobileError && <p className="text-red-500 text-sm mt-1">{mobileError}</p>}
