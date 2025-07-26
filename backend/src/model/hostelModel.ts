@@ -20,6 +20,7 @@ export interface IHostel extends Document {
     inactiveReason:string,
     cancellationPolicy:string,
     totalRooms:number;
+    isFull?:boolean;
 }
 
 const hostelModel: Schema = new Schema(

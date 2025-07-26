@@ -9,6 +9,7 @@ interface BookingModalProps {
   maxGuests?: number;
   orderDetails: any[];
   totalRooms: number;
+  isFull:boolean;
   availableRooms?: number;
 }
 
@@ -26,6 +27,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
   maxGuests = 10,
   orderDetails = [],
   totalRooms = 1,
+  isFull,
   availableRooms = 1
 }) => {
   const [fromDate, setFromDate] = useState('');
@@ -380,7 +382,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
             <h2 className="text-xl font-bold text-gray-800">Book Your Stay</h2>
             <p className="text-sm text-gray-600 mt-1">{hostelName}</p>
             <p className="text-xs text-gray-500 mt-1">
-              {totalRooms} total rooms • {availableRooms} currently available
+              Rooms currently {isFull?'Not':''} available
             </p>
           </div>
           <button

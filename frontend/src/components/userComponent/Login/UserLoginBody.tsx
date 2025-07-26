@@ -250,21 +250,23 @@ const UserLoginBody = () => {
                                 </svg>
                                 <span className="text-sm font-medium text-gray-800">Sign in with Google</span>
                             </a> */}
-                            <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID as string}>
-                                <GoogleLogin
-                                    onSuccess={handleGoogleLogin}
-                                    onError={() => {
-                                        toast.error("Login failed")
-                                    }}
-                                    useOneTap
-                                    type='standard'
-                                    theme="outline"
-                                    size="large"
-                                    text="continue_with"
-                                    shape="rectangular"
-                                    width="100%"
-                                />
-                            </GoogleOAuthProvider>
+                            <div className="flex justify-center">
+                                <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID as string}>
+                                    <div className="w-full max-w-sm">
+                                        <GoogleLogin
+                                            onSuccess={handleGoogleLogin}
+                                            onError={() => toast.error("Login failed")}
+                                            useOneTap
+                                            type="standard"
+                                            theme="outline"
+                                            size="large"
+                                            text="continue_with"
+                                            shape="rectangular"
+                                            width="100%"
+                                        />
+                                    </div>
+                                </GoogleOAuthProvider>
+                            </div>
                         </form>
                     </div>
                 </div>

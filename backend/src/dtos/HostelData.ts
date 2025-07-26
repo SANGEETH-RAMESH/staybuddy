@@ -18,4 +18,5 @@ export interface IUpdateHostelInput {
   phoneNumber?:string;
   cancellationPolicy:string;
   totalRooms:number;
+  isFull?:boolean;
 }

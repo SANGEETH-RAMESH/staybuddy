@@ -30,7 +30,8 @@ export interface IOrder extends Document {
     active: boolean,
     startDate: Date,
     endDate: Date,
-    cancellationPolicy:string
+    cancellationPolicy:string,
+    cancelled:boolean
 }
 
 const orderSchema: Schema = new Schema(
@@ -153,6 +154,10 @@ const orderSchema: Schema = new Schema(
             type:String,
             required:true
         },
+        cancelled:{
+            type:Boolean,
+            default:false
+        }
     },
     { timestamps: true }
 );

@@ -35,5 +35,6 @@ export interface Hostel {
   longitude?: number;
   category: string;
   cancellationPolicy?:string;
+  isFull?:boolean;
 };
 

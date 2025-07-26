@@ -4,6 +4,7 @@ import Hostel, { IHostel } from "../model/hostelModel";
 import baseRepository from "./baseRespository";
 import { IUpdateHostelInput } from "../dtos/HostelData";
 import Review from "../model/reviewModel";
+import Order from "../model/orderModel";
 
 function getDistanceInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371;
@@ -24,9 +25,36 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
         super(Hostel)
     }
 
-    async getHostels(query: Record<string, any>,projection:IUpdateHostelInput, sortOption: any = {}): Promise<IHostel[]> {
+    async getHostels(query: Record<string, any>, projection: IUpdateHostelInput, sortOption: any = {}): Promise<(IHostel & { isFull: boolean })[]> {
 
-        return await Hostel.find(query,projection).sort(sortOption);
+        const hostels = await Hostel.find(query, projection).sort(sortOption);
+
+        const today = new Date();
+
+        const hostelsWithIsFull = await Promise.all(
+            hostels.map(async (hostel) => {
+                const orderList = await Order.find({
+                    hostel_id: hostel._id,
+                    active: true,
+                    startDate: { $lte: today },
+                    endDate: { $gte: today },
+                });
+
+                let bookedBeds = 0;
+                orderList.forEach((order) => {
+                    bookedBeds += order.selectedBeds || 0;
+                });
+
+                const isFull = bookedBeds >= hostel.totalRooms;
+
+                return {
+                    ...hostel.toObject(),
+                    isFull,
+                } as IHostel & { isFull: boolean };
+            })
+        );
+
+        return hostelsWithIsFull;
     }
 
     async findAverageRatedHostelIds(rating: number): Promise<{ hostelId: mongoose.Types.ObjectId; rating: number }[]> {
@@ -48,13 +76,30 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
         }));
     }
 
-    async getSingleHostel(id: Types.ObjectId): Promise<IHostel | string> {
+    async getSingleHostel(id: Types.ObjectId): Promise<(IHostel & { isFull: boolean }) | string> {
         try {
             const getHostel = await Hostel.findOne({ _id: id }).populate('host_id')
             if (!getHostel) {
                 return "No Hostel"
             }
-            return getHostel
+            console.log(getHostel, 'dfdhf')
+            const today = new Date();
+
+            const orderList = await Order.find({
+                hostel_id: getHostel._id,
+                active: true,
+                startDate: { $lte: today },
+                endDate: { $gte: today }
+            });
+
+            let bookedBeds = 0;
+            orderList.forEach(order => {
+                bookedBeds += order.selectedBeds || 0;
+            });
+
+            const isFull = bookedBeds >= getHostel.totalRooms;
+            const order = await Order.find({ hostel_id: getHostel._id })
+            return { ...getHostel.toObject(), isFull } as IHostel & { isFull: boolean };
         } catch (error) {
             return error as string
         }
@@ -81,7 +126,7 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
                     advanceamount: hostelData.advance,
                     facilities: facilities,
                     bedShareRoom: hostelData.bedShareRate,
-                    isActive:true,
+                    isActive: true,
                     foodRate: hostelData.foodRate,
                     phone: hostelData.phoneNumber,
                     host_id: host_id,
@@ -222,14 +267,14 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
         }
     }
 
-    async getAllHostel():Promise<IHostel[] | string>{
+    async getAllHostel(): Promise<IHostel[] | string> {
         try {
             const hostels = await Hostel.find();
             return hostels
         } catch (error) {
             return error as string;
         }
-    } 
+    }
 }
 
 export default hostelRepository

@@ -419,7 +419,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
         <div className="flex items-center space-x-4 mb-4 text-sm text-gray-600">
           <div className="flex items-center">
             <Users size={16} className="mr-1" />
-            <span>{hostel.beds || 0} per room</span>
+            <span>{hostel.isFull?"Rooms Not Available":'Rooms Available'} </span>
           </div>
           <div className="flex items-center">
             <Phone size={16} className="mr-1" />
@@ -849,7 +849,8 @@ const HostelCardGrid: React.FC = () => {
           inactiveReason: item.inactiveReason,
           latitude: item.latitude,
           longitude: item.longitude,
-          cancellationPolicy: item.cancellationPolicy
+          cancellationPolicy: item.cancellationPolicy,
+          isFull:item.isFull
         };
       });
 

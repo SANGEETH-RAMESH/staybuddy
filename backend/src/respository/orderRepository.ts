@@ -274,7 +274,6 @@ class orderRepository implements IOrderRepository {
         try {
             console.log(hostelId)
             const orders = await Order.find({ hostel_id: hostelId })
-            console.log(orders,'orders')
             return orders;
         } catch (error) {
             return error as string

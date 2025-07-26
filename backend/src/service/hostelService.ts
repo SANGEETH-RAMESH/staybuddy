@@ -89,7 +89,7 @@ class hostelService implements IHostelService {
                     break;
             }
             let projection: any
-            if ( Number(page) > 0 || Number(limit) > 0  ) {
+            if (Number(page) > 0 || Number(limit) > 0) {
                 projection = {
                     _id: 1,
                     totalRooms: 1,
@@ -102,8 +102,8 @@ class hostelService implements IHostelService {
                     location: 1,
                     facilities: 1,
                     phone: 1,
-                    inactiveReason:1,
-                    bedShareRoom:1
+                    inactiveReason: 1,
+                    bedShareRoom: 1
                 }
             } else {
                 projection = {
@@ -112,7 +112,7 @@ class hostelService implements IHostelService {
                     location: 1,
                     bedShareRoom: 1,
                     photos: 1,
-                    rating:1
+                    rating: 1
                 }
             }
             let allHostels = await this.hostelRepository.getHostels(query, projection, sortOption);
@@ -148,13 +148,13 @@ class hostelService implements IHostelService {
             const totalCount = allHostels.length;
             const start = (pageNumber - 1) * limitNumber;
             let paginated: typeof allHostels;
-            if(start>0 && limitNumber>0){
-             paginated = allHostels.slice(start, start + limitNumber);
+            if (limitNumber > 0) {
+                console.log("Paginated")
+                paginated = allHostels.slice(start, start + limitNumber);
 
-            }else{
-                paginated  = allHostels
+            } else {
+                paginated = allHostels
             }
-
             return { hostels: paginated, totalCount };
         } catch (err) {
             return err as string;
@@ -164,6 +164,7 @@ class hostelService implements IHostelService {
     async getSingleHostel(id: Types.ObjectId): Promise<IHostel | string> {
         try {
             const response = await this.hostelRepository.getSingleHostel(id);
+            console.log(response,"Resposd")
             return response
         } catch (error) {
             return error as string

@@ -347,7 +347,7 @@ const HostelDetailPage = () => {
                                 <Users className="mr-3 text-green-500 flex-shrink-0" size={18} />
                                 <div>
                                     <p className="text-xs sm:text-sm text-gray-500">Occupancy</p>
-                                    <p className="font-medium text-sm sm:text-base">{hostel.totalRooms} per room</p>
+                                    <p className="font-medium text-sm sm:text-base">{hostel.isFull?"Rooms not available":"Rooms Available"} </p>
                                 </div>
                             </div>
                             <div className="flex items-center">
@@ -492,6 +492,7 @@ const HostelDetailPage = () => {
                     maxGuests={Number(hostel.totalRooms) || 10}
                     orderDetails={orderDetails}
                     totalRooms={hostel.totalRooms || 10}
+                    isFull={hostel.isFull || false}
                 />
             )}
         </div>
