@@ -38,7 +38,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectingDate, setSelectingDate] = useState<'from' | 'to' | null>(null);
 
-  // Helper function to format date in local timezone
   const formatDateToLocal = (date: Date): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -63,7 +62,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
         bookingStart.setHours(0, 0, 0, 0);
         bookingEnd.setHours(0, 0, 0, 0);
         
-        // Check if the date falls within the booking period
         if (date >= bookingStart && date <= bookingEnd) {
           occupiedRooms += booking.selectedBeds || 1;
         }
@@ -146,6 +144,7 @@ const BookingModal: React.FC<BookingModalProps> = ({
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     const newMonth = new Date(currentMonth);
+    console.log(availableRooms)
     if (direction === 'prev') {
       newMonth.setMonth(newMonth.getMonth() - 1);
     } else {
@@ -178,7 +177,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
     const days = [];
     const current = new Date(startDate);
 
-    // Generate 42 days (6 weeks) to fill the calendar grid
     for (let i = 0; i < 42; i++) {
       days.push(new Date(current));
       current.setDate(current.getDate() + 1);
