@@ -368,7 +368,7 @@ const BookingForm = () => {
           // toast.success('Payment successful!');
         },
         modal: {
-          ondismiss: () => toast.info('Payment cancelled'),
+          ondismiss: () => toast.error('Payment cancelled'),
         },
       };
 
