@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Wallet, CreditCard, AlertCircle, AlertTriangle, ArrowLeft, Loader } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { toast } from 'react-hot-toast';
 import { Notification } from '../../../interface/Notification';
 import { getSingleHostel, getUserDetails, getWalletDetails, payment, createBooking } from '../../../services/userServices';
 import { socket } from '../../../utils/socket';

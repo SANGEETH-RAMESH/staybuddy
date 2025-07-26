@@ -35,13 +35,15 @@ class OrderController {
 
     async endBooking(req: Request, res: Response): Promise<void> {
         try {
+            console.log(req.body,'body')
             const id = req.params.bookingId;
             if (!req.user) {
                 res.status(StatusCode.NOT_FOUND).json({ success: false, message: "No user" })
             }
+            const {cancellationStatus} = req.body
             const userId = new ObjectId(req?.user?._id);
             const orderId = new ObjectId(id)
-            const data = { userId, orderId }
+            const data = { userId, orderId ,cancellationStatus}
             const response = await this.orderService.endBooking(data);
             res.status(StatusCode.OK).json({ success: true, message: response })
 

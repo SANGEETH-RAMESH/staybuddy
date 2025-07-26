@@ -208,7 +208,7 @@ class orderRepository implements IOrderRepository {
             const orderFind = await Order.findOne({ _id: orderId })
             await Order.updateOne(
                 { _id: orderId },
-                { $set: { active: false } }
+                { $set: { active: false,cancelled:true } }
             )
             return "Updated"
         } catch (error) {

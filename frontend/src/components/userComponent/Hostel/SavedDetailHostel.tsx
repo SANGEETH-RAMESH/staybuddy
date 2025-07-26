@@ -43,8 +43,8 @@ const SavedDetailHostel = () => {
 
 
 
-    const checkCancellationEligibility = (cancellationDate:string) => {
-        console.log(cancellationDate,'Cancellation Date')
+    const checkCancellationEligibility = (cancellationDate: string) => {
+        console.log(cancellationDate, 'Cancellation Date')
         const today = new Date();
         const cancelDate = new Date(cancellationDate);
 
@@ -53,7 +53,8 @@ const SavedDetailHostel = () => {
 
         const isEligible = cancelDate >= today;
         setCancellationAllowed(isEligible);
-        console.log(cancelDate,today,'dfldjf')
+        console.log(cancelDate, today, 'dfldjf')
+        console.log(isEligible, 'Aano')
         if (!isEligible) {
             const daysPassed = Math.floor((today.getTime() - cancelDate.getTime()) / (1000 * 60 * 60 * 24))
             setCancellationMessage(`Cancellation period expired ${daysPassed} day(s) ago`);
@@ -71,9 +72,11 @@ const SavedDetailHostel = () => {
                 const response = await getOrderDetails(id)
                 const orderData = response.data.message;
                 setOrderId(orderData._id);
-
-                if (orderData.cancellationPolicy) {
+                console.log(orderData.cancellationPolicy, 'Policy')
+                if (orderData.cancellationPolicy == 'freecancellation') {
                     checkCancellationEligibility(orderData.startDate);
+                } else {
+                    setCancellationMessage('No free cancellation');
                 }
 
                 setBooking({
@@ -104,7 +107,8 @@ const SavedDetailHostel = () => {
                     paymentMethod: orderData.paymentMethod,
                     fromDate: orderData.startDate,
                     toDate: orderData.endDate,
-                    cancellationPolicy: orderData.cancellationPolicy
+                    cancellationPolicy: orderData.cancellationPolicy,
+                    cancelled:orderData.cancelled
                 });
 
                 setBookingEnded(!orderData.active);
@@ -131,15 +135,33 @@ const SavedDetailHostel = () => {
 
     const handleEndBooking = () => setShowAlert(true);
 
-
+    const isReviewAllowed = booking?.cancelled === true &&booking.fromDate && new Date(booking.fromDate) < new Date();
     const confirmEndBooking = async () => {
         setShowAlert(false);
         setIsEndingBooking(true);
 
         try {
-            const response = await endBooking(orderId);
+            let cancellationStatus = 'not_available';
+            if (!booking?.fromDate) {
+                toast.error("Start date is missing. Cannot end booking.");
+                return;
+            }
+            if (booking?.cancellationPolicy === 'freecancellation') {
+                const today = new Date();
+                const cancelDate = new Date(booking.fromDate);
+                today.setHours(0, 0, 0, 0);
+                cancelDate.setHours(0, 0, 0, 0);
+
+                if (cancelDate >= today) {
+                    cancellationStatus = 'available';
+                } else {
+                    cancellationStatus = 'expired';
+                }
+            }
+            const response = await endBooking(orderId, cancellationStatus);
             if (response.data.message == 'Updated') {
                 setBookingEnded(true);
+                setBooking(prev => prev ? { ...prev, cancelled: true } : prev);
                 toast.success('Booking ended successfully');
             } else if (response.data.message == 'Cancellation not allowed') {
                 toast.error('Cancellation period has expired');
@@ -249,6 +271,7 @@ const SavedDetailHostel = () => {
             return (
                 <button
                     onClick={() => setShowReviewModal(true)}
+                     disabled={!isReviewAllowed}
                     className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
                     <div className="flex items-center gap-2">
@@ -277,11 +300,13 @@ const SavedDetailHostel = () => {
                 {/* End Booking Button */}
                 <button
                     onClick={handleEndBooking}
-                    disabled={isEndingBooking || !cancellationAllowed}
-                    className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg transform hover:-translate-y-0.5 ${cancellationAllowed
-                        ? 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white hover:shadow-xl'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        } ${isEndingBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    disabled={false}
+                    className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg transform hover:-translate-y-0.5 
+    ${!cancellationAllowed
+                            ? 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white hover:shadow-xl'
+                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        } 
+    ${isEndingBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                     <div className="flex items-center gap-2">
                         <XCircle size={20} />
@@ -565,21 +590,20 @@ const SavedDetailHostel = () => {
                         <div className="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-md w-full mx-4">
                             <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${cancellationAllowed ? 'bg-yellow-100' : 'bg-red-100'
                                 }`}>
-                                {cancellationAllowed ? (
-                                    <AlertCircle className="text-yellow-600" size={32} />
-                                ) : (
-                                    <XCircle className="text-red-600" size={32} />
-                                )}
+
+                                <AlertCircle className="text-yellow-600" size={32} />
+
+
                             </div>
                             <h3 className="font-bold text-xl mb-2">
-                                {cancellationAllowed ? 'End Booking?' : 'Cancellation Not Allowed'}
+                                <p>End Booking?</p>
                             </h3>
-                            <p className="text-gray-600 mb-6">
+                            {/* <p className="text-gray-600 mb-6">
                                 {cancellationAllowed
                                     ? 'This action cannot be undone. Your booking will be terminated immediately.'
                                     : 'The cancellation period has expired. You cannot end this booking.'
                                 }
-                            </p>
+                            </p> */}
                             <div className="flex gap-3">
                                 <button
                                     onClick={cancelEndBooking}
@@ -588,7 +612,7 @@ const SavedDetailHostel = () => {
                                     <XCircle size={16} />
                                     Cancel
                                 </button>
-                                {cancellationAllowed && (
+                                {(
                                     <button
                                         onClick={confirmEndBooking}
                                         className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"

@@ -50,7 +50,7 @@ class OrderService implements IOrderService {
         }
     }
 
-    async endBooking(data: { orderId: Types.ObjectId, userId: Types.ObjectId }): Promise<string> {
+    async endBooking(data: { orderId: Types.ObjectId, userId: Types.ObjectId, cancellationStatus: string }): Promise<string> {
         try {
             const response = await this.orderRepository.getOrderDetails(data.orderId);
             if (!response || typeof response === "string") {
@@ -59,15 +59,21 @@ class OrderService implements IOrderService {
             const hostId = response.host_id._id
             const amount = response?.totalDepositAmount
             const updateStatusOrder = await this.orderRepository.updatingOrderStatus(data.orderId)
-            const userWalletCredit = await this.orderRepository.creditUserWallet(data?.userId, amount)
-            const hostWalletDebit = await this.orderRepository.debitHostWallet(hostId, amount)
+            let userWalletCredit: string = "skipped";
+            let hostWalletDebit: string = "skipped";
+            if (data.cancellationStatus == 'available') {
+                userWalletCredit = await this.orderRepository.creditUserWallet(data?.userId, amount)
+                hostWalletDebit = await this.orderRepository.debitHostWallet(hostId, amount)
+
+                if (userWalletCredit !== 'Wallet updated successfully' || hostWalletDebit !== 'Wallet updated successfully') {
+                    return "Wallet update failed";
+                }
+            }
+
             const beds = response.selectedBeds;
 
             const hostelId = (response.hostel_id as any).toString();
             await this.orderRepository.updateRoom(hostelId, beds)
-            if (userWalletCredit == 'Wallet updated successfully' && hostWalletDebit == 'Wallet updated successfully') {
-                return "Updated"
-            }
             return 'Updated'
         } catch (error) {
             console.log(error)

@@ -76,8 +76,8 @@ export const createBooking = (bookingDetails: BookingDetails) => userApiClient.p
 
 export const getOrderDetails = (id: mongoose.Types.ObjectId | string) => userApiClient.get(`${apiUrl}/order/bookings/${id}`);
 
-export const endBooking = (orderId: mongoose.Types.ObjectId | string) =>
-  userApiClient.post(`${apiUrl}/order/bookings/${orderId}/end`);
+export const endBooking = (orderId: mongoose.Types.ObjectId | string,cancellationStatus:string) =>
+  userApiClient.post(`${apiUrl}/order/bookings/${orderId}/end`,{cancellationStatus});
 
 export const getSavedBookings = (id: mongoose.Types.ObjectId | string, params?: URLSearchParams) => userApiClient.get(`${apiUrl}/order/users/${id}/bookings?${params}`);
 
