@@ -1,4 +1,4 @@
-import UserLoginBody from '../../components/userComponent/Login/userLoginBody'
+import UserLoginBody from '../../components/userComponent/Login/UserLoginBody'
 
 const UserLogin = () => {
   return (

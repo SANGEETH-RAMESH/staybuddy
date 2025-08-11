@@ -1,5 +1,5 @@
-import UserLandingBody from '../../components/userComponent/Landing/userLandingBody'
-import UserHeader from '../../components/commonComponents/userHeader'
+import UserLandingBody from '../../components/userComponent/Landing/UserLandingBody'
+import UserHeader from '../../components/commonComponents/UserHeader'
 
 const UserLandingPage = () => {
   return (

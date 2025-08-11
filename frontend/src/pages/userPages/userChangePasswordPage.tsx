@@ -1,5 +1,5 @@
-import UserHeader from '../../components/commonComponents/userHeader'
-import ChangePasswordBody from '../../components/userComponent/Password/changePasswordBody'
+import UserHeader from '../../components/commonComponents/UserHeader'
+import ChangePasswordBody from '../../components/userComponent/Password/ChangePasswordBody'
 
 
 const userChangePasswordPage = () => {

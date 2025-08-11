@@ -1,5 +1,5 @@
-import HostHeader from '../../components/commonComponents/hostHeader'
-import HostProfileBody from '../../components/hostComponent/Profile/hostProfileBody'
+import HostHeader from '../../components/commonComponents/HostHeader'
+import HostProfileBody from '../../components/hostComponent/Profile/HostProfileBody'
 
 const HostProfilePage = () => {
   return (

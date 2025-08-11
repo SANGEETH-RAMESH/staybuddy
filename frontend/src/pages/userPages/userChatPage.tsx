@@ -1,6 +1,6 @@
 
-import UserHeader from '../../components/commonComponents/userHeader'
-import UserChatBody from '../../components/userComponent/Chat/userChatBody'
+import UserHeader from '../../components/commonComponents/UserHeader'
+import UserChatBody from '../../components/userComponent/Chat/UserChatBody'
 
 const userChatPage = () => {
     return (

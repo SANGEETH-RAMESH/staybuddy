@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Category } from '../../../interface/Category';
 import { editHostel, getAllCategory, getHost, getSingleHostel } from '../../../services/hostServices';
-import LocationPicker from '../../commonComponents/locationPicker';
+import LocationPicker from '../../commonComponents/LocationPicker';
 
 const HostelEditForm = () => {
   const { id } = useParams<{ id: string }>();

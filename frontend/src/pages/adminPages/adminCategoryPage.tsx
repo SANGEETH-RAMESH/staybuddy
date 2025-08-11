@@ -1,7 +1,7 @@
 import  { useState } from 'react'
-import AdminSidebar from '../../components/commonComponents/adminSidebar';
-import AdminHeader from '../../components/commonComponents/adminHeader';
-import AdminCategoryBody from '../../components/adminComponent/Category/adminCategoryBody';
+import AdminSidebar from '../../components/commonComponents/AdminSidebar';
+import AdminHeader from '../../components/commonComponents/AdminHeader';
+import AdminCategoryBody from '../../components/adminComponent/Category/AdminCategoryBody';
 
 const AdminCategoryPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); 

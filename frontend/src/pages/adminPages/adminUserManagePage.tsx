@@ -1,8 +1,8 @@
 
 import  { useState } from 'react';
-import AdminUserManageBody from '../../components/adminComponent/UserManage/adminUserManageBody';
-import AdminSidebar from '../../components/commonComponents/adminSidebar';
-import AdminHeader from '../../components/commonComponents/adminHeader';
+import AdminUserManageBody from '../../components/adminComponent/UserManage/AdminUserManageBody';
+import AdminSidebar from '../../components/commonComponents/AdminSidebar';
+import AdminHeader from '../../components/commonComponents/AdminHeader';
 
 const AdminUserManagePage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);

@@ -1,5 +1,5 @@
-    import UserHeader from '../../components/commonComponents/userHeader'
-    import HostelListingsBody from '../../components/userComponent/Hostel/hostelListingBody'
+    import UserHeader from '../../components/commonComponents/UserHeader'
+    import HostelListingsBody from '../../components/userComponent/Hostel/HostelListingBody'
 
 
 

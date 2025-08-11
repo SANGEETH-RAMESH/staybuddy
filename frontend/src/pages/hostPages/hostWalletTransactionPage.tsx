@@ -1,5 +1,5 @@
-import HostHeader from '../../components/commonComponents/hostHeader'
-import HostWalletTransactionPage from '../../components/hostComponent/Wallet/hostWalletTransactionBody'
+import HostHeader from '../../components/commonComponents/HostHeader'
+import HostWalletTransactionPage from '../../components/hostComponent/Wallet/HostWalletTransactionBody'
 
 const hostWalletTransactionsPage = () => {
   return (

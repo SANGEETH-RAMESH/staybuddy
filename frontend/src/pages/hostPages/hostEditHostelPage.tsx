@@ -1,5 +1,5 @@
-import HostHeader from '../../components/commonComponents/hostHeader'
-import EditHostelBody from '../../components/hostComponent/Hostel/editHostelBody'
+import HostHeader from '../../components/commonComponents/HostHeader'
+import EditHostelBody from '../../components/hostComponent/Hostel/EditHostelBody'
 
 const HostEditHostelPage = () => {
   return (

@@ -1,4 +1,4 @@
-import HostResetPasswordBody from '../../components/hostComponent/Password/hostResetPasswordBody'
+import HostResetPasswordBody from '../../components/hostComponent/Password/HostResetPasswordBody'
 
 const hostResetPassword = () => {
   return (

@@ -1,4 +1,4 @@
-import SignUpOtpBody from '../../components/userComponent/Otp/signupOtpBody'
+import SignUpOtpBody from '../../components/userComponent/Otp/SignupOtpBody'
 
 const OtpSignUpPage = () => {
   return (

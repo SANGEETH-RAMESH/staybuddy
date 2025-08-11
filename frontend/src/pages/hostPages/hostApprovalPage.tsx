@@ -1,5 +1,5 @@
-import HostHeader from '../../components/commonComponents/hostHeader'
-import ApprovalBody from '../../components/hostComponent/Approval/approvalBody'
+import HostHeader from '../../components/commonComponents/HostHeader'
+import ApprovalBody from '../../components/hostComponent/Approval/ApprovalBody'
 
 const hostApprovalPage = () => {
   return (

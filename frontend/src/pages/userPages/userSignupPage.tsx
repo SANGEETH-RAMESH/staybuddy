@@ -1,4 +1,4 @@
-import UserSignUpBody from '../../components/userComponent/SignUp/userSignupBody'
+import UserSignUpBody from '../../components/userComponent/SignUp/UserSignupBody'
 
 const UserSignUp = () => {
   return (

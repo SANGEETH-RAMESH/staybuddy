@@ -1,4 +1,4 @@
-import ForgotPasswordBody from '../../components/userComponent/ForgotPassword/forgotPasswordBody'
+import ForgotPasswordBody from '../../components/userComponent/ForgotPassword/ForgotPasswordBody'
 
 const UserForgotPassword = () => {
   return (

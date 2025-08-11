@@ -1,5 +1,5 @@
-import UserHeader from '../../components/commonComponents/userHeader'
-import UserProfileBody from '../../components/userComponent/Profile/userProfileBody'
+import UserHeader from '../../components/commonComponents/UserHeader'
+import UserProfileBody from '../../components/userComponent/Profile/UserProfileBody'
 
 
 const userProfilePage = () => {

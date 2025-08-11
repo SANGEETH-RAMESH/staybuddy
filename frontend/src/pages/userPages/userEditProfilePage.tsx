@@ -1,5 +1,5 @@
-import UserHeader from '../../components/commonComponents/userHeader'
-import UserEditProfileBody from '../../components/userComponent/Profile/userEditProfileBody'
+import UserHeader from '../../components/commonComponents/UserHeader'
+import UserEditProfileBody from '../../components/userComponent/Profile/UserEditProfileBody'
 
 
 

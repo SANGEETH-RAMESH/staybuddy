@@ -1,5 +1,5 @@
-import HostHeader from '../../components/commonComponents/hostHeader'
-import HostWalletBody from '../../components/hostComponent/Wallet/hostWalletBody'
+import HostHeader from '../../components/commonComponents/HostHeader'
+import HostWalletBody from '../../components/hostComponent/Wallet/HostWalletBody'
 
 const hostWalletPage = () => {
   return (

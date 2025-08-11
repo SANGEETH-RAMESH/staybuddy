@@ -1,4 +1,4 @@
-import AdminLoginBody from '../../components/adminComponent/Login/adminLoginBody'
+import AdminLoginBody from '../../components/adminComponent/Login/AdminLoginBody'
 
 const AdminLogin = () => {
   return (

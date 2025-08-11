@@ -3,14 +3,14 @@ import { Wifi, RefreshCw, ArrowLeft, Filter, Search, Home, UtensilsCrossed, Shir
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { addToWishlist, checkWishlists, removeFromWishlist, getHostels } from '../../../services/userServices';
-import LocationPicker from '../../commonComponents/locationPicker';
+import LocationPicker from '../../commonComponents/LocationPicker';
 import { Hostel } from '../../../interface/Hostel';
 import { SearchBarProps } from '../../../interface/Search';
 import { FacilityBadgeProps } from '../../../interface/FacilityBadgeProps';
 import { FilterState } from '../../../interface/FilterState';
 import { PaginationProps } from '../../../interface/PaginationProps';
 import { Facilities } from '../../../interface/Facilities';
-import FilterComponent from '../../commonComponents/filterComponent';
+import FilterComponent from '../../commonComponents/FilterComponent';
 
 interface HostelCardProps {
   hostel: Hostel;

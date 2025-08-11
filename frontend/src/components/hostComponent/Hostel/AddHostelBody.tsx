@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { Category } from '../../../interface/Category';
 import { addHostel, getAllCategory, getHost } from '../../../services/hostServices';
-import LocationPicker from '../../commonComponents/locationPicker'
+import LocationPicker from '../../commonComponents/LocationPicker'
 
 
 

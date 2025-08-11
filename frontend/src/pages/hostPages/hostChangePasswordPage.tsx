@@ -1,5 +1,5 @@
-import HostHeader from '../../components/commonComponents/hostHeader'
-import HostChangePasswordBody from '../../components/hostComponent/Password/hostChangePasswordBody'
+import HostHeader from '../../components/commonComponents/HostHeader'
+import HostChangePasswordBody from '../../components/hostComponent/Password/HostChangePasswordBody'
 
 const HostChangePasswordPage = () => {
   return (

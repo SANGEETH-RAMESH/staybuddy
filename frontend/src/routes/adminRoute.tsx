@@ -8,7 +8,7 @@ import AdminProtectiveCheck from '../routeProtector/adminProtectiveCheck';
 import AdminHostManagePage from '../pages/adminPages/adminHostManagePage'
 import AdminHostelListingsPage from '../pages/adminPages/adminHostelListingsPage';
 import AdminCategoryPage from '../pages/adminPages/adminCategoryPage'
-import AdminAddCategoryPage from '../components/adminComponent/Category/adminAddCategory';
+import AdminAddCategoryPage from '../components/adminComponent/Category/AdminAddCategory';
 import AdminEditCategoryPage from '../pages/adminPages/adminEditCategoryPage';
 import AdminHostDetailedPage from '../pages/adminPages/adminHostDetailedPage';
 

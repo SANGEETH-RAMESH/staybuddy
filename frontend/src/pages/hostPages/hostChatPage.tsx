@@ -1,5 +1,5 @@
-import HostHeader from '../../components/commonComponents/hostHeader'
-import HostChatBody from '../../components/hostComponent/Chat/hostChatBody'
+import HostHeader from '../../components/commonComponents/HostHeader'
+import HostChatBody from '../../components/hostComponent/Chat/HostChatBody'
 
 const HostChatPage = () => {
   return (

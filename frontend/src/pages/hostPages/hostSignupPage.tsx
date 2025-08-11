@@ -1,4 +1,4 @@
-import HostSignUpBody from '../../components/hostComponent/SignUp/hostSignUpBody'
+import HostSignUpBody from '../../components/hostComponent/SignUp/HostSignUpBody'
 
 const hostSignupPage = () => {
   return (

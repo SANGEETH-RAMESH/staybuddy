@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import AdminSidebar from '../../components/commonComponents/adminSidebar';
-import AdminHeader from '../../components/commonComponents/adminHeader';
-import AdminEditCategoryBody from '../../components/adminComponent/Category/adminEditCategoryBody'
+import AdminSidebar from '../../components/commonComponents/AdminSidebar';
+import AdminHeader from '../../components/commonComponents/AdminHeader';
+import AdminEditCategoryBody from '../../components/adminComponent/Category/AdminEditCategoryBody'
 // import {X,Menu} from 'lucide-react'
 const AdminEditCategoryPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Start closed on mobile

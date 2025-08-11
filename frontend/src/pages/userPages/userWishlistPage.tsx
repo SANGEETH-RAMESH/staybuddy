@@ -1,5 +1,5 @@
-import UserHeader from '../../components/commonComponents/userHeader'
-import UserWishListBody from '../../components/userComponent/Wishlist/userWishListBody'
+import UserHeader from '../../components/commonComponents/UserHeader'
+import UserWishListBody from '../../components/userComponent/Wishlist/UserWishListBody'
 
 
 const userWishlistPage = () => {

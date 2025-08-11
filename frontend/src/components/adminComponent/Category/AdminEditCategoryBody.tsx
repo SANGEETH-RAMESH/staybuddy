@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Package, ArrowLeft, Save, Loader2, ToggleLeft, ToggleRight, Info, AlertCircle } from 'lucide-react';
-import AdminHeader from '../../commonComponents/adminHeader';
-import AdminSidebar from '../../commonComponents/adminSidebar';
+import AdminHeader from '../../commonComponents/AdminHeader';
+import AdminSidebar from '../../commonComponents/AdminSidebar';
 import { getCategory, updateCategory } from '../../../services/categoryServices';
 
 

@@ -1,5 +1,5 @@
-import UserHeader from '../../components/commonComponents/userHeader'
-import UserSavedDetailHostelPage from '../../components/userComponent/Hostel/savedDetailHostel'
+import UserHeader from '../../components/commonComponents/UserHeader'
+import UserSavedDetailHostelPage from '../../components/userComponent/Hostel/SavedDetailHostel'
 
 
 const userSavedDetailHostelPage = () => {

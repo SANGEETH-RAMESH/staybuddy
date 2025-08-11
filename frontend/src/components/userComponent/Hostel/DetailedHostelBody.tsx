@@ -21,8 +21,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { createChat, getOrderBookingByHostelId, getSingleHostel, getUserDetails } from '../../../services/userServices';
-import LocationDisplay from '../../commonComponents/locationDisplay';
-import BookingModal from '../../commonComponents/bookingModal';
+import LocationDisplay from '../../commonComponents/LocationDisplay';
+import BookingModal from '../../commonComponents/BookingModal';
 import mongoose from 'mongoose';
 import { Hostel } from '../../../interface/Hostel';
 import { Order } from '../../../interface/Order';

@@ -1,7 +1,7 @@
 import  { useState } from 'react'
-import AdminSidebar from '../../components/commonComponents/adminSidebar';
-import AdminHeader from '../../components/commonComponents/adminHeader';
-import AdminAddCategoryBody from '../../components/adminComponent/Category/adminAddCategory'
+import AdminSidebar from '../../components/commonComponents/AdminSidebar';
+import AdminHeader from '../../components/commonComponents/AdminHeader';
+import AdminAddCategoryBody from '../../components/adminComponent/Category/AdminAddCategory'
 import {X,Menu} from 'lucide-react'
 
 const AdminCategoryPage = () => {

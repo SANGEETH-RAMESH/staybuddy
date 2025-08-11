@@ -1,4 +1,4 @@
-import HostForgotPasswordBody from '../../components/hostComponent/ForgotPassword/hostForgotPasswordBody'
+import HostForgotPasswordBody from '../../components/hostComponent/ForgotPassword/HostForgotPasswordBody'
 
 const hostForgotPasswordPage = () => {
   return (

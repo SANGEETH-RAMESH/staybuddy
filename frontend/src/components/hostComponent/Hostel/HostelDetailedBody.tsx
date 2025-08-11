@@ -20,7 +20,7 @@ import {
 import { Hostel } from '../../../interface/Hostel';
 import { getSingleHostel, status } from '../../../services/hostServices';
 import toast from 'react-hot-toast';
-import LocationDisplay from '../../commonComponents/locationDisplay';
+import LocationDisplay from '../../commonComponents/LocationDisplay';
 
 const InactiveReasonModal = ({ 
   isOpen, 
