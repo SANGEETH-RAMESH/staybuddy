@@ -37,5 +37,6 @@ export interface Order {
   toDate?: Date;
   guests?: string;
   cancellationPolicy?: string;
-  cancelled?:boolean
+  cancelled?:boolean;
+  status?:string;
 };

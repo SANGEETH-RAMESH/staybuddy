@@ -10,4 +10,5 @@ export interface IUserResponse {
   wallet_id?: Types.ObjectId | null;
   temp?:boolean;
   userType?:string;
+  password?:string;
 }

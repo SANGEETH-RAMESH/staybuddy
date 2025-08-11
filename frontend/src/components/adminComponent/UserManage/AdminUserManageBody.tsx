@@ -104,13 +104,10 @@ const AdminUserManageBody = () => {
     setIsRefreshing(true);
     try {
       const response = await fetchUser(page,limit);
-
       if (response.data.success) {
         const { totalCount, users: fetchedUsers } = response.data.message;
 
         const totalPages = Math.ceil(totalCount / limit);
-
-        // setAllUsers(allUsers);
         setUsers(fetchedUsers);
 
         setPaginationInfo({

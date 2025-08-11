@@ -140,6 +140,7 @@ export const initializeSocket = (server: HttpServer, chatService: IChatService) 
     })
 
     socket.on("join_notification_room", (userId: string) => {
+      console.log(userId,'UserIdfdfdf')
       if (userId) {
         socket.join(`notif_${userId}`);
         console.log(`User ${userId} joined notification room`);
@@ -148,6 +149,7 @@ export const initializeSocket = (server: HttpServer, chatService: IChatService) 
 
     socket.on('send_notification', async (notification: INotification) => {
       try {
+        console.log(notification,'Ingg')
         const send_notification = await userService.sendNotification(notification);
         console.log("Sending", send_notification)
         const receiverId = notification.receiver?.toString()

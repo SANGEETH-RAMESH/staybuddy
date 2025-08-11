@@ -58,7 +58,7 @@ export const unblockUser = (userId: string | mongoose.Types.ObjectId) => AdminAp
 export const deleteUser = (userId: string | mongoose.Types.ObjectId) => AdminApiClient.delete(`${apiUrl}/admin/users/${userId}`);
 
 export const fetchUser = (page:number,limit:number) =>  AdminApiClient.get(
-        `http://localhost:4000/admin/users?page=${page}&limit=${limit}`
+        `${apiUrl}/admin/users?page=${page}&limit=${limit}`
       );
 
 export const searchUser = (newSearchTerm: string,itemsPerPage:number) =>  AdminApiClient.get(
@@ -66,4 +66,4 @@ export const searchUser = (newSearchTerm: string,itemsPerPage:number) =>  AdminA
         );
 
 
-export const loginUrl =  ({ email, password }: { email: string; password: string }) => axios.post(`${apiUrl}/admin/auth/login`,{email,password})
+export const loginUrl =  ({ email, password }: { email: string; password: string }) => axios.post(`${apiUrl}/admin/login`,{email,password})

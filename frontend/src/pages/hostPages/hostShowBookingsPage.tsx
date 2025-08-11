@@ -1,5 +1,5 @@
 import HostHeader from '../../components/commonComponents/hostHeader'
-import ShowBookingsBody from '../../components/hostComponent/Hostel/ShowBookingsBody'
+import ShowBookingsBody from '../../components/hostComponent/Hostel/showBookingsBody'
 
 const HostShowBookingsPage = () => {
   return (

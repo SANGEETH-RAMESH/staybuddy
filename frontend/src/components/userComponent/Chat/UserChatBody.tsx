@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Send, Search, Plus, Paperclip, Image, X, Clock, Video, ArrowLeft } from 'lucide-react';
 import dummy_profile from '../../../assets/dummy profile.png';
 import { useLocation } from 'react-router-dom';
-import VideoCall from '../../commonComponents/VideoCall'
+import VideoCall from '../../commonComponents/videoCall'
 import { createChat, getAllHosts, getChat } from '../../../services/userServices';
 import { socket } from '../../../utils/socket';
 

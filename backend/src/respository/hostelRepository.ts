@@ -5,6 +5,7 @@ import baseRepository from "./baseRespository";
 import { IUpdateHostelInput } from "../dtos/HostelData";
 import Review from "../model/reviewModel";
 import Order from "../model/orderModel";
+import { Messages } from "../messages/messages";
 
 function getDistanceInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 6371;
@@ -25,9 +26,9 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
         super(Hostel)
     }
 
-    async getHostels(query: Record<string, any>, projection: IUpdateHostelInput, sortOption: any = {}): Promise<(IHostel & { isFull: boolean })[]> {
+    async getHostels(query: Record<string, any>, projection?: IUpdateHostelInput, sortOption: any = {}): Promise<(IUpdateHostelInput & { isFull: boolean })[]> {
 
-        const hostels = await Hostel.find(query, projection).sort(sortOption);
+        const hostels = await Hostel.find(query, projection).sort(sortOption).lean<IUpdateHostelInput[]>();
 
         const today = new Date();
 
@@ -48,9 +49,9 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
                 const isFull = bookedBeds >= hostel.totalRooms;
 
                 return {
-                    ...hostel.toObject(),
+                    ...hostel,
                     isFull,
-                } as IHostel & { isFull: boolean };
+                } as IUpdateHostelInput & { isFull: boolean };
             })
         );
 
@@ -76,13 +77,12 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
         }));
     }
 
-    async getSingleHostel(id: Types.ObjectId): Promise<(IHostel & { isFull: boolean }) | string> {
+    async getSingleHostel(id: Types.ObjectId): Promise<(IUpdateHostelInput & { isFull: boolean }) | string> {
         try {
             const getHostel = await Hostel.findOne({ _id: id }).populate('host_id')
             if (!getHostel) {
-                return "No Hostel"
+                return Messages.NoHostel
             }
-            console.log(getHostel, 'dfdhf')
             const today = new Date();
 
             const orderList = await Order.find({
@@ -99,7 +99,7 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
 
             const isFull = bookedBeds >= getHostel.totalRooms;
             const order = await Order.find({ hostel_id: getHostel._id })
-            return { ...getHostel.toObject(), isFull } as IHostel & { isFull: boolean };
+            return { ...getHostel.toObject(), isFull } as IUpdateHostelInput & { isFull: boolean };
         } catch (error) {
             return error as string
         }
@@ -107,23 +107,29 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
 
     async addHostel(hostelData: IUpdateHostelInput): Promise<string> {
         try {
-            const host_id = new mongoose.Types.ObjectId(hostelData.host_id);
+            const host_id = new mongoose.Types.ObjectId(
+                typeof hostelData.host_id === 'string'
+                    ? hostelData.host_id
+                    : hostelData.host_id instanceof mongoose.Types.ObjectId
+                        ? hostelData.host_id
+                        : hostelData.host_id._id
+            );
             let facilities: string[] = [];
             if (Array.isArray(hostelData.facilities)) {
                 facilities = hostelData.facilities.flatMap(fac => fac.split(',')).map(f => f.trim().toLowerCase());
             } else if (typeof hostelData.facilities === 'string') {
-                facilities = hostelData.facilities.split(',').map(f => f.trim().toLowerCase());
+                facilities = hostelData.facilities.split(',').map((f: string) => f.trim().toLowerCase());
             }
             const addingHostelData = Object.assign(
                 {
-                    hostelname: hostelData.name,
+                    hostelname: hostelData.hostelname,
                     location: hostelData.location,
-                    nearbyaccess: hostelData.nearbyAccess,
-                    beds: hostelData.bedsPerRoom,
-                    totalRooms: hostelData.bedsPerRoom,
+                    nearbyaccess: hostelData.nearbyaccess,
+                    beds: hostelData.beds,
+                    totalRooms: hostelData.beds,
                     policies: hostelData.policies,
                     category: hostelData.category,
-                    advanceamount: hostelData.advance,
+                    advanceamount: hostelData.advanceamount,
                     facilities: facilities,
                     bedShareRoom: hostelData.bedShareRate,
                     isActive: true,
@@ -134,15 +140,15 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
                     latitude: Number(hostelData.latitude),
                     cancellationPolicy: hostelData.cancellationPolicy
                 },
-                hostelData.photo ? { photos: hostelData.photo } : {}
+                hostelData.photos ? { photos: hostelData.photos } : {}
             );
 
             const addingHostel = new Hostel(addingHostelData)
             if (addingHostel) {
                 await addingHostel.save();
-                return 'Hostel added'
+                return Messages.HostelAdded;
             } else {
-                return 'Hostel not added'
+                return Messages.HostelNotAdded;
             }
         } catch (error) {
             console.log(error)
@@ -150,7 +156,7 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
         }
     }
 
-    async getHostHostels(id: Types.ObjectId, limit: number, skip: number, search: string): Promise<{ hostels: IHostel[]; totalCount: number } | string> {
+    async getHostHostels(id: Types.ObjectId, limit: number, skip: number, search: string): Promise<{ hostels: IUpdateHostelInput[]; totalCount: number } | string> {
         try {
             const query: any = {
                 host_id: id,
@@ -167,6 +173,7 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
                 .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit)
+                .lean<IUpdateHostelInput[]>()
             const totalCount = await Hostel.countDocuments(query);
             return {
                 hostels: getHostel,
@@ -180,10 +187,15 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
 
     async deleteHostel(hostelId: string): Promise<string> {
         try {
-            await Hostel.findOneAndDelete({ _id: hostelId });
-            return "Hostel Deleted"
+            const hostRemoving = await Hostel.findOneAndDelete(
+                { _id: hostelId }
+            )
+            if (hostRemoving) {
+                return Messages.HostelDeleted
+            }
+            return Messages.HostelNotDeleted
         } catch (error) {
-            return error as string;
+            return error as string
         }
     }
 
@@ -194,23 +206,23 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
                 : hostelData.facilities.split(',').map(f => f.trim().toLowerCase());
             const existingHostel = await Hostel.findById(hostelData.hostelId);
             if (!existingHostel) {
-                throw new Error('Hostel not found');
+                throw new Error(Messages.HostelNotFound);
             }
             const currentTotalRooms = existingHostel.totalRooms || 0;
             const currentBeds = existingHostel.beds || 0;
-            const additionalRooms = hostelData.bedsPerRoom || 0;
+            const additionalRooms = hostelData.beds || 0;
             const updatedTotalRooms = Number(currentTotalRooms) + Number(additionalRooms);
             const updatedBeds = Number(currentBeds) + Number(additionalRooms);
             const updateFields: any = {
-                hostelname: hostelData.name,
+                hostelname: hostelData.hostelname,
                 location: hostelData.location,
-                nearbyaccess: hostelData.nearbyAccess,
+                nearbyaccess: hostelData.nearbyaccess,
                 beds: updatedBeds,
                 policies: hostelData.policies,
                 category: hostelData.category,
-                advanceamount: hostelData.advance,
+                advanceamount: hostelData.advanceamount,
                 facilities: facilities,
-                photos: hostelData.photo,
+                photos: hostelData.photos,
                 longitude: Number(hostelData.longitude),
                 latitude: Number(hostelData.latitude),
                 cancellationPolicy: hostelData.cancellationPolicy,
@@ -230,19 +242,19 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
                 { $set: updateFields }
             );
 
-            return 'Hostel updated successfully';
+            return Messages.HostelUpdateSuccess;
         } catch (error) {
             return error as string;
         }
     }
 
-    async getOneHostel(id: Types.ObjectId): Promise<IHostel | string> {
+    async getOneHostel(id: Types.ObjectId): Promise<IUpdateHostelInput | string> {
         try {
-            const hostelFind = await Hostel.findOne({ _id: id }).populate('host_id')
+            const hostelFind = await Hostel.findOne({ _id: id }).populate('host_id').lean<IUpdateHostelInput>();
             if (hostelFind) {
                 return hostelFind
             } else {
-                return "Hostel not found"
+                return Messages.HostelNotFound;
             }
         } catch (error) {
             console.log(error)
@@ -261,16 +273,46 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
                     }
                 }
             )
-            return 'Status Updated'
+            return Messages.StatusUpdated;
         } catch (error) {
             return error as string;
         }
     }
 
-    async getAllHostel(): Promise<IHostel[] | string> {
+    async getAllHostel(): Promise<IUpdateHostelInput[] | string> {
         try {
-            const hostels = await Hostel.find();
+            const hostels = await Hostel.find().populate('host_id').lean<IUpdateHostelInput[]>();
             return hostels
+        } catch (error) {
+            return error as string;
+        }
+    }
+
+    async searchHostel(name: string): Promise<IUpdateHostelInput[] | string | null> {
+        try {
+            const hostels = await Hostel.find({
+                hostelname: { $regex: `^${name}`, $options: 'i' }
+            }).populate('host_id')
+            .lean<IUpdateHostelInput[]>()
+            return hostels
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getAllHostels(page: string, limit: string): Promise<{ hostels: IUpdateHostelInput[], totalCount: number; } | string | null> {
+        try {
+            const pageNumber = parseInt(page, 10);
+            const limitNumber = parseInt(limit, 10);
+
+            const hostels = await Hostel.find()
+                .skip(limitNumber * (pageNumber - 1))
+                .limit(limitNumber)
+                .populate('host_id')
+                .lean<IUpdateHostelInput[]>();
+            const totalCount = await Hostel.countDocuments();
+
+            return { hostels, totalCount };
         } catch (error) {
             return error as string;
         }

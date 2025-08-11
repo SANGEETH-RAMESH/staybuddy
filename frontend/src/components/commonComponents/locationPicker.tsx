@@ -153,7 +153,6 @@ const LocationPicker: React.FC<LocationPickerProps> = ({
   const [currentPosition, setCurrentPosition] = useState<{ lat: number; lng: number } | null>(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
 
-  // Set initial position from props
   const initialPosition = (initialLatitude !== 0 && initialLongitude !== 0)
     ? { lat: initialLatitude, lng: initialLongitude }
     : null;

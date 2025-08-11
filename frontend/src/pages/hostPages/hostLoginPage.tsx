@@ -1,4 +1,4 @@
-import HostLoginBody from '../../components/hostComponent/Login/HostLoginBody'
+import HostLoginBody from '../../components/hostComponent/Login/hostLoginBody'
 
 const hostLoginPage = () => {
   return (

@@ -137,13 +137,13 @@ const WalletTracker = () => {
       const totalAmount = parseFloat(amount);
       const response = await payment(totalAmount);
 
-      const { order_id } = response.data;
+      const { order_id,totalPrice,currency } = response.data;
 
       const options = {
         key: 'rzp_test_s0Bm198VJWlvQ2',
-        amount: parseFloat(amount) * 100, 
-        currency: 'INR',
-        name: 'Acme Corp',
+        amount: totalPrice * 100, 
+        currency: currency,
+        name: name,
         description: 'Test Transaction',
         order_id,
         prefill: {

@@ -3,10 +3,12 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Wallet, CreditCard, AlertCircle, AlertTriangle, ArrowLeft, Loader } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Notification } from '../../../interface/Notification';
-import { getSingleHostel, getUserDetails, getWalletDetails, payment, createBooking } from '../../../services/userServices';
+import { getSingleHostel, getUserDetails, getWalletDetails, createOrder, createBooking, verifyPayment, paymentFailed } from '../../../services/userServices';
 import { socket } from '../../../utils/socket';
 import { RazorpayResponse, ValidationErrors } from '../../../interface/RazorpayOptions';
 import { RazorpayOptions } from '../../../interface/RazorpayOptions';
+
+
 
 declare class Razorpay {
   constructor(options: RazorpayOptions);
@@ -303,7 +305,7 @@ const BookingForm = () => {
 
     try {
       const response = await createBooking(bookingDetails);
-      console.log(response)
+      console.log(response,'Anshi')
       if (response.data.message === 'Hostel Booked') {
         const newNotification: Notification = {
           receiver: userId,
@@ -343,32 +345,53 @@ const BookingForm = () => {
 
     setLoading(true);
     try {
-      const response = await payment(totalAmount)
+      const bookingDetails = {
+        customerName,
+        customerPhone,
+        customerEmail,
+        selectedBeds,
+        totalRentAmount,
+        totalDepositAmount,
+        tenantPreferred,
+        selectedFacilities,
+        host_id,
+        hostel_id: id,
+        foodRate: selectedFacilities.food ? foodRate : null,
+        category,
+        paymentMethod,
+        cancellationPolicy,
+        startDate: new Date(startDate),
+        endDate: new Date(endDate),
+        totalAmount
+      };
+      const response = await createOrder(bookingDetails);
 
-      const { order_id } = response.data;
-
+      const { order_id,amount,hostelname,currency,beds,customername,customeremail,customerphone,booking_id } = response.data;
+      console.log(amount,hostelname,currency,booking_id,'Booking')
       const options = {
         key: 'rzp_test_s0Bm198VJWlvQ2',
-        amount: totalAmount * 100,
-        currency: 'INR',
-        name: 'Hostel Booking',
-        description: `Booking for ${selectedBeds} bed(s)`,
+        amount: amount * 100,
+        currency: currency,
+        name: hostelname,
+        description: `Booking for ${beds} bed(s)`,
         order_id,
         prefill: {
-          name: customerName,
-          email: customerEmail,
-          contact: customerPhone,
+          name: customername,
+          email: customeremail,
+          contact: customerphone,
         },
         theme: {
           color: '#3B82F6',
         },
         handler: async (response: RazorpayResponse) => {
           console.log(response)
-          await handleSubmit();
+          await handleSubmit(booking_id);
           // toast.success('Payment successful!');
         },
         modal: {
-          ondismiss: () => toast.error('Payment cancelled'),
+          ondismiss: () => {
+             paymentFail(booking_id);
+          },
         },
       };
 
@@ -393,29 +416,32 @@ const BookingForm = () => {
     }
   };
 
-  const handleSubmit = async () => {
-    const bookingDetails = {
-      customerName,
-      customerPhone,
-      customerEmail,
-      selectedBeds,
-      totalRentAmount,
-      totalDepositAmount,
-      tenantPreferred,
-      selectedFacilities,
-      host_id,
-      hostel_id: id,
-      foodRate: selectedFacilities.food ? foodRate : null,
-      category,
-      paymentMethod,
-      cancellationPolicy,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate)
-    };
+  const handleSubmit = async (bookingId:string) => {
+    // const bookingDetails = {
+    //   customerName,
+    //   customerPhone,
+    //   customerEmail,
+    //   selectedBeds,
+    //   totalRentAmount,
+    //   totalDepositAmount,
+    //   tenantPreferred,
+    //   selectedFacilities,
+    //   host_id,
+    //   hostel_id: id,
+    //   foodRate: selectedFacilities.food ? foodRate : null,
+    //   category,
+    //   paymentMethod,
+    //   cancellationPolicy,
+    //   startDate: new Date(startDate),
+    //   endDate: new Date(endDate)
+    // };
 
     try {
-      const response = await createBooking(bookingDetails);
-      if (response.data.message === 'Hostel Booked') {
+      console.log(bookingId)
+      console.log(typeof bookingId,'fhdfldfdf')
+      const response = await verifyPayment(bookingId);
+      console.log(response,'REss')
+      if (response.data.message === 'Payment verified successfully') {
         const newNotification: Notification = {
           receiver: userId,
           message: `Your booking at ${hostelName} has been confirmed for ${new Date().toLocaleDateString()}`,
@@ -432,6 +458,7 @@ const BookingForm = () => {
           isRead: true
         }
         console.log('rece', newNotification)
+        console.log("host ",hostNotification)
         socket.emit('send_notification', newNotification)
         socket.emit('send_notification', hostNotification)
         // toast.success('Hostel Booked Successfully');
@@ -445,6 +472,20 @@ const BookingForm = () => {
       toast.error('Error creating booking');
     }
   };
+
+  const paymentFail = async(bookingId:string) => {
+    try {
+      console.log(bookingId,'dlfd')
+      const response = await paymentFailed(bookingId);
+      console.log(response)
+      if(response.data.message == 'Payment Failed'){
+        toast.error('Payment failed,hostel Booked')
+        navigate('/hostel')
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
   const renderError = (field: keyof ValidationErrors) => {
     if (touched[field] && errors[field]) {

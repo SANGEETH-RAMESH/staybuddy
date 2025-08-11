@@ -33,6 +33,7 @@ export const UserHeader: React.FC = () => {
   const [userId, setUserId] = useState('')
 
   useEffect(() => {
+    console.log(userId,'dfldfsdlfjdsfdf')
     if (userId) {
       socket.emit('join_notification_room', userId);
     }

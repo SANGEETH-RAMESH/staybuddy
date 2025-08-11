@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Search, UserPlus, Loader2, Clock, Paperclip, Image, X,  Video } from 'lucide-react';
 import dummy_profile from '../../../assets/dummy profile.png'
-import VideoCall from '../../commonComponents/VideoCall'
+import VideoCall from '../../commonComponents/videoCall'
 import { Message } from '../../../interface/Message';
 import { User } from '../../../interface/User';
 import { Chats } from '../../../interface/Chats';

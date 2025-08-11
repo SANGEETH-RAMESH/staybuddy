@@ -1,5 +1,5 @@
 import UserHeader from '../../components/commonComponents/userHeader'
-import UserWalletBody from '../../components/userComponent/Wallet/UserWalletBody'
+import UserWalletBody from '../../components/userComponent/Wallet/userWalletBody'
 
 const userWalletPage = () => {
   return (

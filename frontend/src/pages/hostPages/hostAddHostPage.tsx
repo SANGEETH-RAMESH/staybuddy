@@ -1,5 +1,5 @@
 import HostHeader from '../../components/commonComponents/hostHeader'
-import AddHostelBody from '../../components/hostComponent/Hostel/AddHostelBody'
+import AddHostelBody from '../../components/hostComponent/Hostel/addHostelBody'
 
 const hostAddHostPage = () => {
   return (

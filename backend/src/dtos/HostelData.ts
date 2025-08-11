@@ -1,20 +1,24 @@
+import { Types } from "mongoose";
+import { IHostResponse } from "./HostResponse";
+
 export interface IUpdateHostelInput {
-  name: string;
+  _id:string;
+  hostelname: string;
   location: string;
-  mobile: string;
-  bedsPerRoom: number;
+  mobile?: string;
+  beds: number;
   policies: string;
   category: string;
-  nearbyAccess: string;
-  advance: string;
-  bedShareRate: string;
-  foodRate: string;
-  host_id: string;
-  facilities: string; 
+  nearbyaccess: string;
+  advanceamount: string | number;
+  bedShareRate?: string;
+  foodRate: string | number;
+  host_id: string | Types.ObjectId |IHostResponse ;
+  facilities: string | string[]; 
   longitude:number;
   latitude:number;
-  photo?: string; 
-  hostelId:string;
+  photos?: string | string[]; 
+  hostelId?:string;
   phoneNumber?:string;
   cancellationPolicy:string;
   totalRooms:number;

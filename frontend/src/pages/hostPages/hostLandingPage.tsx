@@ -1,5 +1,5 @@
 import HostHeader from '../../components/commonComponents/hostHeader'
-import HostLandingBody from '../../components/hostComponent/Landing/HostLandingBody'
+import HostLandingBody from '../../components/hostComponent/Landing/hostLandingBody'
 
 const HostLandingPage = () => {
   return (

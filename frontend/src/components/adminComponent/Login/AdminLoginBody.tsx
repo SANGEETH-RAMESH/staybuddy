@@ -36,12 +36,13 @@ const AdminLoginBody = () => {
     e.preventDefault()
     try {
       const res = await loginUrl({email:formValues.email,password:formValues.password})
-      if (res.data.data === 'Invalid Password') {
+      console.log(res.data.data,'ljsfldsf')
+      if (res.data.data.message === 'Invalid password') {
         setErrors((prev) => ({
           ...prev,
           password: "Invalid Password"
         }))
-      } else if (res.data.data === 'Invalid Email') {
+      } else if (res.data.data.message === 'Admin not found') {
         setErrors((prev) => ({
           ...prev,
           email: 'Invalid Email'

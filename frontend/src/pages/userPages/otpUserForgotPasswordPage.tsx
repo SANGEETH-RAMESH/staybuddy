@@ -1,4 +1,4 @@
-import ForgotPasswordOtpBody from '../../components/userComponent/Otp/ForgotPasswordOtpBody'
+import ForgotPasswordOtpBody from '../../components/userComponent/Otp/forgotPasswordOtpBody'
 
 const OtpUserForgotPasswordPage = () => {
   return (

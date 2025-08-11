@@ -70,7 +70,6 @@ export const sendApprovalOrRejectionMail = async (
       },
     });
   
-    // Generate the message dynamically based on approval status
     const response = {
       body: {
         name: email,

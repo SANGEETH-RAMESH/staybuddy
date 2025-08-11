@@ -4,17 +4,20 @@ import HostService from '../service/hostService';
 import HostController from '../controller/hostController';
 import upload from '../cloudinary/multer'
 import hostAuthMiddleware from "../middleware/hostAuth";
-import passport from "passport";
 import WalletRepository from "../respository/walletRepository";
+import AdminRespository from "../respository/adminRepository";
+import UserRepository from "../respository/userRepository";
 const host_route = Router();
 
 const hostRepository = new HostRepository();
-const walletRepository = new WalletRepository()
-const hostService = new HostService(hostRepository,walletRepository);
+const walletRepository = new WalletRepository();
+const adminRepository = new AdminRespository();
+const userRepository = new UserRepository();
+const hostService = new HostService(hostRepository,walletRepository,adminRepository,userRepository);
 const hostController = new HostController(hostService);
 
-host_route.post('/signup',hostController.SignUp.bind(hostController))
-host_route.post('/verifyotp',hostController.VerifyOtp.bind(hostController))
+host_route.post('/signup',hostController.signUp.bind(hostController))
+host_route.post('/verifyotp',hostController.verifyOtp.bind(hostController))
 host_route.post('/forgotpassword',hostController.forgotPassword.bind(hostController))
 host_route.post('/verifyforgotpasswordotp',hostController.verifyForgotPasswordOtp.bind(hostController))
 host_route.post('/resendotp',hostController.resendOtp.bind(hostController))
@@ -30,27 +33,7 @@ host_route.patch('/editprofile',hostAuthMiddleware,hostController.editProfile.bi
 host_route.get('/allUsers',hostAuthMiddleware,hostController.getAllUsers.bind(hostController))
 host_route.get('/getAdmin',hostAuthMiddleware,hostController.getAdmin.bind(hostController))
 
-
-host_route.use(passport.initialize());
-host_route.use(passport.session());
-
-host_route.get(
-    '/auth/google',
-    passport.authenticate('google-host', { scope: ['email', 'profile'] })
-  );
-
-host_route.get('/auth/google/callback',
-    passport.authenticate('google-host',{
-        successRedirect:'/host/google/success',
-        failureRedirect:'/host/google/failure'
-    })
-)
-
-
-host_route.get('/google/success',(req,res) =>{
-    console.log('host google')
-    hostController.hostGoogleSignUp(req,res)
-})
+host_route.post('/google/callback',hostController.createGoogleAuth.bind(hostController))
 
 
 

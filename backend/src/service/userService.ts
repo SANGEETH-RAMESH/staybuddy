@@ -1,126 +1,76 @@
 import { IUserService } from "../interface/user/!UserService";
 import { IUserRespository } from "../interface/user/!UserRepository";
 import { sendOtp } from "../utils/mail";
-import { IUser } from "../model/userModel";
 import { Types } from "mongoose";
 import { userPayload } from "../types/commonInterfaces/tokenInterface";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Jwt/jwt";
-import HashedPassword from "../utils/hashedPassword";
 import bcrypt from 'bcrypt';
 import { IUserResponse } from "../dtos/UserResponse";
-import { IHost } from "../model/hostModel";
-import { INotification } from "../model/notificationModel";
 import { IWalletRepository } from "../interface/wallet/!WalletRepository";
 import { IHostRepository } from "../interface/host/!HostRepository";
 import jwt from 'jsonwebtoken';
+import { Messages } from "../messages/messages";
+import { IHostResponse } from "../dtos/HostResponse";
+import { INotificationResponse } from "../dtos/NotficationResponse";
 
 
-interface ResetPasswordData {
-    email: string;
-    password: string;
-    newPassword: string;
-}
 
-interface ChangePasswordData {
-    userId: string;
-    currentPassword: string;
-    newPassword: string;
-}
-type EditUserDetailData = {
-    userId: string;
-    name: string;
-    mobile: string;
-};
-
-interface UserData {
-    displayName?: string;
-    email?: string;
-}
 
 
 function otpgenerator(): number {
     return Math.floor(1000 + Math.random() * 9000);
 }
 
-function generateRandomMobileNumber() {
-    const firstDigit = Math.floor(Math.random() * 5) + 6;
-    let mobileNumber = firstDigit.toString();
-    for (let i = 0; i < 9; i++) {
-        mobileNumber += Math.floor(Math.random() * 10).toString();
-    }
 
-    return mobileNumber;
-}
 
-function generateRandomPassword() {
-    const lowerCase = 'abcdefghijklmnopqrstuvwxyz';
-    const upperCase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const numbers = '0123456789';
 
-    let password = '';
-
-    password += lowerCase[Math.floor(Math.random() * lowerCase.length)];
-    password += upperCase[Math.floor(Math.random() * upperCase.length)];
-    password += numbers[Math.floor(Math.random() * numbers.length)];
-
-    const allCharacters = lowerCase + upperCase + numbers;
-    for (let i = 0; i < 5; i++) {
-        password += allCharacters[Math.floor(Math.random() * allCharacters.length)];
-    }
-
-    password = password.split('').sort(() => Math.random() - 0.5).join('');
-
-    return password;
-}
 
 class UserService implements IUserService {
-    constructor(private userRepository: IUserRespository, private walletRepository: IWalletRepository, private hostRepository: IHostRepository) { }
+    constructor(private _userRepository: IUserRespository, private _walletRepository: IWalletRepository, private _hostRepository: IHostRepository) { }
 
-    async userSignUp(userData: IUser): Promise<string> {
+    async userSignUp(userData: IUserResponse): Promise<string> {
         try {
-            const existingUser = await this.userRepository.FindUserByEmail(userData.email);
+            const existingUser = await this._userRepository.findUserByEmail(userData.email);
             if (existingUser && !existingUser.isAdmin && existingUser.temp == false) {
-                return "User already exists";
+                return Messages.UserAlreadyExist;
             }
             const otp = otpgenerator();
             sendOtp(userData.email, otp);
-            await this.userRepository.OtpGenerating(userData.email, otp);
-            await this.userRepository.tempStoreUser(userData);
+            await this._userRepository.otpGenerating(userData.email, otp);
+            await this._userRepository.tempStoreUser(userData);
 
-            return "Otp sent successfully";
+            return Messages.OtpSentSuccess;
         } catch (error) {
-            console.error(error);
-            throw new Error("Error during signup");
+            return error as string;
         }
     }
 
     async verifyOtp(userOtp: { email: string; otp: number }): Promise<string> {
         try {
-            const verifiedOtp = await this.userRepository.otpVerifying(userOtp);
-            if (verifiedOtp === 'OTP not verified') {
-                return "Invalid OTP";
+            const verifiedOtp = await this._userRepository.otpVerifying(userOtp);
+            if (verifiedOtp === Messages.OtpNotVerified) {
+                return Messages.InvalidOtp;
             }
-            const user = await this.userRepository.CreateUser(userOtp);
-            if (user == 'success') {
-                await this.walletRepository.createWallet(userOtp.email)
+            const user = await this._userRepository.createUser(userOtp);
+            if (user == Messages.success) {
+                await this._walletRepository.createWallet(userOtp.email)
             }
             return user;
         } catch (error) {
-            console.error(error);
             return error as string
         }
     }
 
-    async verifyLogin(userData: IUser): Promise<{
+    async verifyLogin(userData: IUserResponse): Promise<{
         message: string;
         accessToken?: string;
         refreshToken?: string;
         role?: string;
     }> {
         try {
-            const checkingUser = await this.userRepository.UserVerifyLogin(userData.email);
+            const checkingUser = await this._userRepository.userVerifyLogin(userData.email);
             if (!checkingUser) {
-                return { message: "Invalid email" }
+                return { message: Messages.InvalidEmail }
             }
             if (typeof checkingUser === 'string') {
                 return { message: checkingUser };
@@ -128,12 +78,15 @@ class UserService implements IUserService {
 
 
             if (checkingUser?.isBlock) {
-                return { message: "User is blocked" };
+                return { message: Messages.UserIsBlocked };
+            }
+            if(!checkingUser.password || !userData.password){
+                return { message:Messages.InvalidPassword}
             }
 
             const isMatch = await bcrypt.compare(userData.password, checkingUser.password);
             if (!isMatch) {
-                return { message: "Invalid password" };
+                return { message: Messages.InvalidPassword };
             }
 
             const userPayload = {
@@ -144,40 +97,39 @@ class UserService implements IUserService {
             const accessToken = generateAccessToken(userPayload);
             const refreshToken = generateRefreshToken(userPayload);
             return {
-                message: "Success",
+                message: Messages.Success,
                 accessToken,
                 refreshToken,
                 role: 'user'
             };
         } catch (error) {
-            console.error(error);
             return { message: error as string };
         }
     }
 
-    async resendOtp(userData: IUser): Promise<string | null> {
+    async resendOtp(userData: IUserResponse): Promise<string | null> {
         try {
             const otp = otpgenerator();
             sendOtp(userData.email, otp);
-            await this.userRepository.OtpGenerating(userData.email, otp);
-            await this.userRepository.tempStoreUser(userData);
-            return 'OTP resent successfully';
+            await this._userRepository.otpGenerating(userData.email, otp);
+            await this._userRepository.tempStoreUser(userData);
+            return Messages.OtpResentSucess;
         } catch (error) {
             console.error(error);
             return null;
         }
     }
 
-    async forgotPassword(userData: IUser): Promise<{ email: string; temp: boolean } | null> {
+    async forgotPassword(userData: IUserResponse): Promise<{ email: string; temp: boolean } | null> {
         try {
 
-            const userFind = await this.userRepository.FindUserByEmail(userData.email);
+            const userFind = await this._userRepository.findUserByEmail(userData.email);
             if (!userFind) {
                 return null;
             }
             const otp = otpgenerator();
             sendOtp(userData.email, otp);
-            await this.userRepository.OtpGenerating(userData.email, otp);
+            await this._userRepository.otpGenerating(userData.email, otp);
             return {
                 email: userFind.email,
                 temp: userFind.temp ?? false
@@ -190,21 +142,20 @@ class UserService implements IUserService {
 
     async resetPassword(userData: { email: string; password: string }): Promise<string | { message: string }> {
         try {
-            const resetData: ResetPasswordData = {
+            const resetData = {
                 email: userData.email,
                 password: userData.password,
                 newPassword: userData.password,
             };
-            const existingUser = await this.userRepository.FindUserByEmail(resetData.email)
+            const existingUser = await this._userRepository.findUserByEmail(resetData.email)
             if (existingUser) {
-                const changedPassword = await this.userRepository.resetPassword(resetData);
+                const changedPassword = await this._userRepository.resetPassword(resetData);
                 return changedPassword;
             }
-            return "No User"
+            return Messages.NoUser
 
         } catch (error) {
-            console.error(error);
-            throw new Error("Error resetting password");
+            return error as string
         }
     }
 
@@ -212,20 +163,25 @@ class UserService implements IUserService {
         try {
 
 
-            const response = await this.userRepository.FindUserByEmail(email);
+            const response = await this._userRepository.findUserByEmail(email);
             if (response) {
-                return "Success"
+                return Messages.Success
             }
-            return "Not success"
+            return Messages.NotSuccess
         } catch (error) {
-            console.error(error);
-            throw new Error("Error resetting password");
+            return error as string
         }
     }
 
     async getUserDetails(userId: Types.ObjectId): Promise<IUserResponse | null> {
         try {
-            const response = await this.userRepository.FindUserById(userId);
+            const projection = {
+                name:1,
+                email:1,
+                mobile:1,
+                wallet_id:1
+            }
+            const response = await this._userRepository.findUserById(userId,projection);
             return response;
         } catch (error) {
             console.error(error);
@@ -235,59 +191,21 @@ class UserService implements IUserService {
 
     async changePassword(userData: { userId: string; currentPassword: string; newPassword: string }): Promise<string> {
         try {
-            const changePasswordData: ChangePasswordData = {
-                userId: userData.userId,
-                currentPassword: userData.currentPassword,
-                newPassword: userData.newPassword,
-            };
-
-            const response = await this.userRepository.changePassword(changePasswordData);
+            const response = await this._userRepository.changePassword(userData);
             return response;
         } catch (error) {
             console.error(error);
-            return "Error changing password";
-        }
-    }
-
-    async editUserDetail(userData: EditUserDetailData): Promise<string> {
-        try {
-            const response = await this.userRepository.editUserDetail(userData);
-            return response;
-        } catch (error) {
-            console.error(error);
-            return "Error updating user details";
-        }
-    }
-
-    async googleSignUp(userData: UserData): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
-        try {
-            const password = generateRandomPassword();
-            const mobile = generateRandomMobileNumber();
-            const hashed = await HashedPassword.hashPassword(password);
-            const data = { ...userData, password: hashed, mobile }
-            const response = await this.userRepository.addGoogleUser(data);
-            if (typeof response === 'object' && response !== null && 'message' in response) {
-                if (response.message === 'Success') {
-                    const userPayload: userPayload = {
-                        _id: new Types.ObjectId(response.user?._id),
-                        role: 'user'
-                    };
-                    const accessToken = generateAccessToken(userPayload);
-                    const refreshToken = generateRefreshToken(userPayload);
-                    return { message: response.message, accessToken, refreshToken };
-                } else if (response.message == 'Already') {
-                    const userPayload: userPayload = {
-                        _id: new Types.ObjectId(response.user?._id),
-                        role: 'user'
-                    };
-                    const accessToken = generateAccessToken(userPayload);
-                    const refreshToken = generateRefreshToken(userPayload);
-                    return { message: "Success", accessToken, refreshToken };
-                }
-            }
-            return response as string
-        } catch (error) {
             return error as string
+        }
+    }
+
+    async editUserDetail(userData: { userId: Types.ObjectId, name: string, mobile: string }): Promise<string> {
+        try {
+            const response = await this._userRepository.editUserDetail(userData);
+            return response;
+        } catch (error) {
+            console.error(error);
+            return error as string;
         }
     }
 
@@ -296,11 +214,10 @@ class UserService implements IUserService {
         try {
             console.log(refreshToken)
             const decoded = verifyToken(refreshToken)
-            console.log(decoded, 'dfldjfldfjdf')
             if (typeof decoded === 'object' && decoded !== null) {
-                const response = await this.userRepository.FindUserById(decoded._id);
+                const response = await this._userRepository.findUserById(decoded._id);
                 if (!response) {
-                    return "No User";
+                    return Messages.NoUser;
                 }
                 const userPayload: userPayload = {
                     _id: new Types.ObjectId(response._id),
@@ -312,7 +229,7 @@ class UserService implements IUserService {
                 return { accessToken, refreshToken };
             }
 
-            return "Invalid Token";
+            return Messages.InvalidToken;
         } catch (error) {
             console.log(error)
             return error as string
@@ -323,27 +240,28 @@ class UserService implements IUserService {
 
 
 
-    async allHost(): Promise<IHost[] | string | null> {
+    async allHost(): Promise<IHostResponse[] | string | null> {
         try {
-            const response = await this.hostRepository.allHost();
+            const response = await this._hostRepository.allHost();
             return response;
         } catch (error) {
             return error as string
         }
     }
 
-    async sendNotification(notification: INotification): Promise<INotification | string | null> {
+    async sendNotification(notification: INotificationResponse): Promise<INotificationResponse | string | null> {
         try {
-            const response = await this.userRepository.sendNotification(notification);
+            console.log(notification,'Notiii')
+            const response = await this._userRepository.sendNotification(notification);
             return response
         } catch (error) {
             return error as string
         }
     }
 
-    async getOldNotification(userId: string): Promise<INotification[] | string | null> {
+    async getOldNotification(userId: string): Promise<INotificationResponse[] | string | null> {
         try {
-            const response = await this.userRepository.getOldNotification(userId);
+            const response = await this._userRepository.getOldNotification(userId);
             return response
         } catch (error) {
             return error as string
@@ -352,7 +270,7 @@ class UserService implements IUserService {
 
     async markAllRead(userId: string): Promise<string> {
         try {
-            const response = await this.userRepository.markAllRead(userId);
+            const response = await this._userRepository.markAllRead(userId);
             return response
         } catch (error) {
             return error as string
@@ -363,10 +281,9 @@ class UserService implements IUserService {
         try {
             const payload = jwt.decode(credential);
             if (!payload || typeof payload === 'string') {
-                return 'No user'
+                return Messages.NoUser
             }
-            const checkUser = await this.userRepository.FindUserByEmail(payload.email)
-            console.log(payload, 'Payload')
+            const checkUser = await this._userRepository.findUserByEmail(payload.email)
             if (checkUser) {
                 const userPayload = {
                     _id: checkUser._id as Types.ObjectId,
@@ -374,7 +291,7 @@ class UserService implements IUserService {
                 };
                 const accessToken = generateAccessToken(userPayload);
                 const refreshToken = generateRefreshToken(userPayload);
-                return { message: "User Already Exist", accessToken, refreshToken, role: 'user' }
+                return { message: Messages.UserAlreadyExist, accessToken, refreshToken, role: 'user' }
             }
 
             const data = {
@@ -383,16 +300,15 @@ class UserService implements IUserService {
                 userType: 'google',
                 mobile: '',
             }
-            const id = await this.userRepository.createGoogleAuth(data)
-            await this.walletRepository.createWallet(payload.email)
-            console.log("Id", id)
+            const id = await this._userRepository.createGoogleAuth(data)
+            await this._walletRepository.createWallet(payload.email)
             const userPayload = {
                 _id: new Types.ObjectId(id),
                 role: 'user' as const
             };
             const accessToken = generateAccessToken(userPayload);
             const refreshToken = generateRefreshToken(userPayload);
-            return { message: "User Created", accessToken, refreshToken, role: 'user' }
+            return { message: Messages.UserCreated, accessToken, refreshToken, role: 'user' }
         } catch (error) {
             return error as string
         }

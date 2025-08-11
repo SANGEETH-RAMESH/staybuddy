@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IHostel extends Document {
     hostelname: string;
-    location: number;
+    location: string;
     latitude:number;
     longitude:number;
     nearbyaccess: string;

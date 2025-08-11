@@ -108,10 +108,24 @@ const UserLoginBody = () => {
             }
         } catch (error: unknown) {
             const axiosError = error as any;
-
+            console.log(axiosError.response.data, "Heyyy")
             if (axiosError.response) {
                 const { message, errors } = axiosError.response.data;
-
+                console.log(message.message, "heyyyy")
+                if (message.message == 'Invalid password') {
+                    console.log('sangee')
+                    setErrors((prev) => ({
+                        ...prev,
+                        password: 'Invalid password'
+                    }))
+                    return;
+                } else if (message.message == "Invalid email") {
+                    setErrors((prev) => ({
+                        ...prev,
+                        email: 'Invalid email'
+                    }));
+                    return;
+                }
                 if (errors) {
                     setErrors(errors);
 

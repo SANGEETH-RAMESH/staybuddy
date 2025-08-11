@@ -1,5 +1,5 @@
 import UserHeader from '../../components/commonComponents/userHeader'
-import Review from "../../components/userComponent/Review/Review"
+import Review from "../../components/userComponent/Review/review"
 
 const userRatingPage = () => {
   return (

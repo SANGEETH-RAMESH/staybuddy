@@ -1,5 +1,5 @@
 import UserHeader from '../../components/commonComponents/userHeader'
-import UserHostelBookingPage from '../../components/userComponent/Hostel/HostelBookingBody'
+import UserHostelBookingPage from '../../components/userComponent/Hostel/hostelBookingBody'
 
 
 const userHostelBookingPage = () => {

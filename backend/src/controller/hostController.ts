@@ -6,6 +6,7 @@ import { ObjectId } from "mongodb";
 import { forgotPasswordValidation, otpValidation, resetPasswordValidation, signInValidation, signupValidation } from "../validations/commonValidations";
 import { ValidationError } from "yup";
 import { StatusCode } from "../status/statusCode";
+import { Messages } from "../messages/messages";
 
 declare module "express" {
     interface Request {
@@ -14,9 +15,9 @@ declare module "express" {
 }
 
 class hostController {
-    constructor(private hostService: IHostService) { }
+    constructor(private _hostService: IHostService) { }
 
-    async SignUp(req: Request, res: Response): Promise<void> {
+    async signUp(req: Request, res: Response): Promise<void> {
         try {
             let validationErrors: Record<string, string> = {};
 
@@ -32,29 +33,29 @@ class hostController {
             if (Object.keys(validationErrors).length > 0) {
                 res.status(StatusCode.BAD_REQUEST).json({
                     success: false,
-                    message: "Validation failed",
+                    message: Messages.ValidationFailed,
                     errors: validationErrors
                 })
                 return
             }
             const { hostData } = req.body
-            const response = await this.hostService.SignUp(hostData);
+            const response = await this._hostService.signUp(hostData);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async resendOtp(req: Request, res: Response): Promise<void> {
         try {
-            const response = await this.hostService.resendOtp(req.body);
+            const response = await this._hostService.resendOtp(req.body);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
-    async VerifyOtp(req: Request, res: Response): Promise<void> {
+    async verifyOtp(req: Request, res: Response): Promise<void> {
         try {
 
             let validationErrors: Record<string, string> = {};
@@ -71,17 +72,17 @@ class hostController {
             if (Object.keys(validationErrors).length > 0) {
                 res.status(StatusCode.BAD_REQUEST).json({
                     success: false,
-                    message: "Validation failed",
+                    message: Messages.ValidationFailed,
                     errors: validationErrors
                 })
                 return
             }
 
 
-            const response = await this.hostService.verifyOtp(req.body);
+            const response = await this._hostService.verifyOtp(req.body);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -102,20 +103,20 @@ class hostController {
             if (Object.keys(validationErrors).length > 0) {
                 res.status(StatusCode.BAD_REQUEST).json({
                     success: false,
-                    message: "Validation failed",
+                    message: Messages.ValidationFailed,
                     errors: validationErrors
                 })
                 return
             }
 
-            const existingHost = await this.hostService.forgotPassword(req.body);
+            const existingHost = await this._hostService.forgotPassword(req.body);
             if (existingHost && existingHost.temp == false) {
-                res.status(StatusCode.OK).json({ success: true, message: "Host found" })
+                res.status(StatusCode.OK).json({ success: true, message: Messages.HostFound })
             } else {
-                res.status(StatusCode.OK).json({ success: true, message: "Host not found" })
+                res.status(StatusCode.OK).json({ success: true, message: Messages.NoHost })
             }
         } catch (error) {
-            console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -133,15 +134,15 @@ class hostController {
             if (Object.keys(validationErrors).length > 0) {
                 res.status(StatusCode.BAD_REQUEST).json({
                     success: false,
-                    message: "Validation failed",
+                    message: Messages.ValidationFailed,
                     errors: validationErrors
                 })
                 return
             }
-            const response = await this.hostService.verifyOtp(req.body);
+            const response = await this._hostService.verifyOtp(req.body);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
 
         }
     }
@@ -169,15 +170,15 @@ class hostController {
             if (Object.keys(validationErrors).length > 0) {
                 res.status(StatusCode.BAD_REQUEST).json({
                     success: false,
-                    message: "Validation failed",
+                    message: Messages.ValidationFailed,
                     errors: validationErrors
                 });
                 return;
             }
-            const response = await this.hostService.resetPassword(req.body);
+            const response = await this._hostService.resetPassword(req.body);
             res.status(StatusCode.OK).json({ success: true, message: response.message })
         } catch (error) {
-            console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -196,34 +197,33 @@ class hostController {
             if (Object.keys(validationErrors).length > 0) {
                 res.status(StatusCode.BAD_REQUEST).json({
                     success: false,
-                    message: "Validation failed",
+                    message: Messages.ValidationFailed,
                     errors: validationErrors,
                 });
                 return;
             }
-            const response = await this.hostService.verifyLogin(req.body);
-            res.status(StatusCode.OK).json({ success: true, message: response.message, accessToken: response.accessToken, refreshToken: response.refreshToken,role:response.role })
+            const response = await this._hostService.verifyLogin(req.body);
+            res.status(StatusCode.OK).json({ success: true, message: response.message, accessToken: response.accessToken, refreshToken: response.refreshToken, role: response.role })
         } catch (error) {
             console.log(error)
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
-    
+
 
     async getHost(req: Request, res: Response): Promise<void> {
         try {
             const host = req.customHost;
 
             if (!host?._id) {
-                res.status(StatusCode.BAD_REQUEST).json({ success: false, message: 'Id is missing or invalid' });
+                res.status(StatusCode.BAD_REQUEST).json({ success: false, message: Messages.IdMissing });
                 return
             }
-            const response = await this.hostService.getHost(host._id);
+            const response = await this._hostService.getHost(host._id);
             res.status(StatusCode.OK).json({ success: true, message: response });
         } catch (error) {
-            console.log(error);
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -232,14 +232,14 @@ class hostController {
             const host = req.customHost;
 
             if (!host?._id) {
-                res.json({ message: "No host id" })
+                res.json({ message: Messages.NoHostId })
                 return
             }
 
-            const response = await this.hostService.newHost(host?._id)
+            const response = await this._hostService.newHost(host?._id)
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -252,55 +252,54 @@ class hostController {
             }
             const host = req.customHost;
             if (!host?._id) {
-                res.json({ success: false, message: "Not host id" })
+                res.json({ success: false, message: Messages.NoHostId })
             }
 
             const hostId = new ObjectId(host?._id);
-            const response = await this.hostService.approvalRequest(hostId, photo, documentType)
+            const response = await this._hostService.approvalRequest(hostId, photo, documentType)
             res.status(StatusCode.OK).json({ success: true, message: response })
 
         } catch (error) {
-            console.log(error)
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
-    
 
-    async hostGoogleSignUp(req: Request, res: Response): Promise<void> {
-        try {
-            const host = req.user;
-            const hostData = { name: host?.displayName, email: host?.email };
-            const response = await this.hostService.hostGoogleSignUp(hostData);
-            if (typeof response !== 'string' && response?.message === 'Success') {
-                res.redirect(`${process.env.FRONTEND_URL}/host/home/?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}`)
-            } else {
 
-                res.json({ message: response });
-            }
+    // async hostGoogleSignUp(req: Request, res: Response): Promise<void> {
+    //     try {
+    //         const host = req.user;
+    //         const hostData = { name: host?.displayName, email: host?.email };
+    //         const response = await this._hostService.hostGoogleSignUp(hostData);
+    //         if (typeof response !== 'string' && response?.message === 'Success') {
+    //             res.redirect(`${process.env.FRONTEND_URL}/host/home/?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}`)
+    //         } else {
 
-        } catch (error) {
-            console.log(error)
-        }
-    }
+    //             res.json({ message: response });
+    //         }
+
+    //     } catch (error) {
+    //         res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
+    //     }
+    // }
 
     async validateRefreshToken(req: Request, res: Response): Promise<void> {
         try {
 
             const { refreshToken } = req.body;
-            const response = await this.hostService.validateRefreshToken(refreshToken)
+            const response = await this._hostService.validateRefreshToken(refreshToken)
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error)
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async getAllCategory(req: Request, res: Response): Promise<void> {
         try {
-            const response = await this.hostService.getAllCategory();
+            const response = await this._hostService.getAllCategory();
             res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -308,18 +307,18 @@ class hostController {
         try {
             const host = req.customHost
             if (!host || !host._id) {
-                res.status(StatusCode.NOT_FOUND).json({ success: false, message: "No Host" })
+                res.status(StatusCode.NOT_FOUND).json({ success: false, message: Messages.NoHost })
                 return
             }
             const body = req.body.formData
             const data = { hostId: host._id, ...body }
-            const response = await this.hostService.changePassword(data)
+            const response = await this._hostService.changePassword(data)
             if (!response) {
-                res.status(StatusCode.BAD_REQUEST).json({ success: false, message: "No Response" })
+                res.status(StatusCode.BAD_REQUEST).json({ success: false, message: Messages.NoResponse })
             }
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -327,14 +326,14 @@ class hostController {
         try {
             const host = req.customHost;
             if (!host || !host._id) {
-                res.status(StatusCode.BAD_REQUEST).json({ message: "No Host" })
+                res.status(StatusCode.BAD_REQUEST).json({ message: Messages.NoHost })
                 return
             }
             const data = { hostId: host._id, ...req.body }
-            const response = await this.hostService.editProfile(data)
+            const response = await this._hostService.editProfile(data)
             res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -374,25 +373,35 @@ class hostController {
 
     async getAllUsers(req: Request, res: Response): Promise<void> {
         try {
-            const response = await this.hostService.getAllUsers();
+            const response = await this._hostService.getAllUsers();
             res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async getAdmin(req: Request, res: Response): Promise<void> {
         try {
-            const response = await this.hostService.getAdmin();
+            const response = await this._hostService.getAdmin();
             res.status(StatusCode.OK).json({ message: response });
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
-    
+    async createGoogleAuth(req: Request, res: Response): Promise<void> {
+        try {
+            const { credential } = req.body;
+            const response = await this._hostService.createGoogleAuth(credential);
+            res.status(StatusCode.OK).json(response)
+        } catch (error) {
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
+        }
+    }
 
-    
+
+
+
 }
 
 export default hostController

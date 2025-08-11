@@ -3,7 +3,7 @@ import { Search, ArrowLeft, RefreshCw, Wifi, UtensilsCrossed, Shirt, MapPin, Sta
 import { useNavigate } from 'react-router-dom';
 import { deleteHostel, getAllHostels } from '../../../services/hostServices';
 import { SearchBarProps } from '../../../interface/Search';
-import DeleteConfirmationModal from '../../commonComponents/DeleteConfirmationModal';
+import DeleteConfirmationModal from '../../commonComponents/deleteConfirmationModal';
 
 
 

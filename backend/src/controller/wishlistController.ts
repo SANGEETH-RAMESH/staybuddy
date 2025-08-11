@@ -3,8 +3,8 @@ import { Request, Response } from "express";
 import { StatusCode } from "../status/statusCode";
 
 
-class WishlistController{
-    constructor(private wishlistService:IWishlistService){ }
+class WishlistController {
+    constructor(private _wishlistService: IWishlistService) { }
 
 
     async addToWishlist(req: Request, res: Response): Promise<void> {
@@ -12,13 +12,12 @@ class WishlistController{
             const hostelId = req.params.hostelId
             if (req.user) {
                 const userId = req.user._id
-                const response = await this.wishlistService.addToWishlist(hostelId, userId)
+                const response = await this._wishlistService.addToWishlist(hostelId, userId)
                 res.status(StatusCode.OK).json({ message: response })
             }
 
         } catch (error) {
-            console.log(error)
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -27,11 +26,11 @@ class WishlistController{
             const hostelId = req.params.hostelId;
             const userId = req.user?._id
             if (userId) {
-                const response = await this.wishlistService.removeFromWishlist(hostelId, userId)
+                const response = await this._wishlistService.removeFromWishlist(hostelId, userId)
                 res.status(StatusCode.OK).json({ message: response })
             }
         } catch (error) {
-           res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -40,11 +39,11 @@ class WishlistController{
             const userId = req.user?._id;
             const hostelId = req.params.hostelId;
             if (userId) {
-                const response = await this.wishlistService.checkWishlist(userId, hostelId)
+                const response = await this._wishlistService.checkWishlist(userId, hostelId)
                 res.status(StatusCode.OK).json({ message: response })
             }
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -52,11 +51,11 @@ class WishlistController{
         try {
             const userId = req.user?._id
             if (userId) {
-                const response = await this.wishlistService.getWishlist(userId)
+                const response = await this._wishlistService.getWishlist(userId)
                 res.status(StatusCode.OK).json({ message: response })
             }
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -64,11 +63,11 @@ class WishlistController{
         try {
             const userId = req.user?._id
             if (userId) {
-                const response = await this.wishlistService.deleteWishlist(userId)
+                const response = await this._wishlistService.deleteWishlist(userId)
                 res.status(StatusCode.OK).json({ message: response })
             }
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 

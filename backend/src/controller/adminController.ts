@@ -1,16 +1,16 @@
 
 import { Request, Response } from "express";
-// import adminService from "../service/adminService";
 import { IAdminService } from "../interface/admin/IAdminService";
 import mongoose, { Types } from "mongoose";
 import uploadImage from "../cloudinary/cloudinary";
 import { signInValidation } from "../validations/commonValidations";
 import { ValidationError } from "yup";
 import { categoryValidation } from "../validations/categoryValidation";
-import {StatusCode} from '../status/statusCode'
+import { StatusCode } from '../status/statusCode'
+import { Messages } from "../messages/messages";
 
 class adminController {
-    constructor(private adminService: IAdminService) {
+    constructor(private _adminService: IAdminService) {
 
     }
 
@@ -30,272 +30,168 @@ class adminController {
             if (Object.keys(validationErrors).length > 0) {
                 res.status(StatusCode.BAD_REQUEST).json({
                     success: false,
-                    message: "Validation failed",
+                    message: Messages.ValidationFailed,
                     errors: validationErrors,
                 });
                 return;
             }
-            const response = await this.adminService.adminLogin(req.body);
+            const response = await this._adminService.adminLogin(req.body);
+            if (response.message == Messages.AdminNotFound) {
+                res.status(StatusCode.NOT_FOUND).json({ success: true, data: response });
+                return;
+            } else if (response.message == Messages.InvalidPassword) {
+                res.status(StatusCode.UNAUTHORIZED).json({ success: true, data: response });
+                return;
+            }
             res.status(StatusCode.OK).json({ success: true, data: response })
 
         } catch (error) {
-            console.log(error)
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async getUser(req: Request, res: Response): Promise<void> {
         try {
-            console.log(req.query, 'eyy')
-            let { page, limit } = req.query
-
             const pageNumber = parseInt(req.query.page as string) || 1;
             const limitNumber = parseInt(req.query.limit as string) || 4;
-
-            const response = await this.adminService.getUser(pageNumber, limitNumber);
-            res.json({ success: true, message: response })
+            const response = await this._adminService.getUser(pageNumber, limitNumber);
+            res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async userBlock(req: Request, res: Response): Promise<void> {
         try {
-            const  userId  = new mongoose.Types.ObjectId(req.params.id);
-            const response = await this.adminService.userBlock(userId);
+            const userId = new mongoose.Types.ObjectId(req.params.id);
+            const response = await this._adminService.userBlock(userId);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async userUnBlock(req: Request, res: Response): Promise<void> {
         try {
-            const  userId  = new mongoose.Types.ObjectId(req.params.id);
-            const response = await this.adminService.userUnBlock(userId);
+            const userId = new mongoose.Types.ObjectId(req.params.id);
+            const response = await this._adminService.userUnBlock(userId);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async userDelete(req: Request, res: Response): Promise<void> {
         try {
-            let  userId  = new mongoose.Types.ObjectId(req.params.id);;
+            let userId = new mongoose.Types.ObjectId(req.params.id);;
             userId = new Types.ObjectId(userId);
-            const response = await this.adminService.userDelete(userId);
+            const response = await this._adminService.userDelete(userId);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async getHost(req: Request, res: Response): Promise<void> {
         try {
-            console.log('hello', req.query)
             const skip = parseInt(req.query.skip as string)
             const limit = parseInt(req.query.limit as string)
-            const response = await this.adminService.getHost(skip, limit);
-            console.log(response, 'hello')
+            const response = await this._adminService.getHost(skip, limit);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async hostBlock(req: Request, res: Response): Promise<void> {
         try {
-            const  hostId  = new mongoose.Types.ObjectId(req.params.id);
-            const response = await this.adminService.hostBlock(hostId);
+            const hostId = new mongoose.Types.ObjectId(req.params.id);
+            const response = await this._adminService.hostBlock(hostId);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async hostUnBlock(req: Request, res: Response): Promise<void> {
         try {
-            const { hostId } = req.body
-            const response = await this.adminService.hostUnBlock(hostId);
+            const hostId = new mongoose.Types.ObjectId(req.params.id);
+            const response = await this._adminService.hostUnBlock(hostId);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async hostDelete(req: Request, res: Response): Promise<void> {
         try {
-            const  hostId  = req.params.id;
+            const hostId = req.params.id;
 
             if (!Types.ObjectId.isValid(hostId)) {
-                res.status(StatusCode.BAD_REQUEST).json({ success: false, message: 'Invalid hostId format' });
+                res.status(StatusCode.BAD_REQUEST).json({ success: false, message: Messages.InvalidHostId });
             }
 
             const objectIdHostId = new Types.ObjectId(hostId);
 
-            const response = await this.adminService.hostDelete(objectIdHostId);
+            const response = await this._adminService.hostDelete(objectIdHostId);
 
             res.status(StatusCode.OK).json({ success: true, message: response });
         } catch (error) {
-            console.log(error);
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async approveHost(req: Request, res: Response): Promise<void> {
         try {
-            const hostId  = new mongoose.Types.ObjectId(req.params.id);;
+            const hostId = new mongoose.Types.ObjectId(req.params.id);;
 
             const Id = new mongoose.Types.ObjectId(hostId);
 
-            const response = await this.adminService.approveHost(Id);
+            const response = await this._adminService.approveHost(Id);
 
             res.status(StatusCode.OK).json({ success: true, message: response });
         } catch (error) {
             console.log(error);
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async rejectHost(req: Request, res: Response): Promise<void> {
         try {
-            const  hostId  = new mongoose.Types.ObjectId(req.params.id);;
-            const response = await this.adminService.rejectHost(hostId);
+            const hostId = new mongoose.Types.ObjectId(req.params.id);;
+            const response = await this._adminService.rejectHost(hostId);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
             console.log(error);
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async getAllHostels(req: Request, res: Response): Promise<void> {
         try {
-            
+
             let { page, limit } = req.query
             if (!page || !limit) {
-                res.status(StatusCode.OK).json({ message: "Page or limit is not" })
+                res.status(StatusCode.OK).json({ message: Messages.PageLimit })
             }
             page = page as string
             limit = limit as string
-            const response = await this.adminService.getAllHostels(page, limit);
+            const response = await this._adminService.getAllHostels(page, limit);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
-    async addCategory(req: Request, res: Response): Promise<void> {
-        try {
-            const name = req.body.name;
-            const isActive = req.body.isActive;
-            const imageFile = req.file;
-            console.log(imageFile, 'image')
-            let validationErrors: Record<string, string> = {};
 
-            await categoryValidation
-                .validate({ name, image: imageFile }, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err) => {
-                        if (err.path) {
-                            if (err.path.startsWith('image.')) {
-                                validationErrors['image'] = err.message;
-                            } else {
-                                validationErrors[err.path] = err.message;
-                            }
-                        }
-                    });
-                });
-
-
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: 'Validation failed',
-                    errors: validationErrors,
-                });
-                return
-            }
-
-            let photo: string | undefined = undefined;
-            if (imageFile?.buffer) {
-                photo = await uploadImage(imageFile.buffer);
-            }
-
-            const response = await this.adminService.addCategory(name, isActive, photo);
-            res.status(StatusCode.OK).json({ success: true, message: response });
-        } catch (error) {
-            console.log(error)
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
-        }
-    }
-
-    async getAllCategory(req: Request, res: Response): Promise<void> {
-        try {
-            console.log(req.query, 'query')
-            const skip = parseInt(req.query.skip as string);
-            const limit = parseInt(req.query.limit as string);
-            const response = await this.adminService.getAllCategory(skip, limit);
-            res.status(StatusCode.OK).json({ message: response });
-        } catch (error) {
-            console.log(error)
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
-        }
-    }
-
-    async getCategory(req: Request, res: Response): Promise<void> {
-        try {
-            console.log(req.query, 'query')
-            console.log(req.params.id)
-            const id = req.params.id
-            const response = await this.adminService.getCategory(id)
-            res.status(StatusCode.OK).json({ message: response })
-        } catch (error) {
-            console.log(error)
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
-        }
-    }
-
-    async updateCategory(req: Request, res: Response): Promise<void> {
-        try {
-            let validationErrors: Record<string, string> = {};
-            await categoryValidation
-                .pick(['name'])
-                .validate({ name:req.body.name }, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err) => {
-                        if (err.path) {
-                            validationErrors[err.path] = err.message;
-                        }
-                    });
-                });
-
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: 'Validation failed',
-                    errors: validationErrors,
-                });
-                return
-            }
-            const id = req.params.id;
-            const { name, isActive } = req.body;
-            console.log(name, isActive, id)
-            const response = await this.adminService.updateCategory(id, name, isActive)
-            console.log("Response", response)
-            res.status(StatusCode.OK).json({ message: response })
-        } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
-        }
-    }
 
     async getHostDetails(req: Request, res: Response): Promise<void> {
         try {
-            console.log(req.params.id, 'heello');
             const userId = req.params.id;
-            const response = await this.adminService.getHostDetails(userId)
+            const response = await this._adminService.getHostDetails(userId)
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -303,11 +199,11 @@ class adminController {
         try {
             console.log(req.params.id)
             const userId = req.params.id
-            const response = await this.adminService.getHostHostelData(userId)
+            const response = await this._adminService.getHostHostelData(userId)
             res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
             console.log(error)
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -315,99 +211,72 @@ class adminController {
         try {
             const hostelId = req.params.id;
             if (!hostelId || typeof hostelId !== 'string') {
-                res.status(StatusCode.BAD_REQUEST).json({ message: "No hostel Id" })
+                res.status(StatusCode.BAD_REQUEST).json({ message: Messages.NoHostelId })
                 return
             }
-            const response = await this.adminService.deleteHostel(hostelId)
+            const response = await this._adminService.deleteHostel(hostelId)
             res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
-        }
-    }
-
-    async deleteCategory(req: Request, res: Response): Promise<void> {
-        try {
-            const categoryId = req.params.id;
-            const response = await this.adminService.deleteCategory(categoryId);
-            res.status(StatusCode.OK).json({ message: response })
-        } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
-        }
-    }
-
-    async searchCategory(req: Request, res: Response): Promise<void> {
-        try {
-            console.log(req.query.name, "quer")
-            const name = req.query.name;
-            if (name) {
-                const categoryname = name.toString();
-                const response = await this.adminService.searchCategory(categoryname)
-                res.status(StatusCode.OK).json({ message: response })
-            }
-
-        } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async searchUser(req: Request, res: Response): Promise<void> {
         try {
-            console.log(req.query, "QUery")
             const name = req.query.name as string;
-            const response = await this.adminService.searchUser(name)
+            const response = await this._adminService.searchUser(name)
             res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async searchHost(req: Request, res: Response): Promise<void> {
         try {
-            console.log(req.query, "Query")
             const name = req.query.name as string;
-            const response = await this.adminService.searchHost(name);
+            const response = await this._adminService.searchHost(name);
             res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async searchHostel(req: Request, res: Response): Promise<void> {
         try {
             const name = req.query.name as string;
-            const response = await this.adminService.searchHostel(name);
+            const response = await this._adminService.searchHostel(name);
             res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async getReviews(req: Request, res: Response): Promise<void> {
         try {
             const hostelId = req.params.hostelId;
-            const response = await this.adminService.getReviews(hostelId);
+            const response = await this._adminService.getReviews(hostelId);
             res.status(StatusCode.OK).json({ message: response });
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async getSales(req: Request, res: Response): Promise<void> {
         try {
-            const response = await this.adminService.getSales();
+            const response = await this._adminService.getSales();
             res.status(StatusCode.OK).json({ message: response });
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
-    async validaterefreshToken(req:Request,res:Response):Promise<void>{
+    async validaterefreshToken(req: Request, res: Response): Promise<void> {
         try {
-            const {refreshToken} = req.body;
-            const response = await this.adminService.validateRefreshToken(refreshToken);
-            res.status(StatusCode.OK).json({message:response});
+            const { refreshToken } = req.body;
+            const response = await this._adminService.validateRefreshToken(refreshToken);
+            res.status(StatusCode.OK).json({ message: response });
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({message:error})
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 }

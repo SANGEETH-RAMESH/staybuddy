@@ -1,16 +1,16 @@
+import { IWalletResponse } from "../dtos/WalletResponse";
 import { IWalletRepository } from "../interface/wallet/!WalletRepository";
 import { IWalletService } from "../interface/wallet/!WalletService";
-import { IWallet } from "../model/walletModel";
 
 
 
 class WalletService implements IWalletService {
-    constructor(private walletRepository: IWalletRepository) { }
+    constructor(private _walletRepository: IWalletRepository) { }
 
 
-    async walletDeposit({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
+    async walletDeposit({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWalletResponse } | string> {
         try {
-            const response = await this.walletRepository.walletDeposit({ id, amount })
+            const response = await this._walletRepository.walletDeposit({ id, amount })
             return response
         } catch (error) {
             console.log(error)
@@ -20,7 +20,7 @@ class WalletService implements IWalletService {
 
     async walletWithdraw({ id, amount }: { id: string, amount: string }): Promise<string> {
         try {
-            const response = await this.walletRepository.walletWithdraw({ id, amount })
+            const response = await this._walletRepository.walletWithdraw({ id, amount })
             return response
         } catch (error) {
             console.log(error)
@@ -28,9 +28,9 @@ class WalletService implements IWalletService {
         }
     }
 
-    async getWalletDetails(id: string): Promise<IWallet | string | null> {
+    async getWalletDetails(id: string): Promise<IWalletResponse | string | null> {
         try {
-            const response = await this.walletRepository.findUserWallet(id)
+            const response = await this._walletRepository.findUserWallet(id)
             return response
         } catch (error) {
             return error as string

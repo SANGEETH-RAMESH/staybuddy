@@ -19,10 +19,18 @@ import {
 import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { endBooking, getOrderDetails, getReviewByOrderId, submitReview } from '../../../services/userServices';
+import { endBooking, getOrderDetails, getReviewByOrderId, repayment, repaymentSuccess, submitReview } from '../../../services/userServices';
 import { Order } from '../../../interface/Order';
 import { Review } from '../../../interface/Review';
+import { RazorpayResponse } from '../../../interface/RazorpayOptions';
+import { useRazorpay, RazorpayOrderOptions } from 'react-razorpay'
 
+
+// declare class Razorpay {
+//     constructor(options: RazorpayOptions);
+//     open(): void;
+//     on(event: string, callback: (response: RazorpayResponse) => void): void;
+// }
 
 const SavedDetailHostel = () => {
     const [showAlert, setShowAlert] = useState(false);
@@ -41,10 +49,9 @@ const SavedDetailHostel = () => {
     const [orderId, setOrderId] = useState('');
     const [loading, setLoading] = useState(true)
 
-
+    const { Razorpay } = useRazorpay();
 
     const checkCancellationEligibility = (cancellationDate: string) => {
-        console.log(cancellationDate, 'Cancellation Date')
         const today = new Date();
         const cancelDate = new Date(cancellationDate);
 
@@ -53,8 +60,6 @@ const SavedDetailHostel = () => {
 
         const isEligible = cancelDate >= today;
         setCancellationAllowed(isEligible);
-        console.log(cancelDate, today, 'dfldjf')
-        console.log(isEligible, 'Aano')
         if (!isEligible) {
             const daysPassed = Math.floor((today.getTime() - cancelDate.getTime()) / (1000 * 60 * 60 * 24))
             setCancellationMessage(`Cancellation period expired ${daysPassed} day(s) ago`);
@@ -72,7 +77,6 @@ const SavedDetailHostel = () => {
                 const response = await getOrderDetails(id)
                 const orderData = response.data.message;
                 setOrderId(orderData._id);
-                console.log(orderData.cancellationPolicy, 'Policy')
                 if (orderData.cancellationPolicy == 'freecancellation') {
                     checkCancellationEligibility(orderData.startDate);
                 } else {
@@ -108,15 +112,13 @@ const SavedDetailHostel = () => {
                     fromDate: orderData.startDate,
                     toDate: orderData.endDate,
                     cancellationPolicy: orderData.cancellationPolicy,
-                    cancelled:orderData.cancelled
+                    cancelled: orderData.cancelled,
+                    status: orderData.status
                 });
 
                 setBookingEnded(!orderData.active);
                 const o_id = orderData._id;
-                console.log(orderData, 'Order')
-                console.log(o_id, 'OrderId')
                 const reviewData = await getReviewByOrderId(o_id)
-                console.log(reviewData, 'heyy')
                 setLoading(false)
 
                 if (reviewData.data.message) {
@@ -135,7 +137,59 @@ const SavedDetailHostel = () => {
 
     const handleEndBooking = () => setShowAlert(true);
 
-    const isReviewAllowed = booking?.cancelled === true &&booking.fromDate && new Date(booking.fromDate) < new Date();
+    const handlePayment = async (id: string, amount: number) => {
+        console.log(id, 'Id')
+        const response = await repayment(amount);
+        console.log(response);
+        const { order_id, totalPrice, currency } = response.data;
+        const options: RazorpayOrderOptions = {
+            key: 'rzp_test_s0Bm198VJWlvQ2',
+            amount: totalPrice * 100,
+            currency: currency,
+            name: "Repayment",
+            description: `Repayment`,
+            order_id,
+            theme: {
+                color: '#3B82F6',
+            },
+            handler: async (response: RazorpayResponse) => {
+                console.log(response)
+                await handleSubmit(id);
+                // toast.success('Payment successful!');
+            },
+            modal: {
+                //   ondismiss: () => {
+                //  paymentFail(booking_id);
+                //   },
+            },
+        };
+        console.log(options, 'Options')
+        const rzp = new Razorpay(options);
+        rzp.open();
+    }
+
+    const handleSubmit = async (bookingId: string) => {
+        try {
+            const response = await repaymentSuccess(bookingId);
+            console.log(response.data.message, 'Fdlfdlfldfdf')
+            if (response.data.message == 'Payment Success') {
+                console.log("Scucldsjf")
+                setBooking((prev) => {
+                    if (!prev) return prev; 
+                    return {
+                        ...prev,
+                        status: 'paid',
+                    };
+                });
+                toast.success("Payment success")
+
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    const isReviewAllowed = booking?.cancelled === true && booking.fromDate && new Date(booking.fromDate) < new Date();
     const confirmEndBooking = async () => {
         setShowAlert(false);
         setIsEndingBooking(true);
@@ -199,11 +253,9 @@ const SavedDetailHostel = () => {
 
         setIsSubmittingReview(true);
         try {
-            console.log(booking, 'bookings')
             if (!booking?.hostel_id) return
             const hostelId = booking.hostel_id
             const response = await submitReview(orderId, rating, review, hostelId)
-            console.log(response.data.message, 'Sangggg')
             if (response.data.message === 'Review Created') {
                 toast.success('Review Added');
                 setExistingReview({
@@ -271,7 +323,7 @@ const SavedDetailHostel = () => {
             return (
                 <button
                     onClick={() => setShowReviewModal(true)}
-                     disabled={!isReviewAllowed}
+                    disabled={!isReviewAllowed}
                     className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
                     <div className="flex items-center gap-2">
@@ -297,23 +349,43 @@ const SavedDetailHostel = () => {
                     <span>{cancellationMessage}</span>
                 </div>
 
-                {/* End Booking Button */}
-                <button
-                    onClick={handleEndBooking}
-                    disabled={false}
-                    className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg transform hover:-translate-y-0.5 
-    ${!cancellationAllowed
-                            ? 'bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white hover:shadow-xl'
-                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        } 
-    ${isEndingBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                    <div className="flex items-center gap-2">
-                        <XCircle size={20} />
-                        {isEndingBooking ? 'Ending Booking...' : 'End Booking'}
-                    </div>
-                </button>
-            </div>
+                {booking && booking.status == 'failed' ? (
+                    <button
+                        onClick={() =>
+                            handlePayment(
+                                booking._id,
+                                booking.totalDepositAmount +
+                                booking.totalRentAmount +
+                                (booking.foodRate ? booking.foodRate : 0)
+                            )
+                        }
+                        disabled={false}
+                        className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg transform hover:-translate-y-0.5 
+        bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white hover:shadow-xl
+        ${isEndingBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        <div className="flex items-center gap-2">
+                            {/* <XCircle size={20} /> */}
+                            <p>Pay</p>
+                        </div>
+                    </button>
+                ) : (
+                    <button
+                        onClick={handleEndBooking}
+                        disabled={false}
+                        className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 shadow-lg transform hover:-translate-y-0.5 
+        bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white hover:shadow-xl
+        ${isEndingBooking ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <XCircle size={20} />
+                            {isEndingBooking ? 'Ending Booking...' : 'End Booking'}
+                        </div>
+                    </button>
+                )
+                }
+
+            </div >
         );
     };
     return (

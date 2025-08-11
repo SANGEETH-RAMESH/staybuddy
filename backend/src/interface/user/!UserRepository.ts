@@ -1,60 +1,40 @@
 import { Types } from "mongoose";
-// import { IUser } from "../../model/userModel";
-import { IHostel } from "../../model/hostelModel";
-import { IWallet } from "../../model/walletModel";
-import { IOrder } from "../../model/orderModel";
-import { IWishlist } from "../../model/wishlistModel";
-import { IUserResponse } from "../../dtos/UserResponse";
-import { IUser } from "../../model/userModel";
-import { IHost } from "../../model/hostModel";
-import { INotification } from "../../model/notificationModel";
 
-interface TempUserData {
-    name: string;
-    mobile: string;
-    email: string;
-    password: string;
-}
+import { IUserResponse } from "../../dtos/UserResponse";
+import { INotificationResponse } from "../../dtos/NotficationResponse";
+import { IUser } from "../../model/userModel";
+import { ChangePasswordData } from "../../dtos/ChangePasswordData";
+
+
+
+
 
 type ResetPasswordData = {
     email: string;
-    password: string; 
+    password: string;
     newPassword: string;
 };
 
-type ChangePasswordData = {
-    userId: string;
-    currentPassword: string;
-    newPassword: string;
-};
 
-type EditUserDetailData = {
-    userId: string;
-    name: string;
-    mobile: string;
-};
-
-interface UserData {
-    displayName?: string;
-    email?: string;
-}
-
-export interface IUserRespository{
+export interface IUserRespository {
     otpVerifying(userData: { email: string; otp: number }): Promise<string>,
-    FindUserByEmail(email: string):Promise<IUserResponse | null>,
-    OtpGenerating(email:string,otp:number):Promise<void>,
-    tempStoreUser(userData: TempUserData): Promise<string | null>,
-    CreateUser(userData: {email:string,otp:number}): Promise<string>,
-    UserVerifyLogin(email: string): Promise< IUser | string>,
+    findUserByEmail(email: string): Promise<IUserResponse | null>,
+    otpGenerating(email: string, otp: number): Promise<void>,
+    tempStoreUser(userData: IUserResponse): Promise<string | null>,
+    createUser(userData: { email: string, otp: number }): Promise<string>,
+    userVerifyLogin(email: string): Promise<IUser | string>,
     resetPassword(userData: ResetPasswordData): Promise<string | { message: string }>,
-    FindUserById(id:Types.ObjectId):Promise<IUserResponse | null>,
+    findUserById(id: Types.ObjectId,projection?:any): Promise<IUserResponse | null>,
     changePassword(userData: ChangePasswordData): Promise<string>,
-    editUserDetail(userData: EditUserDetailData): Promise<string>,
-    addGoogleUser(userData:UserData):Promise<{ message: string, user?: IUserResponse }| string>,    
-     sendNotification(notification:INotification):Promise<INotification | string | null>,
-    getOldNotification(userId:string):Promise<INotification [] | string | null>,
+    editUserDetail(userData: { userId: Types.ObjectId, name: string, mobile: string }): Promise<string>,
+    sendNotification(notification: INotificationResponse): Promise<INotificationResponse | string | null>,
+    getOldNotification(userId: string): Promise<INotificationResponse[] | string | null>,
     markAllRead(userId: string): Promise<string>,
     getUser(page: number, limit: number): Promise<{ users: IUserResponse[]; totalCount: number } | string | null>,
-    createGoogleAuth(data:{email:string,name:string,userType:string,mobile:string}): Promise<string>
-    
+    createGoogleAuth(data: { email: string, name: string, userType: string, mobile: string }): Promise<string>,
+    userUnBlock(userId: Types.ObjectId): Promise<{ message: string; userUnBlock: IUserResponse | null; error?: string }>,
+    userBlock(userId: Types.ObjectId): Promise<string>,
+    searchUser(name: string): Promise<IUserResponse[] | string>,
+    userDelete(userId: Types.ObjectId): Promise<string>,
+    getAllUsers(): Promise<IUserResponse[] | string | null>
 }

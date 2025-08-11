@@ -72,6 +72,7 @@ const SignupOtpBody = () => {
        
       }
     } catch (error) {
+      console.log(error)
       const axiosError = error as any;
 
       if (axiosError.response) {

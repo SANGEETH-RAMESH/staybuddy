@@ -1,14 +1,14 @@
 import { Types } from "mongoose";
-import { IChat } from "../../model/chatModel";
-import { IMessage } from "../../model/messageModel";
+import { IMessageResponse } from "../../dtos/MessageResponse";
+import { IChatResponse } from "../../dtos/ChatResponse";
 
 export interface IChatService {
-    createChat(userId: Types.ObjectId, ownerId: Types.ObjectId): Promise<IChat| string>,
-    getChat(userId: Types.ObjectId, ownerId: Types.ObjectId):Promise<IChat[] | string>,
-    handleSendMessage(messageData: {senderId: string,receiverId: string,message: string,timestamp: number}):  Promise<{ savedMessage: IMessage; readCount: number } | string> ,
-    getOldChat(chatId:string):Promise<IMessage[] | null | string>,
-    getHostChat(hostId: string): Promise<IChat[] | string>,
-    getUserChats(userId:string):Promise<IChat[] | string>,
+    createChat(userId: Types.ObjectId, ownerId: Types.ObjectId): Promise<IChatResponse| string>,
+    getChat(userId: Types.ObjectId, ownerId: Types.ObjectId):Promise<IChatResponse[] | string>,
+    handleSendMessage(messageData: {senderId: string,receiverId: string,message: string,timestamp: number}):  Promise<{ savedMessage: IMessageResponse; readCount: number } | string> ,
+    getOldChat(chatId:string):Promise<IMessageResponse[] | null | string>,
+    getHostChat(hostId: string): Promise<IChatResponse[] | string>,
+    getUserChats(userId:string):Promise<IChatResponse[] | string>,
     createHostChat(hostId: string, userId: string): Promise<string>,
     setCountRead(chatId:string):Promise<string>
 }

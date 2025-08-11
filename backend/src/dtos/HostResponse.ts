@@ -10,4 +10,6 @@ export interface IHostResponse {
     photo?: string | null;
     documentType?: string | null;
     wallet_id?: Types.ObjectId | null;
+    password:string;
+    temp?:boolean;
 }

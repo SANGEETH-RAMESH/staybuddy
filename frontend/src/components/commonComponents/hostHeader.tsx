@@ -27,6 +27,7 @@ const HostHeader = () => {
     const fetchData = async () => {
       try {
         const response = await getHost();
+        console.log(response.data.message,'fdjfdf')
         setHostId(response.data.message._id);
         setName(response.data.message.name);
       } catch (error) {

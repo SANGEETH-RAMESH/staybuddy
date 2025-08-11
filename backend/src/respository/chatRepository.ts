@@ -1,7 +1,9 @@
 import { Types } from "mongoose";
 import { IChatRepository } from "../interface/chat/IChatRepository"
-import Chat, { IChat } from "../model/chatModel"
+import Chat from "../model/chatModel"
 import Message, { IMessage } from "../model/messageModel";
+import { Messages } from "../messages/messages";
+import { IChatResponse } from "../dtos/ChatResponse";
 
 
 
@@ -9,7 +11,7 @@ import Message, { IMessage } from "../model/messageModel";
 class chatRepository implements IChatRepository {
     constructor() { }
 
-    async createChat(userId: Types.ObjectId, ownerId: Types.ObjectId): Promise<IChat | string> {
+    async createChat(userId: Types.ObjectId, ownerId: Types.ObjectId): Promise<IChatResponse | string> {
         try {
             const existingChat = await Chat.findOne({
                 $or: [
@@ -26,9 +28,9 @@ class chatRepository implements IChatRepository {
                 });
 
                 await chat.save();
-                return 'Chat Created'
+                return Messages.ChatCreated;
             } else {
-                return 'Already Created'
+                return Messages.AlreadyChatCreated;
             }
 
         } catch (error) {
@@ -37,7 +39,7 @@ class chatRepository implements IChatRepository {
         }
     }
 
-    async getChat(userId: Types.ObjectId, ownerId: Types.ObjectId): Promise<IChat[] | string> {
+    async getChat(userId: Types.ObjectId, ownerId: Types.ObjectId): Promise<IChatResponse[] | string> {
         try {
             const chat = await Chat.find({
                 $or: [
@@ -46,7 +48,7 @@ class chatRepository implements IChatRepository {
                 ]
             }).populate('participant2').sort({ updatedAt: -1 })
             if (!chat) {
-                return 'No chat found'
+                return Messages.NoChatFound
             }
             return chat
         } catch (error) {
@@ -73,7 +75,6 @@ class chatRepository implements IChatRepository {
         fileUrl?: string;
     }): Promise<{ savedMessage: IMessage; readCount: number } | string> {
         try {
-            console.log("Hey",messageData,'dfljsdflsjfdsf')
             const storedMessage = messageData.message;
 
             const newMessage = new Message({
@@ -132,7 +133,7 @@ class chatRepository implements IChatRepository {
         }
     }
 
-    async getHostChat(hostId: string): Promise<IChat[] | string> {
+    async getHostChat(hostId: string): Promise<IChatResponse[] | string> {
         try {
             const getChat = await Chat.find({
                 $or: [
@@ -146,7 +147,7 @@ class chatRepository implements IChatRepository {
         }
     }
 
-    async getUserChats(userId: string): Promise<IChat[] | string> {
+    async getUserChats(userId: string): Promise<IChatResponse[] | string> {
         try {
             const getChat = await Chat.find({
                 $or: [
@@ -182,9 +183,9 @@ class chatRepository implements IChatRepository {
                 });
 
                 await chat.save();
-                return 'Chat Created'
+                return Messages.ChatCreated;
             } else {
-                return 'Already Created'
+                return Messages.AlreadyChatCreated;
             }
         } catch (error) {
             return error as string;
@@ -201,7 +202,7 @@ class chatRepository implements IChatRepository {
                     }
                 }
             );
-            return 'Count Updated'
+            return Messages.CountUpdated;
         } catch (error) {
             return error as string
         }

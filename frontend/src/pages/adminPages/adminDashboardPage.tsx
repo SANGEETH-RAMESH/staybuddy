@@ -1,6 +1,6 @@
 import  { useState } from 'react'
 import AdminSidebar from '../../components/commonComponents/adminSidebar'
-import AdminDashboardBody from '../../components/adminComponent/Dashboard/AdminDashboardBody'
+import AdminDashboardBody from '../../components/adminComponent/Dashboard/adminDashboardBody'
 import AdminHeader from '../../components/commonComponents/adminHeader'
 import { Menu, X } from 'lucide-react'
 

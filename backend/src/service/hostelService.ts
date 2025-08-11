@@ -1,26 +1,34 @@
 import { Types } from "mongoose";
 import { IHostelRepository } from "../interface/hostel/!HostelRepository";
 import { IHostelService } from "../interface/hostel/!HostelService";
-import { IHostel } from "../model/hostelModel";
 import { IUpdateHostelInput } from "../dtos/HostelData";
+import { Messages } from "../messages/messages";
 
 function getDistanceInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
+    // const R = 6371;
+    // const dLat = (lat2 - lat1) * Math.PI / 180;
+    // const dLon = (lon2 - lon1) * Math.PI / 180;
+    // const a =
+    //     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    //     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    //     Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    // const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    // return R * c;
+    const x = (lon2 - lon1) * Math.cos((lat1 + lat2) / 2 * Math.PI / 180);
+    const y = lat2 - lat1;
+    const kmPerDegree = 111;
+
+    return Math.sqrt(x * x + y * y) * kmPerDegree;
+}
+
+function toPlainHostel(hostel: any) {
+    return typeof hostel.toObject === 'function' ? hostel.toObject() : hostel;
 }
 
 
 
-
 class hostelService implements IHostelService {
-    constructor(private hostelRepository: IHostelRepository) { }
+    constructor(private _hostelRepository: IHostelRepository) { }
 
 
     async getHostels(
@@ -37,12 +45,12 @@ class hostelService implements IHostelService {
             maxPrice?: number;
             sort?: string;
         }
-    ): Promise<{ hostels: IHostel[]; totalCount: number } | string> {
+    ): Promise<{ hostels: IUpdateHostelInput[]; totalCount: number } | string> {
         try {
             const pageNumber = parseInt(page);
             const limitNumber = parseInt(limit);
             if (isNaN(pageNumber) || isNaN(limitNumber)) {
-                return 'Invalid pagination values';
+                return Messages.InvalidPaginationValues;
             }
 
             const query: Record<string, any> = {};
@@ -57,7 +65,7 @@ class hostelService implements IHostelService {
             }
 
             if (filters?.rating) {
-                ratedHostels = await this.hostelRepository.findAverageRatedHostelIds(filters.rating);
+                ratedHostels = await this._hostelRepository.findAverageRatedHostelIds(filters.rating);
                 const hostelIds = ratedHostels.map(item => item.hostelId);
                 query._id = { $in: hostelIds };
             }
@@ -115,7 +123,7 @@ class hostelService implements IHostelService {
                     rating: 1
                 }
             }
-            let allHostels = await this.hostelRepository.getHostels(query, projection, sortOption);
+            let allHostels = await this._hostelRepository.getHostels(query, projection, sortOption);
             if (lat && lng && radius) {
                 allHostels = allHostels.filter((hostel) => {
                     if (typeof hostel.latitude === 'number' && typeof hostel.longitude === 'number') {
@@ -127,20 +135,20 @@ class hostelService implements IHostelService {
             }
             if (ratedHostels.length > 0) {
                 allHostels = allHostels.map(hostel => {
-                    const plainHostel = hostel.toObject?.() || hostel;
+                    const plainHostel = toPlainHostel(hostel);
                     const ratingEntry = ratedHostels.find(r => r.hostelId.toString() === plainHostel._id.toString());
                     return {
-                        ...hostel.toObject?.() || hostel,
+                        ...hostel,
                         rating: ratingEntry?.rating || 0
                     };
                 });
             } else {
-                const allRatings = await this.hostelRepository.findAverageRatedHostelIds(0);
+                const allRatings = await this._hostelRepository.findAverageRatedHostelIds(0);
                 allHostels = allHostels.map(hostel => {
-                    const plainHostel = hostel.toObject?.() || hostel;
+                    const plainHostel = toPlainHostel(hostel);
                     const ratingEntry = allRatings.find(r => r.hostelId.toString() === plainHostel._id.toString());
                     return {
-                        ...hostel.toObject?.() || hostel,
+                        ...hostel,
                         rating: ratingEntry?.rating || 0
                     };
                 });
@@ -149,7 +157,6 @@ class hostelService implements IHostelService {
             const start = (pageNumber - 1) * limitNumber;
             let paginated: typeof allHostels;
             if (limitNumber > 0) {
-                console.log("Paginated")
                 paginated = allHostels.slice(start, start + limitNumber);
 
             } else {
@@ -161,10 +168,9 @@ class hostelService implements IHostelService {
         }
     }
 
-    async getSingleHostel(id: Types.ObjectId): Promise<IHostel | string> {
+    async getSingleHostel(id: Types.ObjectId): Promise<IUpdateHostelInput | string> {
         try {
-            const response = await this.hostelRepository.getSingleHostel(id);
-            console.log(response,"Resposd")
+            const response = await this._hostelRepository.getSingleHostel(id);
             return response
         } catch (error) {
             return error as string
@@ -173,7 +179,7 @@ class hostelService implements IHostelService {
 
     async addHostel(hostData: IUpdateHostelInput): Promise<string> {
         try {
-            const response = await this.hostelRepository.addHostel(hostData)
+            const response = await this._hostelRepository.addHostel(hostData)
             return response
         } catch (error) {
             console.log(error);
@@ -181,9 +187,9 @@ class hostelService implements IHostelService {
         }
     }
 
-    async getHostHostels(id: Types.ObjectId, limit: number, skip: number, search: string): Promise<{ hostels: IHostel[]; totalCount: number } | string> {
+    async getHostHostels(id: Types.ObjectId, limit: number, skip: number, search: string): Promise<{ hostels: IUpdateHostelInput[]; totalCount: number } | string> {
         try {
-            const response = await this.hostelRepository.getHostHostels(id, limit, skip, search);
+            const response = await this._hostelRepository.getHostHostels(id, limit, skip, search);
             return response
         } catch (error) {
             console.log(error);
@@ -193,7 +199,7 @@ class hostelService implements IHostelService {
 
     async deleteHostel(hostelId: string): Promise<string> {
         try {
-            const response = await this.hostelRepository.deleteHostel(hostelId);
+            const response = await this._hostelRepository.deleteHostel(hostelId);
             return response;
         } catch (error) {
             return error as string;
@@ -202,16 +208,16 @@ class hostelService implements IHostelService {
 
     async updateHostel(hostelData: IUpdateHostelInput): Promise<string> {
         try {
-            const response = await this.hostelRepository.updateHostel(hostelData);
+            const response = await this._hostelRepository.updateHostel(hostelData);
             return response;
         } catch (error) {
             return error as string;
         }
     }
 
-    async getOneHostel(id: Types.ObjectId): Promise<IHostel | string> {
+    async getOneHostel(id: Types.ObjectId): Promise<IUpdateHostelInput | string> {
         try {
-            const response = await this.hostelRepository.getOneHostel(id)
+            const response = await this._hostelRepository.getOneHostel(id)
             return response;
         } catch (error) {
             console.log(error)
@@ -221,16 +227,16 @@ class hostelService implements IHostelService {
 
     async updateStatus(id: string, isActive: boolean, inactiveReason: string): Promise<string> {
         try {
-            const response = await this.hostelRepository.updateStatus(id, isActive, inactiveReason);
+            const response = await this._hostelRepository.updateStatus(id, isActive, inactiveReason);
             return response
         } catch (error) {
             return error as string;
         }
     }
 
-    async getAllHostel(): Promise<IHostel[] | string> {
+    async getAllHostel(): Promise<IUpdateHostelInput[] | string> {
         try {
-            const response = await this.hostelRepository.getAllHostel();
+            const response = await this._hostelRepository.getAllHostel();
             return response;
         } catch (error) {
             return error as string;

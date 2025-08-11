@@ -19,7 +19,7 @@ const UserProfileBody = () => {
         const walletDetails = await getWalletDetails();
         console.log(response.data.data, 'fffdszfd')
         setId(response?.data?.data?._id)
-        setBalance(walletDetails?.data.message?.balance)
+        setBalance(walletDetails?.data?.message?.balance)
         setName(response?.data.data?.name);
         setEmail(response?.data?.data?.email)
         setUserType(response?.data?.data?.userType)

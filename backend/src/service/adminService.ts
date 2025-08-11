@@ -2,51 +2,57 @@
 import { IAdminService } from "../interface/admin/IAdminService";
 import { IAdminRepository } from "../interface/admin/IAdminRepository";
 import bcrypt from 'bcrypt';
-import { IUser } from "../model/userModel";
 import mongoose, { ObjectId, Types } from 'mongoose'
-import { IHost } from "../model/hostModel";
 import { sendApprovalOrRejectionMail } from "../utils/mail";
-import { IHostel } from "../model/hostelModel";
-import { ICategory } from "../model/categoryModel";
-import { IReview } from "../model/reviewModel";
-import { IOrder } from "../model/orderModel";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Jwt/jwt";
 import { adminPayload } from "../types/commonInterfaces/tokenInterface";
 import { IUserResponse } from "../dtos/UserResponse";
 import { IUserRespository } from "../interface/user/!UserRepository";
 import { IHostRepository } from "../interface/host/!HostRepository";
 import { IHostResponse } from "../dtos/HostResponse";
+import { Messages } from "../messages/messages";
+import { IHostelRepository } from "../interface/hostel/!HostelRepository";
+import { IOrderRepository } from "../interface/order/!OrderRepository";
+import { IUpdateHostelInput } from "../dtos/HostelData";
+import { IOrderResponse } from "../dtos/OrderResponse";
+import { reviewData } from "../dtos/ReviewData";
 
 
 class adminService implements IAdminService {
-    constructor(private adminRepository: IAdminRepository, private userRepository: IUserRespository, private hostRepository: IHostRepository) {
+    constructor(private _adminRepository: IAdminRepository, private _userRepository: IUserRespository,
+    private _hostRepository: IHostRepository, private _hostelRepository:IHostelRepository,
+    private _orderRepository:IOrderRepository
+        
+    ) {
 
     }
 
-    async adminLogin(adminData: { email: string, password: string }): Promise<{ message: string;
+    async adminLogin(adminData: { email: string, password: string }): Promise<{
+        message: string;
         accessToken?: string;
         refreshToken?: string;
-        role?: string;} > {
+        role?: string;
+    }> {
         try {
-            const checkingHost = await this.adminRepository.AdminVerifyLogin(adminData.email);
+            const checkingHost = await this._adminRepository.adminVerifyLogin(adminData.email);
             if (typeof checkingHost === 'string') {
                 return { message: checkingHost };
             }
 
-            if(!checkingHost){
-                return {message:"No Admin"}
+            if (!checkingHost || !checkingHost.password) {
+                return { message: Messages.NoAdmin }
             }
 
             if (checkingHost.isBlock) {
-                return { message: "Admin is blocked" };
+                return { message: Messages.AdminIsBlocked };
             }
 
             const isMatch = await bcrypt.compare(adminData.password, checkingHost.password);
             if (!isMatch) {
-                return { message: "Invalid password" };
+                return { message: Messages.InvalidPassword }; 
             }
 
-            const adminPayload = {
+            const adminPayload = { 
                 _id: checkingHost._id as Types.ObjectId,
                 role: 'admin' as const
             };
@@ -55,20 +61,20 @@ class adminService implements IAdminService {
             const refreshToken = generateRefreshToken(adminPayload);
 
             return {
-                message: "Success",
+                message: Messages.Success,
                 accessToken,
                 refreshToken,
                 role: 'admin'
             };
         } catch (error) {
             console.log(error)
-            return { message:error as string}
+            return { message: error as string }
         }
     }
 
     async getUser(page: number, limit: number): Promise<{ users: IUserResponse[]; totalCount: number } | string | null> {
         try {
-            const getUser = await this.userRepository.getUser(page, limit);
+            const getUser = await this._userRepository.getUser(page, limit);
             return getUser
         } catch (error) {
             console.log(error)
@@ -78,7 +84,7 @@ class adminService implements IAdminService {
 
     async userBlock(userId: Types.ObjectId): Promise<string> {
         try {
-            const response = await this.adminRepository.userBlock(userId);
+            const response = await this._userRepository.userBlock(userId);
             return response
         } catch (error) {
             console.log(error);
@@ -86,13 +92,13 @@ class adminService implements IAdminService {
         }
     }
 
-    async userUnBlock(userId: Types.ObjectId): Promise<{ message: string; userUnBlock: IUser | null; error?: string }> {
+    async userUnBlock(userId: Types.ObjectId): Promise<{ message: string; userUnBlock: IUserResponse | null; error?: string }> {
         try {
-            const response = await this.adminRepository.userUnBlock(userId as Types.ObjectId);
+            const response = await this._userRepository.userUnBlock(userId as Types.ObjectId);
             return response;
         } catch (error) {
             return {
-                message: "An error occurred while unblocking the user",
+                message: error as string,
                 userUnBlock: null,
                 error: String(error),
             };
@@ -101,7 +107,7 @@ class adminService implements IAdminService {
 
     async userDelete(userId: Types.ObjectId): Promise<string> {
         try {
-            const response = await this.adminRepository.userDelete(userId);
+            const response = await this._userRepository.userDelete(userId);
             return response
         } catch (error) {
             console.log(error)
@@ -111,16 +117,15 @@ class adminService implements IAdminService {
 
     async getHost(skip: number, limit: number): Promise<{ hosts: IHostResponse[] | null; totalCount: number, hostIdCounts: Record<string, number> } | null> {
         try {
-            const getHostels = await this.adminRepository.getHostels();
-            const getHost = await this.hostRepository.getHost(skip, limit);
+            const getHostels = await this._hostelRepository.getAllHostel();
+            const getHost = await this._hostRepository.getHost(skip, limit);
 
             if (!Array.isArray(getHostels)) {
-                console.error("Invalid data format: getHostels is not an array.");
                 return null;
             }
 
             const hostIdCounts: Record<string, number> = {};
-            getHostels.forEach((hostel: IHostel) => {
+            getHostels.forEach((hostel: IUpdateHostelInput) => {
                 const hostId = typeof hostel.host_id === 'string'
                     ? hostel.host_id
                     : hostel.host_id?._id?.toString();
@@ -143,7 +148,7 @@ class adminService implements IAdminService {
 
     async hostBlock(hostId: Types.ObjectId): Promise<string> {
         try {
-            const response = await this.adminRepository.hostBlock(hostId);
+            const response = await this._hostRepository.hostBlock(hostId);
             return response
         } catch (error) {
             console.log(error);
@@ -153,7 +158,7 @@ class adminService implements IAdminService {
 
     async hostUnBlock(hostId: Types.ObjectId): Promise<string> {
         try {
-            const response = await this.adminRepository.hostUnBlock(hostId);
+            const response = await this._hostRepository.hostUnBlock(hostId);
             return response
         } catch (error) {
             console.log(error);
@@ -163,7 +168,7 @@ class adminService implements IAdminService {
 
     async hostDelete(hostId: Types.ObjectId): Promise<string> {
         try {
-            const hostDelete = await this.adminRepository.hostDelete(hostId);
+            const hostDelete = await this._hostRepository.hostDelete(hostId);
             return hostDelete
         } catch (error) {
             console.log(error);
@@ -174,9 +179,12 @@ class adminService implements IAdminService {
     async approveHost(hostId: mongoose.Types.ObjectId): Promise<string> {
         try {
 
-            const approveHost = await this.adminRepository.approveHost(hostId);
-            if (approveHost == "Approved") {
-                const Host = await this.adminRepository.findHostById(hostId);
+            const approveHost = await this._hostRepository.approveHost(hostId);
+            if (approveHost == Messages.Approved) {
+                const projection = {
+                    email: 1,
+                }
+                const Host = await this._hostRepository.findHostById(hostId,projection);
                 if (typeof Host !== "string" && Host?.email) {
                     sendApprovalOrRejectionMail(Host.email, true);
                 }
@@ -189,9 +197,9 @@ class adminService implements IAdminService {
 
     async rejectHost(hostId: mongoose.Types.ObjectId): Promise<string> {
         try {
-            const rejectHost = await this.adminRepository.rejectHost(hostId)
-            if (rejectHost == 'Reject') {
-                const Host = await this.adminRepository.findHostById(hostId);
+            const rejectHost = await this._hostRepository.rejectHost(hostId)
+            if (rejectHost == Messages.Reject) {
+                const Host = await this._hostRepository.findHostById(hostId);
                 if (typeof Host !== "string" && Host?.email) {
                     sendApprovalOrRejectionMail(Host.email, false);
                 }
@@ -202,70 +210,28 @@ class adminService implements IAdminService {
         }
     }
 
-    async getAllHostels(page: string, limit: string): Promise<{ hostels: IHostel[], totalCount: number; } | string | null> {
+    async getAllHostels(page: string, limit: string): Promise<{ hostels: IUpdateHostelInput[], totalCount: number; } | string | null> {
         try {
-            const response = await this.adminRepository.getAllHostels(page, limit);
+            const response = await this._hostelRepository.getAllHostels(page, limit);
             return response
         } catch (error) {
             console.log(error)
-            return error as string
-        }
-    }
-
-    async addCategory(name: string, isActive: boolean, photo: string | undefined): Promise<string> {
-        try {
-
-            const alreadyCategory = await this.adminRepository.findCategoryByName(name);
-            if (alreadyCategory == 'Category Already Exist') {
-                return "Category Already Exist"
-            }
-            const response = await this.adminRepository.addCategory(name, isActive, photo)
-            return response
-        } catch (error) {
-            console.log(error)
-            return error as string
-        }
-    }
-
-    async getAllCategory(skip: number, limit: number): Promise<{ getCategories: ICategory[], totalCount: number } | string> {
-        try {
-            const response = await this.adminRepository.getAllCategory(skip, limit);
-            return response
-        } catch (error) {
-            return error as string
-        }
-    }
-
-    async getCategory(id: string): Promise<ICategory | string> {
-        try {
-            const response = await this.adminRepository.getCategory(id)
-            return response
-        } catch (error) {
-            return error as string
-        }
-    }
-
-    async updateCategory(id: string, name: string, isActive: boolean): Promise<string> {
-        try {
-            const response = await this.adminRepository.updateCategory(id, name, isActive);
-            return response
-        } catch (error) {
             return error as string
         }
     }
 
     async getHostDetails(userId: string): Promise<string | IHostResponse | null> {
         try {
-            const response = await this.adminRepository.getHostDetails(userId)
+            const response = await this._hostRepository.getHostDetails(userId)
             return response;
         } catch (error) {
             return error as string
         }
     }
 
-    async getHostHostelData(userId: string): Promise<IHostel[] | string | null> {
+    async getHostHostelData(userId: string): Promise<IUpdateHostelInput[] | string | null> {
         try {
-            const response = await this.adminRepository.getHostHostelData(userId);
+            const response = await this._hostRepository.getHostHostelData(userId);
             return response
         } catch (error) {
             return error as string
@@ -275,70 +241,54 @@ class adminService implements IAdminService {
 
     async deleteHostel(hostelId: string): Promise<string> {
         try {
-            const response = await this.adminRepository.deleteHostel(hostelId)
+            const response = await this._hostelRepository.deleteHostel(hostelId)
             return response
         } catch (error) {
             return error as string
         }
     }
 
-    async deleteCategory(id: string): Promise<string | null> {
+    
+
+    async searchUser(name: string): Promise<IUserResponse[] | string> {
         try {
-            const response = await this.adminRepository.deleteCategory(id);
+            const response = await this._userRepository.searchUser(name);
             return response
         } catch (error) {
             return error as string
         }
     }
 
-    async searchCategory(name: string): Promise<ICategory[] | string | null> {
+    async searchHost(name: string): Promise<IHostResponse[] | string | null> {
         try {
-            const response = await this.adminRepository.searchCategory(name);
-            return response;
-        } catch (error) {
-            return error as string;
-        }
-    }
-
-    async searchUser(name: string): Promise<IUser[] | string> {
-        try {
-            const response = await this.adminRepository.searchUser(name);
+            const response = await this._hostRepository.searchHost(name);
             return response
         } catch (error) {
             return error as string
         }
     }
 
-    async searchHost(name: string): Promise<IHost[] | string | null> {
+    async searchHostel(name: string): Promise<IUpdateHostelInput[] | string | null> {
         try {
-            const response = await this.adminRepository.searchHost(name);
+            const response = await this._hostelRepository.searchHostel(name);
             return response
         } catch (error) {
             return error as string
         }
     }
 
-    async searchHostel(name: string): Promise<IHostel[] | string | null> {
+    async getReviews(hostelId: string): Promise<reviewData[] | string | null> {
         try {
-            const response = await this.adminRepository.searchHostel(name);
+            const response = await this._adminRepository.getReviews(hostelId);
             return response
         } catch (error) {
             return error as string
         }
     }
 
-    async getReviews(hostelId: string): Promise<IReview[] | string | null> {
+    async getSales(): Promise<IOrderResponse[] | string | null> {
         try {
-            const response = await this.adminRepository.getReviews(hostelId);
-            return response
-        } catch (error) {
-            return error as string
-        }
-    }
-
-    async getSales(): Promise<IOrder[] | string | null> {
-        try {
-            const response = await this.adminRepository.getSales();
+            const response = await this._orderRepository.getSales();
             return response;
         } catch (error) {
             return error as string
@@ -349,9 +299,9 @@ class adminService implements IAdminService {
         try {
             const decoded = verifyToken(refreshToken)
             if (typeof decoded === 'object' && decoded !== null) {
-                const response = await this.adminRepository.FindAdminById(decoded._id);
+                const response = await this._adminRepository.findAdminById(decoded._id);
                 if (!response || typeof response === 'string') {
-                    return "No User";
+                    return Messages.NoUser;
                 }
                 const adminPayload: adminPayload = {
                     _id: new Types.ObjectId(response._id),
@@ -364,7 +314,7 @@ class adminService implements IAdminService {
                 return { accessToken, refreshToken };
             }
 
-            return "Invalid Token";
+            return Messages.InvalidToken;
         } catch (error) {
             console.log(error)
             return error as string

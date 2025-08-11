@@ -25,34 +25,34 @@ const UserEditProfileBody: React.FC = () => {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    if (name === 'name') {
-      const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;;
-      if (!nameRegex.test(value)) {
-        setNameError('Name should only contain alphabets without spaces or special characters');
-      } else {
-        setNameError(null);
-      }
-    }
+    // if (name === 'name') {
+    //   const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;;
+    //   if (!nameRegex.test(value)) {
+    //     setNameError('Name should only contain alphabets without spaces or special characters');
+    //   } else {
+    //     setNameError(null);
+    //   }
+    // }
 
-    if (name === 'mobile') {
-      const digitOnly = /^[0-9]*$/;
-      const zeroCount = (value.match(/0/g) || []).length;
-      const startsWith = value[0];
+    // if (name === 'mobile') {
+    //   const digitOnly = /^[0-9]*$/;
+    //   const zeroCount = (value.match(/0/g) || []).length;
+    //   const startsWith = value[0];
 
-      if (!digitOnly.test(value)) {
-        setMobileError('Mobile number should contain only digits');
-      } else if (value.length > 10) {
-        setMobileError('Mobile number must be exactly 10 digits');
-      } else if (value.length === 10 && +startsWith <= 5) {
-        setMobileError('First digit must be greater than 5');
-      } else if (zeroCount > 5) {
-        setMobileError('Mobile number should not contain more than 5 zeros');
-      } else if (value.length !== 10) {
-        setMobileError('Mobile number must be 10 digits');
-      } else {
-        setMobileError(null);
-      }
-    }
+    //   if (!digitOnly.test(value)) {
+    //     setMobileError('Mobile number should contain only digits');
+    //   } else if (value.length > 10) {
+    //     setMobileError('Mobile number must be exactly 10 digits');
+    //   } else if (value.length === 10 && +startsWith <= 5) {
+    //     setMobileError('First digit must be greater than 5');
+    //   } else if (zeroCount > 5) {
+    //     setMobileError('Mobile number should not contain more than 5 zeros');
+    //   } else if (value.length !== 10) {
+    //     setMobileError('Mobile number must be 10 digits');
+    //   } else {
+    //     setMobileError(null);
+    //   }
+    // }
 
     setFormData((prev) => ({ ...prev, [name]: value }));
     setSuccess(false);
@@ -81,17 +81,41 @@ const UserEditProfileBody: React.FC = () => {
 
     try {
       const response = await editProfile(formData);
-      console.log(response.data.message);
+      console.log(response.data.message, "Response");
       if (response.data.message == "Not updated") {
         toast.error("User details not updated")
-      } else if (response.data.message == "User details updated") {
+      } else if (response.data.message == "User details updated" && response.status == 200) {
         setSuccess(true)
         toast.success("User details updated")
         navigate("/profile")
       }
     } catch (error) {
-      console.error(error);
-      setError('Failed to update profile.');
+      const axiosError = error as any;
+      console.log("Duii",axiosError.response)
+      if (axiosError.response) {
+        const { message, errors } = axiosError.response.data;
+        console.log(message,"message",errors)
+        console.log(errors?.name)
+        if(errors.name == "Invalid name format" || errors.name == 'Name cannot be more than 15 characters'){
+          console.log('keritund')
+          setNameError(errors.name)
+        }else{
+          setMobileError(errors.mobile)
+        }
+        // if (errors) {
+        //   setError(errors || 'Failed to update profile');
+
+        //   return;
+        // }
+
+        toast.error(message || "Login failed", {
+          style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+        });
+      } else {
+        toast.error("An unexpected error occurred", {
+          style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+        });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -152,7 +176,7 @@ const UserEditProfileBody: React.FC = () => {
             </div>
             {nameError && <p className="text-red-500 text-sm mt-1">{nameError}</p>}
           </div>
-          
+
           <div>
             <label htmlFor="mobile" className="block text-sm font-medium text-gray-700">
               Mobile Number
@@ -175,13 +199,7 @@ const UserEditProfileBody: React.FC = () => {
           <button
             type="submit"
             className={`w-full py-2 text-white font-bold rounded-md ${isSubmitting ? 'bg-blue-300 cursor-not-allowed' : 'bg-[#31AFEF] hover:bg-blue-500'}`}
-            disabled={
-              !formData.name ||
-              !formData.mobile ||
-              nameError !== null ||
-              mobileError !== null ||
-              isSubmitting
-            }
+            
           >
             {isSubmitting ? (
               <span className="flex items-center justify-center">

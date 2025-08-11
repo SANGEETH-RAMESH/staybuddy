@@ -1,4 +1,4 @@
-import HostSignUpOtpBody from '../../components/hostComponent/Otp/HostSignUpOtpBody'
+import HostSignUpOtpBody from '../../components/hostComponent/Otp/hostSignUpOtpBody'
 
 const hostSignUpOtpPage = () => {
   return (

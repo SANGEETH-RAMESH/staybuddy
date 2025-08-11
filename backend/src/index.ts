@@ -51,18 +51,20 @@ import order_route from './router/orderRoute';
 import chat_route from './router/chatRoute';
 import hostel_route from './router/hostelRoute';
 import wallet_route from './router/walletRoute';
+import category_route from './router/categoryRoute';
 import wishlist_route from './router/wishlistRoute';
 import chatService from './service/chatService';
 import chatRepository from './respository/chatRepository';
 
-app.use('/admin', admin_route);
-app.use('/user', user_route);
-app.use('/host', host_route);
-app.use('/order', order_route);
-app.use('/chat', chat_route);
-app.use('/hostel',hostel_route);
-app.use('/wallet',wallet_route);
-app.use('/wishlist',wishlist_route);
+app.use('/api/admin', admin_route);
+app.use('/api/user', user_route);
+app.use('/api/host', host_route);
+app.use('/api/order', order_route);
+app.use('/api/chat', chat_route);
+app.use('/api/hostel',hostel_route);
+app.use('/api/wallet',wallet_route);
+app.use('/api/wishlist',wishlist_route);
+app.use('/api/category',category_route);
 
 
 const ChatRepository = new chatRepository

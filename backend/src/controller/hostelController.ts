@@ -3,10 +3,11 @@ import { Request, Response } from "express";
 import { StatusCode } from "../status/statusCode";
 import mongoose from "mongoose";
 import uploadImage from "../cloudinary/cloudinary";
+import { Messages } from "../messages/messages";
 const ObjectId = mongoose.Types.ObjectId;
 
 class HostelController {
-    constructor(private hostelService: IHostelService) { }
+    constructor(private _hostelService: IHostelService) { }
 
     async getHostels(req: Request, res: Response): Promise<void> {
         try {
@@ -31,7 +32,7 @@ class HostelController {
                     facilitiesArr = [req.query.facilities.toLowerCase()];
                 }
             }
-            const response = await this.hostelService.getHostels(
+            const response = await this._hostelService.getHostels(
                 pageStr,
                 limitStr,
                 searchStr,
@@ -48,7 +49,7 @@ class HostelController {
             );
             res.status(StatusCode.OK).json({ success: true, response })
         } catch (error: any) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error?.message as string })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -56,10 +57,10 @@ class HostelController {
         try {
             const userId = req.params.id;
             const id = new ObjectId(userId)
-            const response = await this.hostelService.getSingleHostel(id);
+            const response = await this._hostelService.getSingleHostel(id);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -70,44 +71,41 @@ class HostelController {
                 photo = await uploadImage(req.file.buffer);
 
             }
-            const response = await this.hostelService.addHostel({
+            const response = await this._hostelService.addHostel({
                 ...req.body,
                 photo,
             });
             res.status(StatusCode.OK).json({ message: response });
         } catch (error) {
-            console.log(error);
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async getHostHostels(req: Request, res: Response): Promise<void> {
         try {
             const host = req.customHost
-            console.log("Abjfdfljsdlfjdslfjdsf", host)
             const hostId = host?._id;
             if (!hostId) {
-                res.status(StatusCode.NOT_FOUND).json({ success: true, message: "No host" })
+                res.status(StatusCode.NOT_FOUND).json({ success: true, message: Messages.NoHost })
                 return
             }
             const searchStr = typeof req.query.search === 'string' ? req.query.search : '';
             const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
             const skip = req.query.skip ? parseInt(req.query.skip as string, 10) : 0;
-            const response = await this.hostelService.getHostHostels(hostId, limit, skip, searchStr);
+            const response = await this._hostelService.getHostHostels(hostId, limit, skip, searchStr);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error)
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async deleteHostel(req: Request, res: Response): Promise<void> {
         try {
             const hostelId = req.params.id;
-            const response = await this.hostelService.deleteHostel(hostelId);
+            const response = await this._hostelService.deleteHostel(hostelId);
             res.status(StatusCode.OK).json({ message: response });
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -124,14 +122,14 @@ class HostelController {
 
 
             const { existingPhotos, ...restOfBody } = req.body;
-            const response = await this.hostelService.updateHostel({
+            const response = await this._hostelService.updateHostel({
                 ...restOfBody,
                 photo,
                 hostelId: req.params.id
             });
             res.status(StatusCode.OK).json({ message: response });
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error });
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
@@ -139,34 +137,33 @@ class HostelController {
         try {
             const id = req.query.id as string;
             if (!id) {
-                res.json({ success: false, message: "Hostel ID not provided" });
+                res.json({ success: false, message: Messages.HostelIdNotProvided });
                 return;
             }
             const objectId = new ObjectId(id);
-            const response = await this.hostelService.getOneHostel(objectId)
+            const response = await this._hostelService.getOneHostel(objectId)
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            console.log(error)
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async updateStatus(req: Request, res: Response): Promise<void> {
         try {
             const { id, isActive, inactiveReason } = req.body;
-            const response = await this.hostelService.updateStatus(id, isActive, inactiveReason);
+            const response = await this._hostelService.updateStatus(id, isActive, inactiveReason);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 
     async getAllHostel(req: Request, res: Response): Promise<void> {
         try {
-            const response = await this.hostelService.getAllHostel();
+            const response = await this._hostelService.getAllHostel();
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
     }
 }

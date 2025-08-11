@@ -3,14 +3,12 @@ import Otp from "../model/otpModel";
 import User, { IUser } from '../model/userModel';
 import HashedPassword from "../utils/hashedPassword";
 import bcrypt from 'bcrypt'
-import mongoose, { Types } from "mongoose";
+import { Types } from "mongoose";
 import baseRepository from "./baseRespository";
-import Hostel, { IHostel } from "../model/hostelModel";
-import Order, { IOrder } from "../model/orderModel";
-import Wishlist, { IWishlist } from "../model/wishlistModel";
 import { IUserResponse } from "../dtos/UserResponse";
-import Host, { IHost } from "../model/hostModel";
-import Notification, { INotification } from "../model/notificationModel";
+import { Messages } from "../messages/messages";
+import { INotificationResponse } from "../dtos/NotficationResponse";
+import Notification from "../model/notificationModel";
 
 type ResetPasswordData = {
     email: string;
@@ -50,7 +48,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
     }
 
 
-    async FindUserByEmail(email: string): Promise<IUserResponse | null> {
+    async findUserByEmail(email: string): Promise<IUserResponse | null> {
         try {
             const projection = {
                 email: 1,
@@ -70,21 +68,19 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async FindUserById(id: Types.ObjectId): Promise<IUserResponse | null> {
+    async findUserById(id: Types.ObjectId,projection?:any): Promise<IUserResponse | null> {
         try {
-            const userData = await this.findById(id)
+            const userData = await this.findById(id,projection)
             if (!userData) return null;
-            const userResponse: IUserResponse = {
-                _id: userData._id,
-                name: userData.name,
-                email: userData.email, 
-                mobile: userData.mobile,
-                isAdmin: userData.isAdmin,
-                isBlock: userData.isBlock,
-                wallet_id: userData.wallet_id ? userData.wallet_id : null,
-                userType:userData.userType 
-            };
-            return userResponse;
+            // const userResponse: IUserResponse = {
+            //     name: userData.name,
+            //     email: userData.email,
+            //     mobile: userData.mobile,
+            //     isBlock: userData.isBlock,
+            //     wallet_id: userData.wallet_id ? userData.wallet_id : null,
+            //     userType: userData.userType
+            // };
+            return userData;
         } catch (error) {
             console.log(error)
             return null
@@ -95,20 +91,20 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         try {
             const user = await Otp.findOne({ email: userData.email });
             if (!user) {
-                return "User not found";
+                return Messages.UserNotFound;
             }
             if (user?.otp === userData.otp) {
-                return "User verified";
+                return Messages.UserVerified;
             } else {
-                return "OTP not verified";
+                return Messages.OtpNotVerified;
             }
         } catch (error) {
             console.log(error);
-            return "Error during OTP verification";
+            return error as string;
         }
     }
 
-    async OtpGenerating(email: string, otp: number): Promise<void> {
+    async otpGenerating(email: string, otp: number): Promise<void> {
         try {
             const exisitingOtp = await Otp.findOne({ email })
             if (exisitingOtp) {
@@ -126,9 +122,13 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async tempStoreUser(userData: TempUserData): Promise<string | null> {
+    async tempStoreUser(userData: IUserResponse): Promise<string | null> {
         try {
             const alreadyUser = await User.findOne({ email: userData.email });
+            if (!userData.password) {
+                return Messages.InvalidPassword;
+            }
+
             if (!alreadyUser) {
                 const hashedPassword = await HashedPassword.hashPassword(userData.password);
                 const tempAddingUser = new User({
@@ -137,19 +137,19 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
                     email: userData.email,
                     password: hashedPassword,
                     temp: true,
-                    userType:'local'
+                    userType: 'local'
                 });
                 await tempAddingUser.save();
-                return 'added';
+                return Messages.Added;
             }
-            return 'User already exists';
+            return Messages.UserAlreadyExist;
         } catch (error) {
             console.log(error);
             return null;
         }
     }
 
-    async CreateUser(userData: { email: string, otp: number }): Promise<string> {
+    async createUser(userData: { email: string, otp: number }): Promise<string> {
         try {
             const checkingotp = await Otp.findOne({ email: userData.email })
             const checkinguser = await User.findOne({ email: userData.email })
@@ -157,18 +157,18 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
                 checkinguser.temp = false
                 checkinguser.tempExpires = undefined
                 await checkinguser.save();
-                return 'success'
+                return Messages.success;
             }
-            return 'otp expired'
+            return Messages.OtpExpired;
         } catch (error) {
             console.log(error)
             return error as string
         }
     }
 
-    async UserVerifyLogin(email: string): Promise<IUser | string> {
+    async userVerifyLogin(email: string): Promise<IUser | string> {
         try {
-            const checkuser = await User.findOne({ email: email, isAdmin: false }) as IUser
+            const checkuser = await User.findOne({ email: email, isAdmin: false }) as IUser;
             return checkuser
         } catch (error) {
             console.log(error);
@@ -181,24 +181,24 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         try {
             const existingUser = await User.findOne({ email: userData.email });
             if (!existingUser || !existingUser.password) {
-                return { message: 'User not found or password not set' };
+                return { message: Messages.UserNotFoundOrPassword };
             }
             if (typeof userData.password !== 'string') {
-                return { message: "Invalid password format" };
+                return { message: Messages.InvalidPasswordFormat };
             }
             const isMatch = await bcrypt.compare(userData.password, existingUser.password);
             if (isMatch) {
-                return 'Same password';
+                return Messages.SamePassword;
             } else {
                 const hashedPassword = await bcrypt.hash(userData.password, 10);
                 existingUser.password = hashedPassword;
                 existingUser.tempExpires = undefined;
                 await existingUser.save();
-                return "Password Changed";
+                return Messages.PasswordChanged;
             }
         } catch (error) {
             console.log(error);
-            return 'Error occurred while resetting the password';
+            return error as string;
         }
     }
 
@@ -206,13 +206,13 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         try {
             const findUser = await User.findOne({ _id: userData.userId });
             if (!findUser) {
-                return "User not found";
+                return Messages.UserNotFound;
             }
             const isMatch = await bcrypt.compare(userData.currentPassword, findUser.password);
             if (isMatch) {
                 const isPasswordSame = await bcrypt.compare(userData.newPassword, findUser.password);
                 if (isPasswordSame) {
-                    return "New password cannot be the same as the current password";
+                    return Messages.NewPasswordCannotbeSame;
                 }
 
                 const hashedPassword = await bcrypt.hash(userData.newPassword, 10);
@@ -222,22 +222,21 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
                 );
 
                 if (updatePassword.matchedCount === 0) {
-                    return "No user found with the provided email";
+                    return Messages.NoUser;
                 } else if (updatePassword.modifiedCount === 0) {
-                    return "Password was not updated. It might already be the same";
+                    return Messages.PasswordNotUpdated;
                 } else {
-                    return "Password changed successfully";
+                    return Messages.PasswordChangedSuccess;
                 }
             } else {
-                return "Current password does not match";
+                return Messages.CurrentPasswordDoesNotMatch;
             }
         } catch (error) {
-            console.log(error);
-            return "Error occurred while changing the password";
+            return error as string;
         }
     }
 
-    async editUserDetail(userData: EditUserDetailData): Promise<string> {
+    async editUserDetail(userData: { userId: Types.ObjectId, name: string, mobile: string }): Promise<string> {
         try {
             const updatingUserDetails = await User.updateOne(
                 { _id: userData.userId },
@@ -249,9 +248,9 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
                 }
             )
             if (updatingUserDetails.matchedCount == 1) {
-                return "User details updated"
+                return Messages.UserDetailsUpdated;
             } else {
-                return "Not updated"
+                return Messages.NotUpdated;
             }
         } catch (error) {
             console.log(error)
@@ -259,55 +258,9 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async addGoogleUser(userData: UserData): Promise<{ message: string, user?: IUserResponse } | string> {
+    async sendNotification(notification: INotificationResponse): Promise<INotificationResponse | string | null> {
         try {
-            const alreadyUser = await User.findOne({ email: userData.email }) as IUserResponse
-            if (alreadyUser) {
-                return {
-                    message: "Already",
-                    user: {
-                        _id: alreadyUser?._id,
-                        name: alreadyUser.name,
-                        email: alreadyUser.email,
-                        mobile: alreadyUser.mobile,
-                        isAdmin: alreadyUser.isAdmin,
-                        isBlock: alreadyUser.isBlock,
-                        wallet_id: alreadyUser.wallet_id ? alreadyUser.wallet_id : null,
-                    }
-                };
-            }
-            const newUser = new User({
-                name: userData.name,
-                email: userData.email,
-                password: userData.password,
-                mobile: userData.mobile,
-                isAdmin: false,
-                isBlock: false,
-                wallet_id: null,
-                temp: false,
-            });
-            newUser.set('tempExpires', undefined);
-            await newUser.save();
-            const userFind: IUserResponse | null = await User.findOne({ email: newUser.email });
-            if (userFind === null) {
-                return { message: 'User not found after creation' };
-            }
-            return { message: 'Success', user: userFind }
-        } catch (error) {
-            return error as string
-        }
-    }
-
-
-
-
-
-
-
-
-
-    async sendNotification(notification: INotification): Promise<INotification | string | null> {
-        try {
+            console.log('hey',notification)
             const newNotification = new Notification({
                 receiver: notification.receiver,
                 message: notification.message,
@@ -322,7 +275,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async getOldNotification(userId: string): Promise<INotification[] | string | null> {
+    async getOldNotification(userId: string): Promise<INotificationResponse[] | string | null> {
         try {
             const notifications = await Notification.find({
                 receiver: userId
@@ -343,7 +296,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
                         { isRead: false }
                 }
             )
-            return "Updated"
+            return Messages.Updated
         } catch (error) {
             return error as string
         }
@@ -354,10 +307,8 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
             const skipCount = (page - 1) * limit;
 
             const projection = {
-                _id: 1,
                 name: 1,
                 mobile: 1,
-                isAdmin: 1,
                 isBlock: 1,
                 email: 1,
             }
@@ -375,17 +326,74 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async createGoogleAuth(data:{email:string,name:string,userType:string,mobile:string}): Promise<string> {
+    async createGoogleAuth(data: { email: string, name: string, userType: string, mobile: string }): Promise<string> {
         try {
-           const createUser = new User({
-            email:data.email,
-            name:data.name,
-            userType:data.userType,
-            mobile:data.mobile,
-            tempExpires:null,
-           })
-           await createUser.save()
-           return createUser._id.toString();
+            const createUser = new User({
+                email: data.email,
+                name: data.name,
+                userType: data.userType,
+                mobile: data.mobile,
+                tempExpires: null,
+            })
+            await createUser.save()
+            return createUser._id.toString();
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async userBlock(userId: Types.ObjectId): Promise<string> {
+        try {
+            await User.updateOne(
+                { _id: userId },
+                { $set: { isBlock: true } }
+            )
+            return Messages.UserBlocked
+        } catch (error) {
+            return error as string
+        }
+    }
+
+
+    async userUnBlock(userId: Types.ObjectId): Promise<{ message: string; userUnBlock: IUser | null; error?: string }> {
+        try {
+            await User.updateOne(
+                { _id: userId },
+                { $set: { isBlock: false } }
+            );
+            const data = await User.findOne({ _id: userId });
+            return { message: Messages.Unblocked, userUnBlock: data };
+        } catch (error) {
+            return { message: error as string, userUnBlock: null }
+        }
+    }
+
+    async searchUser(name: string): Promise<IUserResponse[] | string> {
+        try {
+            const users = await User.find({
+                name: { $regex: `^${name}`, $options: 'i' },
+                isAdmin: false
+            });
+            return users;
+        } catch (error) {
+            return error as string;
+        }
+    }
+
+    async userDelete(userId: Types.ObjectId): Promise<string> {
+        try {
+            await this.deleteById(userId)
+            return Messages.UserDeleted
+        } catch (error) {
+            console.log(error)
+            return error as string
+        }
+    }
+
+    async getAllUsers(): Promise<IUserResponse[] | string | null> {
+        try {
+            const allUsers = await User.find({ isAdmin: false });
+            return allUsers
         } catch (error) {
             return error as string
         }

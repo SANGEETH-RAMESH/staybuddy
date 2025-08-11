@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import AdminSidebar from '../../components/commonComponents/adminSidebar';
 import AdminHeader from '../../components/commonComponents/adminHeader';
-import AdminHostDetailedPage from '../../components/adminComponent/HostManage/AdminHostDetailedBody';
+import AdminHostDetailedPage from '../../components/adminComponent/HostManage/adminHostDetailedBody';
 
 const AdminhostDetailedPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);

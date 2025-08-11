@@ -12,7 +12,7 @@ class baseRepository<T> implements IBaseRepository<T> {
 
     async findByEmail(filter: object, projection?: any): Promise<T | null> {
         try {
-            return await this.model.findOne(filter, projection).exec();
+            return await this.model.findOne(filter, projection).lean<T>().exec();
         } catch (error) {
             console.error(error);
             return null;
@@ -20,9 +20,9 @@ class baseRepository<T> implements IBaseRepository<T> {
     }
 
 
-    async findById(id: Types.ObjectId): Promise<T | null> {
+    async findById(id: Types.ObjectId,projection?:any): Promise<T | null> {
         try {
-            const data = await this.model.findById(id).exec();
+            const data = await this.model.findById(id,projection).exec();
             return data;
         } catch (error) {
             console.error(error);

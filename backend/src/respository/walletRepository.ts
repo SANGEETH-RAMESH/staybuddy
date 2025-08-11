@@ -1,8 +1,11 @@
 import mongoose, { Types } from "mongoose";
 import { IWalletRepository } from "../interface/wallet/!WalletRepository";
-import User, { IUser } from "../model/userModel";
-import Wallet, { IWallet } from "../model/walletModel";
+import User from "../model/userModel";
+import Wallet , {IWallet}  from "../model/walletModel";
 import baseRepository from "./baseRespository";
+import { Messages } from "../messages/messages";
+import Order from "../model/orderModel";
+import { IWalletResponse } from "../dtos/WalletResponse";
 
 
 
@@ -12,7 +15,7 @@ class walletRepository extends baseRepository<IWallet> implements IWalletReposit
         super(Wallet)
     }
 
-    async walletDeposit({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
+    async walletDeposit({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWalletResponse } | string> {
         try {
             await Wallet.findOneAndUpdate(
                 { userOrHostId: id },
@@ -28,11 +31,11 @@ class walletRepository extends baseRepository<IWallet> implements IWalletReposit
                     },
                 }
             );
-            const userWallet = await Wallet.findOne({ userOrHostId: id });
+            const userWallet = await Wallet.findOne({ userOrHostId: id }) as IWalletResponse;
             if (!userWallet) {
-                return "Wallet not found"
+                return Messages.WalletNotFound;
             }
-            return { message: "Deposited", userWallet };
+            return { message: Messages.Deposited, userWallet };
         } catch (error) {
             console.log(error);
             return error as string;
@@ -56,7 +59,7 @@ class walletRepository extends baseRepository<IWallet> implements IWalletReposit
                     }
                 }
             )
-            return "Withdrawn"
+            return Messages.Withdrawn;
         } catch (error) {
             console.log(error);
             return error as string
@@ -67,7 +70,7 @@ class walletRepository extends baseRepository<IWallet> implements IWalletReposit
         try {
             const findUser = await User.findOne({ email });
             if (!findUser) {
-                return "User not found"
+                return Messages.UserNotFound;
             }
             const creatingWallet = new Wallet({
                 userOrHostId: findUser._id
@@ -77,14 +80,14 @@ class walletRepository extends baseRepository<IWallet> implements IWalletReposit
             findUser.tempExpires = undefined;
             findUser.temp = false;
             await findUser.save();
-            return "success"
+            return Messages.success;
         } catch (error) {
             console.log(error)
             return error as string
         }
     }
 
-    async findUserWallet(id: string): Promise<IWallet | string | null> {
+    async findUserWallet(id: string): Promise<IWalletResponse | string | null> {
         try {
             const userWallet = await Wallet.aggregate([
                 { $match: { userOrHostId: new Types.ObjectId(id) } },
@@ -97,11 +100,112 @@ class walletRepository extends baseRepository<IWallet> implements IWalletReposit
                 }
             ]);
             if (!userWallet) {
-                return "No Wallet"
+                return Messages.NoWallet;
             }
             return userWallet[0]
         } catch (error) {
             console.log(error)
+            return error as string
+        }
+    }
+
+    async creditHostWallet(id: Types.ObjectId, amount: number): Promise<string> {
+        try {
+            await Wallet.updateOne(
+                { userOrHostId: id },
+                {
+                    $inc: { balance: amount },
+                    $push: {
+                        transactionHistory: {
+                            type: "deposit",
+                            amount: amount,
+                            date: new Date(),
+                            description: `Credited ${amount} to wallet`
+                        }
+                    }
+                });
+
+            return Messages.WalletUpdatedSuccessfully;
+        } catch (error) {
+            console.log(error);
+            return error as string
+        }
+    }
+
+    async debitUserWallet(id: Types.ObjectId, amount: number): Promise<string> {
+        try {
+            await Wallet.updateOne(
+                { userOrHostId: id },
+                {
+                    $inc: { balance: -amount },
+                    $push: {
+                        transactionHistory: {
+                            type: "withdrawal",
+                            amount: amount,
+                            date: new Date(),
+                            description: `Debited ${amount} from wallet`
+                        }
+                    }
+                });
+
+            return Messages.WalletUpdatedSuccessfully;
+        } catch (error) {
+            console.log(error);
+            return error as string
+        }
+    }
+
+    async creditUserWallet(id: Types.ObjectId, orderId: Types.ObjectId, cancellationStatus: string): Promise<string> {
+        try {
+            let amount = 0;
+            const result = await Order.findOne({ _id: orderId })
+
+            if (cancellationStatus == 'available' && result) {
+                const foodRate = result.foodRate ?? 0;
+                amount = (result.totalDepositAmount ?? 0) + (result.totalRentAmount ?? 0) + foodRate;
+            } else {
+                amount = result?.totalDepositAmount ?? 0;
+            }
+            await Wallet.updateOne(
+                { userOrHostId: id },
+                {
+                    $inc: { balance: amount },
+                    $push: {
+                        transactionHistory: {
+                            type: "deposit",
+                            amount: amount,
+                            date: new Date(),
+                            description: `Credited ${amount} to wallet`
+                        }
+                    }
+                });
+
+            return Messages.WalletUpdatedSuccessfully;
+        } catch (error) {
+            console.log(error);
+            return error as string
+        }
+    }
+
+    async debitHostWallet(id: Types.ObjectId, amount: number): Promise<string> {
+        try {
+            await Wallet.updateOne(
+                { userOrHostId: id },
+                {
+                    $inc: { balance: -amount },
+                    $push: {
+                        transactionHistory: {
+                            type: "withdraw",
+                            amount: amount,
+                            date: new Date(),
+                            description: `Debited ${amount} from wallet`
+                        }
+                    }
+                });
+
+            return Messages.WalletUpdatedSuccessfully;
+        } catch (error) {
+            console.log(error);
             return error as string
         }
     }

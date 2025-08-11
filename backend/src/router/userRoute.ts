@@ -4,7 +4,6 @@ import WalletRepository from '../respository/walletRepository';
 import UserService from '../service/userService';
 import UserController from '../controller/userController'
 import userAuthMiddleware from '../middleware/userAuth';
-import passport from 'passport';
 import HostRepository from '../respository/hostRepository';
 const user_route = Router();
 
@@ -37,25 +36,5 @@ user_route.put('/notifications/mark-all-read',userAuthMiddleware,userController.
 
 
 
-user_route.use(passport.initialize());
-
-user_route.use(passport.session());
-
-user_route.get(
-    '/auth/google',
-    passport.authenticate('google-user', { scope: ['email', 'profile'] })
-  );
-
-user_route.get('/auth/google/callback',
-    passport.authenticate('google-user', {
-        successRedirect: '/user/google/success',
-        failureRedirect: '/google/failure'
-    }))
-
-    user_route.get('/google/success', (req, res) => {
-        console.log('Google Sign-in success');
-        userController.googleSignUp(req, res);
-    });
- 
 
 export { user_route, userService };

@@ -1,5 +1,5 @@
 import HostHeader from '../../components/commonComponents/hostHeader'
-import HostelDetail from '../../components/hostComponent/Hostel/HostelDetailedBody'
+import HostelDetail from '../../components/hostComponent/Hostel/hostelDetailedBody'
 
 
 const hostHostelDetailsPage = () => {

@@ -1,5 +1,5 @@
 import UserHeader from '../../components/commonComponents/userHeader'
-import SavedBookings from '../../components/userComponent/Hostel/SavedBookings'
+import SavedBookings from '../../components/userComponent/Hostel/savedBookings'
 
 const userSavedBookings = () => {
   return (

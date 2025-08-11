@@ -57,14 +57,9 @@ export const changePassword = (formData: {
 
 export const editProfile = (data: { name: string; mobile: string }) => hostApiClient.patch(`${apiUrl}/host/editprofile`, data);
 
-export const getwalletDetails = () => hostApiClient.get(`${apiUrl}/wallet/getWalletDetails`);
+export const getwalletDetails = () => hostApiClient.get(`${apiUrl}/wallet/`);
 
-export const payment  = (amount:string) => hostApiClient.post('/order/payments', {
-        totalAmount: parseFloat(amount) * 100, 
-        currency: 'INR',
-        receipt: 'receipt#1',
-        notes: {},
-      });
+export const payment  = (amount:string) => hostApiClient.post('/wallet/payment', {totalAmount:amount });
 
 export const deposit = (depositAmount:number) => hostApiClient.post(`${apiUrl}/wallet/deposit`, { amount: depositAmount });
 
@@ -113,3 +108,5 @@ export const resetPassword = (email:string,password:string,confirmPassword:strin
         );
 
 export const signUp = (formValues: { name: string; email: string; password: string; mobile?: string }) => axios.post(`${apiUrl}/host/signup`, formValues );
+
+export const googleLogin = async (credential:string) =>  axios.post(`${apiUrl}/host/google/callback`,{credential});

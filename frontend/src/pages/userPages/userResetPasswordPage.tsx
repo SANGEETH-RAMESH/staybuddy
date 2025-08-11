@@ -1,4 +1,4 @@
-import ResetPasswordBody from '../../components/userComponent/Password/ResetPasswordBody'
+import ResetPasswordBody from '../../components/userComponent/Password/resetPasswordBody'
 
 const userResetPasswordPage = () => {
   return (

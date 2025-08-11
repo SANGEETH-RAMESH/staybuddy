@@ -1,16 +1,20 @@
 import { IHostService } from "../interface/host/!HostService";
 import { IHostRepository } from "../interface/host/!HostRepository";
 import { sendOtp } from "../utils/mail";
-import Host, { IHost } from "../model/hostModel";
 import { Types } from "mongoose";
 import HashedPassword from "../utils/hashedPassword";
 import { hostPayload } from "../types/commonInterfaces/tokenInterface";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Jwt/jwt";
-type HostType = InstanceType<typeof Host>
-import { ICategory } from "../model/categoryModel";
-import { IUser } from "../model/userModel";
 import { IWalletRepository } from "../interface/wallet/!WalletRepository";
 import bcrypt from 'bcrypt';
+import { Messages } from "../messages/messages";
+import { IAdminRepository } from "../interface/admin/IAdminRepository";
+import { IUserRespository } from "../interface/user/!UserRepository";
+import { IHostResponse } from "../dtos/HostResponse";
+import { IUserResponse } from "../dtos/UserResponse";
+import { ICategoryResponse } from "../dtos/CategoryResponse";
+import { IOtpVerify } from "../dtos/OtpVerify";
+import jwt from 'jsonwebtoken';
 
 function otpgenerator() {
     return Math.floor(1000 + Math.random() * 9000);
@@ -41,7 +45,6 @@ function generateRandomMobileNumber() {
     const firstDigit = Math.floor(Math.random() * 5) + 6;
     let mobileNumber = firstDigit.toString();
 
-    // Generate remaining 9 digits
     for (let i = 0; i < 9; i++) {
         mobileNumber += Math.floor(Math.random() * 10).toString();
     }
@@ -49,54 +52,24 @@ function generateRandomMobileNumber() {
     return mobileNumber;
 }
 
-interface hostData {
-    name: string,
-    mobile: number,
-    email: string,
-    password: string
-}
 
-interface HostelData {
-    name: string,
-    location: string,
-    nearbyAccess: string,
-    bedsPerRoom: number,
-    policies: string,
-    category: string,
-    advance: number,
-    facilities: string[],
-    bedShareRate: number,
-    foodRate: number,
-    phoneNumber: string,
-    photo: string[]
-}
-
-
-interface otpData {
-    email: string,
-    otp: number
-}
-
-
-// interface HostData {
-//     displayName?: string;
-//     email?: string;
-// }
 
 class hostService implements IHostService {
-    constructor(private hostRepository: IHostRepository, private walletRepository: IWalletRepository) { }
+    constructor(private _hostRepository: IHostRepository, private _walletRepository: IWalletRepository,
+    private _adminRepository : IAdminRepository,private _userRepository :IUserRespository
+    ) { }
 
-    async SignUp(hostData: hostData): Promise<string> {
+    async signUp(hostData: IHostResponse): Promise<string> {
         try {
-            const existingUser = await this.hostRepository.FindHostByEmail(hostData.email)
+            const existingUser = await this._hostRepository.findHostByEmail(hostData.email)
             if (existingUser) {
-                return 'existing'
+                return Messages.Existing
             }
             const Otp = otpgenerator();
             sendOtp(hostData.email, Otp);
-            await this.hostRepository.OtpGenerating(hostData.email, Otp)
-            await this.hostRepository.tempStoreHost(hostData);
-            return 'Otp success'
+            await this._hostRepository.otpGenerating(hostData.email, Otp)
+            await this._hostRepository.tempStoreHost(hostData);
+            return Messages.OtpSuccess
 
 
         } catch (error) {
@@ -105,28 +78,28 @@ class hostService implements IHostService {
         }
     }
 
-    async resendOtp(hostData: hostData): Promise<string | null> {
+    async resendOtp(hostData: IHostResponse): Promise<string | null> {
         try {
             const Otp = otpgenerator();
             sendOtp(hostData.email, Otp);
-            await this.hostRepository.OtpGenerating(hostData.email, Otp);
-            await this.hostRepository.tempStoreHost(hostData);
-            return 'otp success'
+            await this._hostRepository.otpGenerating(hostData.email, Otp);
+            await this._hostRepository.tempStoreHost(hostData);
+            return Messages.OtpSuccess
         } catch (error) {
             console.log(error)
             return null
         }
     }
 
-    async verifyOtp(hostOtp: otpData): Promise<string> {
+    async verifyOtp(hostOtp: IOtpVerify): Promise<string> {
         try {
-            const checkOtp = await this.hostRepository.otpChecking(hostOtp);
-            if (checkOtp == 'not verified') {
-                return 'Invalid otp'
+            const checkOtp = await this._hostRepository.otpChecking(hostOtp);
+            if (checkOtp == Messages.HostNotVerified) {
+                return Messages.InvalidOtp
             }
-            const creatingHost = await this.hostRepository.CreateHost({ email: hostOtp.email })
-            if (creatingHost == 'success') {
-                await this.walletRepository.createWallet(hostOtp?.email)
+            const creatingHost = await this._hostRepository.createHost({ email: hostOtp.email })
+            if (creatingHost == Messages.success) {
+                await this._walletRepository.createWallet(hostOtp?.email)
             }
             return creatingHost;
         } catch (error) {
@@ -135,16 +108,16 @@ class hostService implements IHostService {
         }
     }
 
-    async forgotPassword(hostData: { email: string }): Promise<HostType | null> {
+    async forgotPassword(hostData: { email: string }): Promise<IHostResponse | null> {
         try {
-            const hostFind = await this.hostRepository.FindHostByEmail(hostData.email);
+            const hostFind = await this._hostRepository.findHostByEmail(hostData.email);
             if (hostFind == null) {
                 return null
             }
             const Otp = otpgenerator();
             sendOtp(hostData.email, Otp)
-            await this.hostRepository.OtpGenerating(hostData.email, Otp);
-            return hostFind as HostType;
+            await this._hostRepository.otpGenerating(hostData.email, Otp);
+            return hostFind;
         } catch (error) {
             console.log(error)
             return null;
@@ -153,11 +126,11 @@ class hostService implements IHostService {
 
     async resetPassword(hostData: { email: string, password: string }): Promise<{ message: string }> {
         try {
-            const changePassword = await this.hostRepository.resetPassword(hostData);
+            const changePassword = await this._hostRepository.resetPassword(hostData);
             return changePassword;
         } catch (error) {
             console.log(error);
-            return { message: "Internal error" }
+            return { message: error as string };
         }
     }
 
@@ -168,20 +141,20 @@ class hostService implements IHostService {
         role?: string;
     }> {
         try {
-            const checkhost = await this.hostRepository.FindHostByEmail(hostData.email);
+            const checkhost = await this._hostRepository.findHostByEmail(hostData.email);
 
             if (!checkhost) {
-                return { message: "Invalid email" };
+                return { message: Messages.InvalidEmail };
             }
 
             if (checkhost.isBlock) {
-                return { message: "Host is blocked" };
+                return { message: Messages.HostIsBlocked };
             }
 
             const isMatch = await bcrypt.compare(hostData.password, checkhost.password);
 
             if (!isMatch) {
-                return { message: "Invalid password" };
+                return { message: Messages.InvalidPassword };
             }
 
             const hostPayload = {
@@ -193,14 +166,13 @@ class hostService implements IHostService {
             const refreshToken = generateRefreshToken(hostPayload);
 
             return {
-                message: "Success",
+                message: Messages.Success,
                 accessToken,
                 refreshToken,
                 role: 'host'
             };
         } catch (error) {
-            console.error("Error in hostService.verifyLogin:", error);
-            return { message: "Internal server error" };
+            return { message: error as string};
         }
     }
 
@@ -209,15 +181,15 @@ class hostService implements IHostService {
 
     async newHost(host_id: Types.ObjectId): Promise<string> {
         try {
-            const getHostels = await this.hostRepository.getAllHostels();
+            const getHostels = await this._hostRepository.getAllHostels();
 
             if (!Array.isArray(getHostels)) {
-                return "Failed to fetch Hostels"
+                return Messages.FetchHostelFail
             }
 
             host_id = new Types.ObjectId(host_id)
 
-            const response = await this.hostRepository.newHost({ hostels: getHostels, host_id });
+            const response = await this._hostRepository.newHost({ hostels: getHostels, host_id });
             return response
         } catch (error) {
             return error as string
@@ -226,9 +198,9 @@ class hostService implements IHostService {
 
     async approvalRequest(host_id: Types.ObjectId, photo: string | undefined, documentType: string): Promise<string> {
         try {
-            const uploadDocument = await this.hostRepository.uploadDocument(host_id, photo, documentType)
-            if (uploadDocument == 'Documnent Updated') {
-                const response = await this.hostRepository.approvalRequest(host_id);
+            const uploadDocument = await this._hostRepository.uploadDocument(host_id, photo, documentType)
+            if (uploadDocument == Messages.DocumentUpdated) {
+                const response = await this._hostRepository.approvalRequest(host_id);
                 return response
             }
             return uploadDocument
@@ -240,16 +212,16 @@ class hostService implements IHostService {
 
 
 
-    async hostGoogleSignUp(hostData: hostData): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
+    async hostGoogleSignUp(hostData: IHostResponse): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
         try {
             const password = generateRandomPassword();
             const mobile = generateRandomMobileNumber();
             const hashed = await HashedPassword.hashPassword(password);
             const data = { ...hostData, name: hostData.name, password: hashed, mobile };
-            const response = await this.hostRepository.addGoogleHost(data);
+            const response = await this._hostRepository.addGoogleHost(data);
 
             if (typeof response === 'object' && response !== null && 'message' in response) {
-                if (response.message === 'Success') {
+                if (response.message === Messages.Success) {
                     const hostPayload: hostPayload = {
                         _id: response.host?._id as Types.ObjectId,
                         role: 'host'
@@ -257,14 +229,14 @@ class hostService implements IHostService {
                     const accessToken = generateAccessToken(hostPayload);
                     const refreshToken = generateAccessToken(hostPayload);
                     return { message: response.message, accessToken, refreshToken }
-                } else if (response.message == 'Already') {
+                } else if (response.message == Messages.Already) {
                     const hostPayload: hostPayload = {
                         _id: response.host?._id as Types.ObjectId,
                         role: 'host'
                     }
                     const accessToken = generateAccessToken(hostPayload);
                     const refreshToken = generateRefreshToken(hostPayload);
-                    return { message: 'Success', accessToken, refreshToken }
+                    return { message: Messages.Success, accessToken, refreshToken }
                 }
             }
             return response as string
@@ -274,9 +246,14 @@ class hostService implements IHostService {
         }
     }
 
-    async getHost(id: Types.ObjectId): Promise<IHost | string> {
+    async getHost(id: Types.ObjectId): Promise<IHostResponse | string> {
         try {
-            const response = await this.hostRepository.findHostById(id);
+            const projection = {
+                name:1,
+                email:1,
+                mobile:1
+            }
+            const response = await this._hostRepository.findHostById(id,projection);
             return response
         } catch (error) {
             console.log(error);
@@ -292,10 +269,13 @@ class hostService implements IHostService {
             }
 
             if (typeof decoded == 'object' && decoded !== null) {
-                const response = await this.hostRepository.findHostById(decoded._id)
+                const projection = {
+                    _id:1
+                }
+                const response = await this._hostRepository.findHostById(decoded._id,projection)
 
                 if (!response || typeof response === 'string') {
-                    return "No Host";
+                    return Messages.NoHosts;
                 }
 
                 const hostPayload: hostPayload = {
@@ -308,16 +288,16 @@ class hostService implements IHostService {
 
                 return { accessToken, refreshToken }
             }
-            return "Invalid token"
+            return Messages.InvalidToken
         } catch (error) {
             console.log(error)
             return error as string
         }
     }
 
-    async getAllCategory(): Promise<ICategory[] | string> {
+    async getAllCategory(): Promise<ICategoryResponse[] | string> {
         try {
-            const response = await this.hostRepository.getAllCategory();
+            const response = await this._hostRepository.getAllCategory();
             return response
         } catch (error) {
             return error as string
@@ -326,7 +306,7 @@ class hostService implements IHostService {
 
     async changePassword(hostData: { hostId: Types.ObjectId; currentPassword: string; newPassword: string }): Promise<string> {
         try {
-            const response = await this.hostRepository.changePassword(hostData);
+            const response = await this._hostRepository.changePassword(hostData);
             return response
         } catch (error) {
             return error as string
@@ -335,48 +315,67 @@ class hostService implements IHostService {
 
     async editProfile(hostData: { hostId: Types.ObjectId, name: string, mobile: string }): Promise<string> {
         try {
-            const response = await this.hostRepository.editProfile(hostData);
+            const response = await this._hostRepository.editProfile(hostData);
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+    
+    async getAllUsers(): Promise<IUserResponse[] | string | null> {
+        try {
+            const response = await this._userRepository.getAllUsers();
             return response
         } catch (error) {
             return error as string
         }
     }
 
-    // async walletDeposit({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
-    //     try {
-    //         const response = await this.hostRepository.walletDeposit({ id, amount });
-    //         return response
-    //     } catch (error) {
-    //         return error as string
-    //     }
-    // }
-
-    // async walletWithDraw({ id, amount, }: { id: string; amount: string; }): Promise<{ message: string; userWallet: IWallet } | string> {
-    //     try {
-    //         const response = await this.hostRepository.walletWithDraw({ id, amount });
-    //         return response
-    //     } catch (error) {
-    //         return error as string
-    //     }
-    // }
-
-    async getAllUsers(): Promise<IUser[] | string | null> {
+    async getAdmin(): Promise<IUserResponse | string | null> {
         try {
-            const response = await this.hostRepository.getAllUsers();
-            return response
-        } catch (error) {
-            return error as string
-        }
-    }
-
-    async getAdmin(): Promise<IUser | string | null> {
-        try {
-            const response = await this.hostRepository.getAdmin();
+            const response = await this._adminRepository.getAdmin();
             return response;
         } catch (error) {
             return error as string
         }
     }
+
+    async createGoogleAuth(credential: string): Promise<{ message: string; accessToken: string; refreshToken: string; role: string } | string> {
+            try {
+                const payload = jwt.decode(credential);
+                if (!payload || typeof payload === 'string') {
+                    return Messages.NoUser
+                }
+                const checkUser = await this._hostRepository.findHostByEmail(payload.email)
+                if (checkUser) {
+                    const userPayload = {
+                        _id: checkUser._id as Types.ObjectId,
+                        role: 'user' as const
+                    };
+                    const accessToken = generateAccessToken(userPayload);
+                    const refreshToken = generateRefreshToken(userPayload);
+                    return { message: Messages.UserAlreadyExist, accessToken, refreshToken, role: 'user' }
+                }
+    
+                const data = {
+                    email: payload.email,
+                    name: payload?.name,
+                    userType: 'google',
+                    mobile: '',
+                }
+                const id = await this._userRepository.createGoogleAuth(data)
+                await this._walletRepository.createWallet(payload.email)
+                const userPayload = {
+                    _id: new Types.ObjectId(id),
+                    role: 'host' as const
+                };
+                const accessToken = generateAccessToken(userPayload);
+                const refreshToken = generateRefreshToken(userPayload);
+                return { message: Messages.UserCreated, accessToken, refreshToken, role: 'host' }
+            } catch (error) {
+                return error as string
+            }
+        }
 }
 
 export default hostService

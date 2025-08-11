@@ -1,4 +1,5 @@
 import { IWishlistRepository } from "../interface/wishlist/!WishlistRepository";
+import { Messages } from "../messages/messages";
 import Hostel from "../model/hostelModel";
 import Wishlist, { IWishlist } from "../model/wishlistModel";
 import baseRepository from "./baseRespository";
@@ -10,8 +11,8 @@ class wishlistRepository extends baseRepository<IWishlist> implements IWishlistR
     constructor(){
         super(Wishlist)
     }
-
-
+ 
+     
     async addToWishlist(id: string, userId: string): Promise<string> {
             try {
                 const hostelDetails = await Hostel.findOne({ _id: id })
@@ -27,10 +28,10 @@ class wishlistRepository extends baseRepository<IWishlist> implements IWishlistR
                     })
                     await newWishList.save()
                     if (newWishList) {
-                        return "Added to wishlist"
+                        return Messages.AddedToWishList;
                     }
                 }
-                return 'Cannot add to wishlist'
+                return Messages.CannotAddToWishlist;
             } catch (error) {
                 console.log(error)
                 return error as string
@@ -42,7 +43,7 @@ class wishlistRepository extends baseRepository<IWishlist> implements IWishlistR
                 await Wishlist.findOneAndDelete(
                     { hostel_id: hostelId, user_id: userId }
                 )
-                return 'Hostel Removed From Wishlist'
+                return Messages.HostelRemovedFromWishlist;
             } catch (error) {
                 return error as string
             }
@@ -54,9 +55,9 @@ class wishlistRepository extends baseRepository<IWishlist> implements IWishlistR
                     { hostel_id: hostelId, user_id: userId }
                 )
                 if (checkingWishlist) {
-                    return "Already Exist"
+                    return Messages.AlreadyExist;
                 }
-                return "Not Exist"
+                return Messages.NotExist;
             } catch (error) {
                 return error as string
             }
@@ -79,9 +80,9 @@ class wishlistRepository extends baseRepository<IWishlist> implements IWishlistR
                     { user_id: userId }
                 )
                 if (deletingWishlist) {
-                    return "Wishlist Deleted"
+                    return Messages.WishlistDeleted;
                 }
-                return "Wishlist Not Deleted"
+                return Messages.WishlistNotDeleted;
     
             } catch (error) {
                 return error as string

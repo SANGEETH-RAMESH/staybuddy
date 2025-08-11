@@ -30,8 +30,10 @@ export interface IOrder extends Document {
     active: boolean,
     startDate: Date,
     endDate: Date,
-    cancellationPolicy:string,
-    cancelled:boolean
+    cancellationPolicy: string,
+    cancelled: boolean,
+    status: string,
+    razorpay_order_id?: string
 }
 
 const orderSchema: Schema = new Schema(
@@ -150,14 +152,19 @@ const orderSchema: Schema = new Schema(
             type: Date,
             required: true
         },
-        cancellationPolicy:{
-            type:String,
-            required:true
+        cancellationPolicy: {
+            type: String,
+            required: true
         },
-        cancelled:{
-            type:Boolean,
-            default:false
-        }
+        cancelled: {
+            type: Boolean,
+            default: false
+        },
+        status: {
+            type: String,
+            enum: ["created", "paid", "failed", "cancelled"],
+            default: "created",
+        },
     },
     { timestamps: true }
 );

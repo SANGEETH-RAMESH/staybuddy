@@ -1,6 +1,5 @@
 import mongoose, { Types } from "mongoose";
 import { IHostRepository } from "../interface/host/!HostRepository";
-// import generateToken from "../Jwt/jwt";
 import { generateAccessToken, generateRefreshToken } from "../Jwt/jwt";
 import Host, { IHost } from "../model/hostModel";
 import Otp from "../model/otpModel";
@@ -8,30 +7,13 @@ import HashedPassword from "../utils/hashedPassword";
 import bcrypt from 'bcrypt';
 import { hostPayload } from "../types/commonInterfaces/tokenInterface";
 import Hostel, { IHostel } from "../model/hostelModel";
-import Wallet, { IWallet } from "../model/walletModel";
 import Category, { ICategory } from "../model/categoryModel";
-import Order, { IOrder } from "../model/orderModel";
 import User, { IUser } from "../model/userModel";
 import baseRepository from "./baseRespository";
-import { IUpdateHostelInput } from "../dtos/HostelData";
 import { IHostResponse } from "../dtos/HostResponse";
+import { Messages } from "../messages/messages";
+import { IUpdateHostelInput } from "../dtos/HostelData";
 
-
-interface HostelData {
-    name: string,
-    location: string,
-    nearbyAccess: string,
-    bedsPerRoom: number,
-    policies: string,
-    category: string,
-    advance: number,
-    facilities: string[],
-    bedShareRate: number,
-    foodRate: number,
-    phoneNumber: string,
-    photo: string[],
-    host_id: string
-}
 
 interface hostData {
     name: string,
@@ -57,9 +39,9 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
         super(Host)
     }
 
-    async FindHostByEmail(email: string): Promise<IHost | null> {
+    async findHostByEmail(email: string): Promise<IHostResponse | null> {
         try {
-            const hostData = await this.findByEmail({ email })
+            const hostData = await this.findByEmail({ email }) as IHostResponse | null;
             return hostData
         } catch (error) {
             console.log(error);
@@ -67,7 +49,7 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
         }
     }
 
-    async OtpGenerating(email: string, otp: number): Promise<void> {
+    async otpGenerating(email: string, otp: number): Promise<void> {
         try {
             const existingOtp = await Otp.findOne({ email });
             if (existingOtp) {
@@ -108,13 +90,13 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
         try {
             const host = await Otp.findOne({ email: hostData.email })
             if (!host) {
-                return 'User not found';
+                return Messages.UserNotFound;
             }
 
             if (host?.otp === hostData.otp) {
-                return "Host verified"
+                return Messages.HostVerified;
             } else {
-                return "not verified"
+                return Messages.HostNotVerified;
             }
 
         } catch (error) {
@@ -123,18 +105,18 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
         }
     }
 
-    async CreateHost(hostData: { email: string }): Promise<string> {
+    async createHost(hostData: { email: string }): Promise<string> {
         try {
             const checkingOtp = await Otp.findOne({ email: hostData.email });
             const email = hostData.email
-            const checkingHost = await this.findByEmail({ email })
+            const checkingHost = await Host.findOne({ email })
             if (checkingHost && checkingOtp) {
                 checkingHost.temp = false;
                 checkingHost.tempExpires = undefined;
                 await checkingHost.save();
-                return "success"
+                return Messages.success;
             }
-            return 'otp expired'
+            return Messages.OtpExpired;
         } catch (error) {
             console.log(error)
             return error as string
@@ -146,26 +128,26 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
             const existingHost = await Host.findOne({ email: hostData.email });
 
             if (!existingHost || !existingHost.password) {
-                return { message: "User not found or password" };
+                return { message: Messages.UserNotFoundOrPassword };
             }
 
             if (typeof hostData.password !== 'string') {
-                return { message: "Invalid password format" };
+                return { message: Messages.InvalidPasswordFormat };
             }
 
             const isMatch = await bcrypt.compare(hostData.password, existingHost.password);
             if (isMatch) {
-                return { message: "Same password" };
+                return { message: Messages.SamePassword };
             } else {
                 const hashedPassword = await bcrypt.hash(hostData.password, 10);
                 existingHost.password = hashedPassword;
                 existingHost.tempExpires = undefined;
                 await existingHost.save();
-                return { message: "Password Changed" };
+                return { message: Messages.PasswordChanged };
             }
         } catch (error) {
             console.log(error);
-            return { message: "An unexpected error occurred" };
+            return { message: error as string };
         }
     }
 
@@ -186,18 +168,17 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
                     const accessToken = generateAccessToken(hostPayload);
                     const refreshToken = generateRefreshToken(hostPayload);
                     // console.log(refreshToken,'Repository')
-                    return { message: "Success", accessToken, refreshToken };
+                    return { message: Messages.Success, accessToken, refreshToken };
                 } else {
-                    return { message: "Invalid password" };
+                    return { message: Messages.InvalidPassword };
                 }
             } else if (checkhost?.isBlock === true) {
-                return { message: "Host is blocked" };
+                return { message: Messages.HostIsBlocked };
             } else {
-                return { message: "Invalid email" };
+                return { message: Messages.InvalidEmail };
             }
         } catch (error) {
-            console.error("Error verifying login:", error);
-            return { message: "Internal server error" };
+            return { message: error as string };
         }
     }
 
@@ -216,22 +197,22 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
             const hostApproved = await Host.findOne({ _id: host_id })
             if (hostApproved) {
                 if (hostApproved?.approvalRequest == '3') {
-                    return "Containing"
+                    return Messages.Containing;
                 }
             } else {
                 const isHostIdPresent = hostels.some((hostel) => hostel.host_id.equals(host_id));
                 if (isHostIdPresent) {
-                    return "Containing"
+                    return Messages.Containing;
                 }
                 else {
-                    return "Not containing"
+                    return Messages.NotContaining;
                 }
 
 
 
             }
 
-            return "Host ID not found"
+            return Messages.HostIdNotFound;
 
         } catch (error) {
             return error as string
@@ -246,7 +227,7 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
                 { _id: host_id },
                 { $set: { approvalRequest: "2" } }
             )
-            return "Approved"
+            return Messages.Approved;
         } catch (error) {
             console.log(error);
             return error as string
@@ -255,11 +236,11 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
 
 
 
-    async addGoogleHost(hostData: HostData): Promise<{ message: string, host?: IHost } | string> {
+    async addGoogleHost(hostData: HostData): Promise<{ message: string, host?: IHostResponse } | string> {
         try {
-            const alreadyHost = await Host.findOne({ email: hostData.email });
+            const alreadyHost = await Host.findOne({ email: hostData.email }) as IHostResponse;
             if (alreadyHost) {
-                return { message: "Already", host: alreadyHost }
+                return { message: Messages.Already, host: alreadyHost }
             }
 
             const newHost = new Host({
@@ -274,22 +255,22 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
 
             await newHost.save();
 
-            const hostFind: IHost | null = await Host.findOne({ email: hostData.email });
+            const hostFind: IHostResponse | null = await Host.findOne({ email: hostData.email });
 
             if (hostFind === null) {
-                return { message: "Host not found" }
+                return { message: Messages.HostNotFound }
             }
 
-            return { message: 'Success', host: hostFind }
+            return { message: Messages.Success, host: hostFind }
 
         } catch (error) {
             return error as string
         }
     }
 
-    async findHostById(id: Types.ObjectId): Promise<IHost | string> {
+    async findHostById(id: Types.ObjectId, projection?: any): Promise<IHostResponse | string> {
         try {
-            const findHost = await Host.findById(id);
+            const findHost = await this.findById(id, projection) as IHostResponse | null;
             if (!findHost) {
                 return "No host"
             }
@@ -300,27 +281,7 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
         }
     }
 
-    // async createWallet(email: string): Promise<string> {
-    //     try {
-    //         const findHost = await Host.findOne({ email: email })
-    //         if (!findHost) {
-    //             return "Host not found"
-    //         }
-    //         const creatingWallet = new Wallet({
-    //             userOrHostId: findHost._id
-    //         })
-    //         await creatingWallet.save()
 
-    //         findHost.wallet_id = creatingWallet._id as mongoose.Types.ObjectId;
-    //         findHost.tempExpires = undefined;
-    //         findHost.temp = false;
-    //         await findHost.save();
-    //         return 'success'
-    //     } catch (error) {
-    //         console.log(error)
-    //         return error as string
-    //     }
-    // }
 
     async getAllCategory(): Promise<ICategory[] | string> {
         try {
@@ -346,40 +307,26 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
                 }
             )
             if (updateHost) {
-                return "Documnent Updated"
+                return Messages.DocumentUpdated;
             }
-            return "Document Not Updated"
+            return Messages.DocumentNotUpdated;
         } catch (error) {
             return error as string
         }
     }
 
-    async findHostWallet(id: string): Promise<IWallet | string | null> {
-        try {
-            const hostId = new mongoose.Types.ObjectId(id)
-            const hostWallet = await Wallet.aggregate([
-                { $match: { userOrHostId: hostId } }
-            ])
-            if (!hostWallet) {
-                return "No Wallet"
-            }
-            return hostWallet[0]
-        } catch (error) {
-            return error as string
-        }
-    }
 
     async changePassword(hostData: { hostId: Types.ObjectId; currentPassword: string; newPassword: string }): Promise<string> {
         try {
             const findHost = await Host.findOne({ _id: hostData.hostId })
             if (!findHost) {
-                return "No Host"
+                return Messages.NoHosts;
             }
             const checkPassword = await bcrypt.compare(hostData.currentPassword, findHost.password)
             if (checkPassword) {
                 const samePassword = await bcrypt.compare(hostData.newPassword, findHost.password)
                 if (samePassword) {
-                    return "New Password Cannot be Same as Current Password"
+                    return Messages.NewPasswordCannotbeSame;
                 } else {
                     const hashedPassword = await bcrypt.hash(hostData.newPassword, 10);
                     await Host.updateOne(
@@ -389,10 +336,10 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
                                 { password: hashedPassword }
                         }
                     )
-                    return "Password Changed"
+                    return Messages.PasswordChanged;
                 }
             } else {
-                return "Current Password does not match"
+                return Messages.CurrentPasswordDoesNotMatch;
             }
         } catch (error) {
             return error as string
@@ -411,9 +358,9 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
                 }
             )
             if (updatingHostDetails.matchedCount == 1) {
-                return "Host details updated"
+                return Messages.HostDetailsUpdated;
             } else {
-                return "Not updated"
+                return Messages.NotUpdated;
             }
         } catch (error) {
             return error as string
@@ -429,18 +376,9 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
         }
     }
 
-    async getAdmin(): Promise<IUser | string | null> {
+    async allHost(): Promise<IHostResponse[] | string | null> {
         try {
-            const admin = await User.findOne({ isAdmin: true })
-            return admin;
-        } catch (error) {
-            return error as string
-        }
-    }
-
-    async allHost(): Promise<IHost[] | string | null> {
-        try {
-            const getHost = await Host.find();
+            const getHost = await Host.find().lean<IHostResponse[]>();
             return getHost;
         } catch (error) {
             return error as string
@@ -467,6 +405,141 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
         } catch (error) {
             console.log(error);
             return null;
+        }
+    }
+
+    async approveHost(hostId: mongoose.Types.ObjectId): Promise<string> {
+        try {
+            const result = await Host.findByIdAndUpdate(
+                { _id: hostId },
+                { $set: { approvalRequest: 3 } },
+                { new: true }
+            )
+            if (result) {
+                return Messages.Approved;
+            } else {
+                return Messages.NotApproved;
+            }
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async searchHost(name: string): Promise<IHostResponse[] | string | null> {
+        try {
+            const hosts = await Host.find({
+                name: { $regex: `^${name}`, $options: 'i' }
+            }).lean<IHostResponse[]>()
+            return hosts
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getHostHostelData(hostId: string): Promise<IUpdateHostelInput[] | string | null> {
+        try {
+            const findHostHostel = await Hostel.find({ host_id: hostId }).lean<IUpdateHostelInput[]>();
+            return findHostHostel;
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getHostDetails(userId: string): Promise<string | IHostResponse | null> {
+        try {
+            const projection = {
+                _id: 1,
+                name: 1,
+                mobile: 1,
+                isAdmin: 1,
+                isBlock: 1,
+                email: 1,
+                approvalRequest: 1,
+                photo: 1,
+                documentType: 1
+            }
+            const getUserData = await Host.findOne({ _id: userId }, projection).lean<IHostResponse>();
+            return getUserData;
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async rejectHost(hostId: mongoose.Types.ObjectId): Promise<string> {
+        try {
+            const result = await Host.findByIdAndUpdate(
+                { _id: hostId },
+                { $set: { approvalRequest: 1 } },
+                { new: true }
+            )
+            if (result) {
+                return Messages.Reject
+            }
+            return Messages.NotReject
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async hostDelete(hostId: Types.ObjectId): Promise<string> {
+        try {
+            await Host.findByIdAndDelete(hostId);
+            return Messages.HostDeleted
+        } catch (error) {
+            console.log(error);
+            return error as string;
+        }
+    }
+
+    async hostBlock(hostId: Types.ObjectId): Promise<string> {
+        try {
+            await Host.updateOne(
+                { _id: hostId },
+                { $set: { isBlock: true } }
+            )
+            return Messages.Blocked
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async hostUnBlock(hostId: Types.ObjectId): Promise<string> {
+        try {
+            await Host.updateOne(
+                { _id: hostId },
+                { $set: { isBlock: false } }
+            )
+            return Messages.Unblocked
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async getHostels(): Promise<IHostel[] | string | null> {
+        try {
+            const findHostel = await Hostel.find().populate('host_id');
+            if (findHostel.length == 0) {
+                return Messages.NotHostel
+            }
+            return findHostel
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async createGoogleAuth(data: { email: string, name: string, userType: string, mobile: string }): Promise<string> {
+        try {
+            const createHost = new Host({
+                email: data.email,
+                name: data.name,
+                hostType: data.userType,
+                mobile: data.mobile,
+                tempExpires: null,
+            })
+            await createHost.save()
+            return (createHost._id as Types.ObjectId).toString();
+        } catch (error) {
+            return error as string
         }
     }
 }

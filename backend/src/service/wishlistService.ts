@@ -5,20 +5,20 @@ import { IWishlist } from "../model/wishlistModel";
 
 
 class WishlistService implements IWishlistService{
-    constructor(private wishlistRepository:IWishlistRepository){ }
-
+    constructor(private _wishlistRepository:IWishlistRepository){ }
+  
     async addToWishlist(id: string, userId: string): Promise<string> {
         try {
-            const response = await this.wishlistRepository.addToWishlist(id, userId);
+            const response = await this._wishlistRepository.addToWishlist(id, userId);
             return response
         } catch (error) {
             return error as string
         }
     }
-
+ 
     async removeFromWishlist(hostelId: string, userId: string): Promise<string> {
         try {
-            const response = await this.wishlistRepository.removeFromWishlist(hostelId, userId)
+            const response = await this._wishlistRepository.removeFromWishlist(hostelId, userId)
             return response
         } catch (error) {
             return error as string
@@ -27,7 +27,7 @@ class WishlistService implements IWishlistService{
 
     async checkWishlist(userId: string, hostelId: string): Promise<string> {
         try {
-            const response = await this.wishlistRepository.checkWishlist(userId, hostelId);
+            const response = await this._wishlistRepository.checkWishlist(userId, hostelId);
             return response
         } catch (error) {
             return error as string
@@ -36,7 +36,7 @@ class WishlistService implements IWishlistService{
 
     async getWishlist(userId: string): Promise<string | IWishlist[]> {
         try {
-            const response = await this.wishlistRepository.getWishlist(userId);
+            const response = await this._wishlistRepository.getWishlist(userId);
             return response
         } catch (error) {
             return error as string
@@ -45,7 +45,7 @@ class WishlistService implements IWishlistService{
 
     async deleteWishlist(userId: string): Promise<string> {
         try {
-            const response = await this.wishlistRepository.deleteWishlist(userId)
+            const response = await this._wishlistRepository.deleteWishlist(userId)
             return response
         } catch (error) {
             return error as string

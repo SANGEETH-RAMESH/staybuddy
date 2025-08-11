@@ -10,7 +10,7 @@ import { FacilityBadgeProps } from '../../../interface/FacilityBadgeProps';
 import { FilterState } from '../../../interface/FilterState';
 import { PaginationProps } from '../../../interface/PaginationProps';
 import { Facilities } from '../../../interface/Facilities';
-import FilterComponent from '../../commonComponents/FilterComponent';
+import FilterComponent from '../../commonComponents/filterComponent';
 
 interface HostelCardProps {
   hostel: Hostel;
@@ -419,7 +419,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
         <div className="flex items-center space-x-4 mb-4 text-sm text-gray-600">
           <div className="flex items-center">
             <Users size={16} className="mr-1" />
-            <span>{hostel.isFull?"Rooms Not Available":'Rooms Available'} </span>
+            <span>{hostel.isFull ? "Rooms Not Available" : 'Rooms Available'} </span>
           </div>
           <div className="flex items-center">
             <Phone size={16} className="mr-1" />
@@ -624,7 +624,8 @@ const HostelCardGrid: React.FC = () => {
               `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}&accept-language=en`
             );
             const data = await res.json();
-            const address = data.dispaly_name || 'Current location';
+            console.log(data, 'Deee')
+            const address = data.display_name || 'Current location';
             setSelectedLocation(address);
           } catch (error) {
             console.log(error);
@@ -815,7 +816,7 @@ const HostelCardGrid: React.FC = () => {
       }
 
       const response = await getHostels(params)
-      
+
       const data = response.data.response;
       console.log(data, 'dataaaaa')
 
@@ -823,7 +824,7 @@ const HostelCardGrid: React.FC = () => {
       const hostelData = data.hostels;
       const total = data.totalCount;
       const pages = Math.ceil(total / limit);
-      console.log(hostelData[3],'Hiltop')
+      console.log(hostelData[3], 'Hiltop')
       const formattedHostels = hostelData.map((item: Hostel) => {
         const facilitiesArray: string[] = Array.isArray(item.facilities)
           ? item.facilities.map((f: string) => f.trim().toLowerCase())
@@ -850,7 +851,7 @@ const HostelCardGrid: React.FC = () => {
           latitude: item.latitude,
           longitude: item.longitude,
           cancellationPolicy: item.cancellationPolicy,
-          isFull:item.isFull
+          isFull: item.isFull
         };
       });
 

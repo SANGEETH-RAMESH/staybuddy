@@ -1,37 +1,30 @@
 import { Types } from "mongoose";
 import { IOrderRepository } from "../interface/order/!OrderRepository";
 import { IOrderService } from "../interface/order/!OrderService";
-import { IOrder } from "../model/orderModel";
-// import Wallet from "../model/walletModel";
 import { ObjectId } from "mongodb";
-import { IReview } from "../model/reviewModel";
+import { Messages } from "../messages/messages";
+import { IWalletRepository } from "../interface/wallet/!WalletRepository";
+import { IOrderResponse } from "../dtos/OrderResponse";
+import { reviewData } from "../dtos/ReviewData";
 
-
-interface reviewData {
-    orderId: string,
-    rating: number,
-    review: string,
-    hostelId: string,
-    userId: string
-}
 
 
 
 class OrderService implements IOrderService {
-    constructor(private orderRepository: IOrderRepository) { }
+    constructor(private _orderRepository: IOrderRepository,private _walletRepository:IWalletRepository) { }
 
 
-    async userBookings(orderData: IOrder): Promise<string> {
+    async userBookings(orderData: IOrderResponse): Promise<string> {
         try {
             const foodRate = orderData.foodRate ?? 0;
             const amount = orderData.totalDepositAmount + orderData.totalRentAmount + foodRate;
-            const response = await this.orderRepository.orderBookings(orderData);
-            await this.orderRepository.creditUserWallet(orderData.host_id, amount)
+            const response = await this._orderRepository.orderBookings(orderData);
+            await this._walletRepository.creditHostWallet(orderData.host_id, amount)
             if (orderData.paymentMethod == 'wallet') {
                 // const foodRate = orderData.foodRate?orderData.foodRate : 0;
                 // const amount = orderData.totalDepositAmount + orderData.totalRentAmount + foodRate
                 const id = new ObjectId(orderData.userId)
-                await this.orderRepository.debitUserWallet(id, amount);
+                await this._walletRepository.debitUserWallet(id, amount);
 
                 return response
             }
@@ -41,9 +34,9 @@ class OrderService implements IOrderService {
         }
     }
 
-    async getOrderDetails(id: Types.ObjectId): Promise<IOrder | string | null> {
+    async getOrderDetails(id: Types.ObjectId): Promise<IOrderResponse | string | null> {
         try {
-            const response = await this.orderRepository.getOrderDetails(id);
+            const response = await this._orderRepository.getOrderDetails(id);
             return response
         } catch (error) {
             return error as string
@@ -52,29 +45,30 @@ class OrderService implements IOrderService {
 
     async endBooking(data: { orderId: Types.ObjectId, userId: Types.ObjectId, cancellationStatus: string }): Promise<string> {
         try {
-            const response = await this.orderRepository.getOrderDetails(data.orderId);
+            const response = await this._orderRepository.getOrderDetails(data.orderId);
             if (!response || typeof response === "string") {
-                return "No order"
+                return Messages.NoOrder;
             }
             const hostId = response.host_id._id
             const amount = response?.totalDepositAmount
-            const updateStatusOrder = await this.orderRepository.updatingOrderStatus(data.orderId)
-            let userWalletCredit: string = "skipped";
-            let hostWalletDebit: string = "skipped";
-            if (data.cancellationStatus == 'available') {
-                userWalletCredit = await this.orderRepository.creditUserWallet(data?.userId, amount)
-                hostWalletDebit = await this.orderRepository.debitHostWallet(hostId, amount)
+            const updateStatusOrder = await this._orderRepository.updatingOrderStatus(data.orderId)
+            let userWalletCredit: string = Messages.Skipped;
+            let hostWalletDebit: string = Messages.Skipped;
+            userWalletCredit = await this._walletRepository.creditUserWallet(data?.userId, data.orderId, data.cancellationStatus)
 
-                if (userWalletCredit !== 'Wallet updated successfully' || hostWalletDebit !== 'Wallet updated successfully') {
-                    return "Wallet update failed";
+            if (data.cancellationStatus == Messages.Available) {
+                hostWalletDebit = await this._walletRepository.debitHostWallet(hostId, amount)
+
+                if (userWalletCredit !== Messages.WalletUpdatedSuccessfully || hostWalletDebit !== Messages.WalletUpdatedSuccessfully) {
+                    return Messages.WalletUpdateFailed;
                 }
             }
 
             const beds = response.selectedBeds;
 
             const hostelId = (response.hostel_id as any).toString();
-            await this.orderRepository.updateRoom(hostelId, beds)
-            return 'Updated'
+            await this._orderRepository.updateRoom(hostelId, beds)
+            return Messages.Updated
         } catch (error) {
             console.log(error)
             return error as string
@@ -83,7 +77,7 @@ class OrderService implements IOrderService {
 
     async createReview(data: reviewData): Promise<string> {
         try {
-            const response = await this.orderRepository.createReview(data);
+            const response = await this._orderRepository.createReview(data);
             return response
         } catch (error) {
             console.log(error);
@@ -91,9 +85,9 @@ class OrderService implements IOrderService {
         }
     }
 
-    async getReviewDetails(orderId: Types.ObjectId): Promise<IReview[] | string | null> {
+    async getReviewDetails(orderId: Types.ObjectId): Promise<reviewData[] | string | null> {
         try {
-            const response = await this.orderRepository.getReviewDetails(orderId);
+            const response = await this._orderRepository.getReviewDetails(orderId);
             return response
         } catch (error) {
             console.log(error)
@@ -101,9 +95,9 @@ class OrderService implements IOrderService {
         }
     }
 
-    async getReviewDetailsByOrderId(orderId: Types.ObjectId): Promise<IReview | string | null> {
+    async getReviewDetailsByOrderId(orderId: Types.ObjectId): Promise<reviewData | string | null> {
         try {
-            const response = await this.orderRepository.getReviewDetailsByOrderId(orderId);
+            const response = await this._orderRepository.getReviewDetailsByOrderId(orderId);
             return response
         } catch (error) {
             console.log(error)
@@ -111,30 +105,57 @@ class OrderService implements IOrderService {
         }
     }
 
-    async getSavedBookings(id: Types.ObjectId, skip: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null> {
+    async getSavedBookings(id: Types.ObjectId, skip: string, limit: string): Promise<{ bookings: IOrderResponse[]; totalCount: number } | string | null> {
         try {
-            const response = await this.orderRepository.getSavedBookings(id, skip, limit);
+            const response = await this._orderRepository.getSavedBookings(id, skip, limit);
             return response
         } catch (error) {
             return error as string;
         }
     }
 
-    async getBookings(hostId: string, skip: string, limit: string): Promise<{ bookings: IOrder[]; totalCount: number } | string | null> {
+    async getBookings(hostId: string, skip: string, limit: string): Promise<{ bookings: IOrderResponse[]; totalCount: number } | string | null> {
         try {
-            const response = await this.orderRepository.getBookings(hostId, skip, limit)
+            const response = await this._orderRepository.getBookings(hostId, skip, limit)
             return response
         } catch (error) {
             return error as string
         }
     }
 
-    async getBookingByOrder(hostelId: string): Promise<IOrder[] | string> {
+    async getBookingByOrder(hostelId: string): Promise<IOrderResponse[] | string> {
         try {
-            const response = await this.orderRepository.getBookingByOrder(hostelId);
+            const response = await this._orderRepository.getBookingByOrder(hostelId);
             return response;
         } catch (error) {
             return error as string
+        }
+    }
+
+    async verifyPayment(bookingId: string): Promise<string> {
+        try {
+            const response = await this._orderRepository.verifyPayment(bookingId);
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async paymentFailed(bookingId: string): Promise<string> {
+        try {
+            const response = await this._orderRepository.paymentFailed(bookingId);
+            return response
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async repaymentSuccess(id: string): Promise<string> {
+        try {
+            const response = await this._orderRepository.repaymentSuccess(id);
+            return response;
+        } catch (error) { 
+            return error as string;
         }
     }
 }

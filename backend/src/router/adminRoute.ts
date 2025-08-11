@@ -2,18 +2,20 @@ import {Router} from 'express'
 import AdminRepository from '../respository/adminRepository';
 import AdminService from '../service/adminService';
 import AdminController from '../controller/adminController';
-// import hostController from '../controller/hostController';
 import adminAuthMiddleware from '../middleware/adminAuth';
-import upload from '../cloudinary/multer'
 import UserRepository from '../respository/userRepository';
 import HostRepository from '../respository/hostRepository';
+import HostelRepository from '../respository/hostelRepository';
+import OrderRepository from '../respository/orderRepository';
 const admin_route = Router();
 
 
 const adminRespository = new AdminRepository();
-const userRepository = new UserRepository()
-const hostRepository = new HostRepository()
-const adminService = new AdminService(adminRespository,userRepository,hostRepository); 
+const userRepository = new UserRepository();
+const hostRepository = new HostRepository();
+const hostelRepository = new HostelRepository();
+const orderRepository = new OrderRepository();
+const adminService = new AdminService(adminRespository,userRepository,hostRepository,hostelRepository,orderRepository); 
 const adminController = new AdminController(adminService)
 
 admin_route.post('/login',adminController.adminLogin.bind(adminController))
@@ -41,14 +43,6 @@ admin_route.get('/hosts/search',adminAuthMiddleware,adminController.searchHost.b
 admin_route.get('/hostels',adminAuthMiddleware,adminController.getAllHostels.bind(adminController))
 admin_route.get('/hostels/search',adminAuthMiddleware,adminController.searchHostel.bind(adminController))
 admin_route.delete('/hostels/:id',adminAuthMiddleware,adminController.deleteHostel.bind(adminController))
-
-
-admin_route.post('/categories',adminAuthMiddleware,upload.single('photos'),adminController.addCategory.bind(adminController))
-admin_route.get('/categories',adminAuthMiddleware,adminController.getAllCategory.bind(adminController))
-admin_route.get('/categories/:id',adminAuthMiddleware,adminController.getCategory.bind(adminController))
-admin_route.put('/categories/:id',adminAuthMiddleware,adminController.updateCategory.bind(adminController))
-admin_route.delete('/categories/:id',adminAuthMiddleware,adminController.deleteCategory.bind(adminController))
-admin_route.get('/categories/search',adminAuthMiddleware,adminController.searchCategory.bind(adminController))
 
 
 admin_route.get('/reviews/:hostelId',adminAuthMiddleware,adminController.getReviews.bind(adminController))

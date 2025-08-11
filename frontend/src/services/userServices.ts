@@ -138,12 +138,17 @@ export const createChat = (id: mongoose.Types.ObjectId | string) => userApiClien
 
 
 
-export const payment = (totalAmount: number) => userApiClient.post(`${apiUrl}/order/payment`, {
-  totalAmount: totalAmount * 100,
-  currency: 'INR',
-  receipt: `receipt_${Date.now()}`,
-  notes: {},
-});
+export const createOrder = (bookingDetails: BookingDetails) => userApiClient.post(`${apiUrl}/order/payment`, bookingDetails);
+
+export const payment = (totalAmount: number) => userApiClient.post(`${apiUrl}/wallet/payment`, {totalAmount});
+
+export const repayment = (amount:number) => userApiClient.post(`${apiUrl}/order/payment/repay`,{amount})
+
+export const repaymentSuccess = (id:string) => userApiClient.post(`${apiUrl}/order/payment/repaymentSuccess`,{id})
+
+export const verifyPayment = (bookingId:string) => userApiClient.post(`${apiUrl}/order/payment/verify`,{bookingId})
+
+export const paymentFailed = (bookingId:string) => userApiClient.post(`${apiUrl}/order/payment/failed`,{bookingId})
 
 export const forgotPassword = ({ email }: { email: string }) => axios.post(`${apiUrl}/user/auth/forgot-password`, { email });
 

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import AdminHeader from '../../components/commonComponents/adminHeader'
 import AdminSidebar from '../../components/commonComponents/adminSidebar';
 import { Menu, X } from 'lucide-react';
-import HostelListings from '../../components/adminComponent/Hostel/HostelListingBody'
+import HostelListings from '../../components/adminComponent/Hostel/hostelListingBody'
 
 const AdminHostelListingsPage = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);

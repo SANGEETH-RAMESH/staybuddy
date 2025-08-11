@@ -1,17 +1,17 @@
 import { Types } from "mongoose"
 import { IChatRepository } from "../interface/chat/IChatRepository"
-import { IChat } from "../model/chatModel"
 import { IChatService } from "../interface/chat/IChatService"
-import { IMessage } from "../model/messageModel"
 import uploadImage from "../cloudinary/cloudinary"
+import { IMessageResponse } from "../dtos/MessageResponse"
+import { IChatResponse } from "../dtos/ChatResponse"
 
 
 class chatService implements IChatService {
-    constructor(private chatRepository: IChatRepository) { }
+    constructor(private _chatRepository: IChatRepository) { }
 
-    async createChat(userId: Types.ObjectId, ownerId: Types.ObjectId): Promise<IChat | string> {
+    async createChat(userId: Types.ObjectId, ownerId: Types.ObjectId): Promise<IChatResponse | string> {
         try {
-            const response = await this.chatRepository.createChat(userId, ownerId)
+            const response = await this._chatRepository.createChat(userId, ownerId)
             return response
         } catch (error) {
             console.log(error)
@@ -19,9 +19,9 @@ class chatService implements IChatService {
         }
     }
 
-    async getChat(userId: Types.ObjectId, ownerId: Types.ObjectId): Promise<IChat[] | string> {
+    async getChat(userId: Types.ObjectId, ownerId: Types.ObjectId): Promise<IChatResponse[] | string> {
         try {
-            const response = await this.chatRepository.getChat(userId, ownerId)
+            const response = await this._chatRepository.getChat(userId, ownerId)
             return response
         } catch (error) {
             console.log(error)
@@ -33,7 +33,7 @@ class chatService implements IChatService {
         senderId: string, receiverId: string, message: string, timestamp: number;
         type: 'text' | 'image' | 'document';
         fileUrl?: string;
-    }): Promise<{ savedMessage: IMessage; readCount: number } | string> {
+    }): Promise<{ savedMessage: IMessageResponse; readCount: number } | string> {
         try {
             if (messageData.type !== 'text') {
                 const base64Data = messageData.message.split(',')[1];
@@ -41,7 +41,7 @@ class chatService implements IChatService {
                 const uploadedUrl = await uploadImage(fileBuffer);
                 messageData.message = uploadedUrl;
             }
-            const savedMessage = await this.chatRepository.saveMessage(messageData)
+            const savedMessage = await this._chatRepository.saveMessage(messageData)
             return savedMessage
         } catch (error) {
             console.log(error)
@@ -49,18 +49,18 @@ class chatService implements IChatService {
         }
     }
 
-    async getOldChat(chatId: string): Promise<IMessage[] | null | string> {
+    async getOldChat(chatId: string): Promise<IMessageResponse[] | null | string> {
         try {
-            const getChatHistory = await this.chatRepository.getHistory(chatId)
+            const getChatHistory = await this._chatRepository.getHistory(chatId)
             return getChatHistory
         } catch (error) {
             return error as string
         }
     }
 
-    async getHostChat(hostId: string): Promise<IChat[] | string> {
+    async getHostChat(hostId: string): Promise<IChatResponse[] | string> {
         try {
-            const response = await this.chatRepository.getHostChat(hostId)
+            const response = await this._chatRepository.getHostChat(hostId)
             return response
 
         } catch (error) {
@@ -68,9 +68,9 @@ class chatService implements IChatService {
         }
     }
 
-    async getUserChats(userId: string): Promise<IChat[] | string> {
+    async getUserChats(userId: string): Promise<IChatResponse[] | string> {
         try {
-            const response = await this.chatRepository.getUserChats(userId);
+            const response = await this._chatRepository.getUserChats(userId);
             return response
         } catch (error) {
             return error as string
@@ -79,7 +79,7 @@ class chatService implements IChatService {
 
     async createHostChat(hostId: string, userId: string): Promise<string> {
         try {
-            const response = await this.chatRepository.createHostChat(hostId, userId);
+            const response = await this._chatRepository.createHostChat(hostId, userId);
             return response
         } catch (error) {
             return error as string;
@@ -88,7 +88,7 @@ class chatService implements IChatService {
 
     async setCountRead(chatId: string): Promise<string> {
         try {
-            const response = await this.chatRepository.setCountRead(chatId);
+            const response = await this._chatRepository.setCountRead(chatId);
             return response
         } catch (error) {
             return error as string
