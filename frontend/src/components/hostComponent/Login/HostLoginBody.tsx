@@ -6,7 +6,6 @@ import { loginSuccess } from '../../../redux/hostAuthSlice';
 import { LoginValues } from '../../../interface/Login';
 import { useState } from 'react';
 import { googleLogin, loginUrl } from '../../../services/hostServices';
-const apiUrl = import.meta.env.VITE_BACKEND_URL;
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google"
 
 const HostLoginBody = () => {
