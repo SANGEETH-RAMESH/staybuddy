@@ -99,27 +99,27 @@ const HostelListings = () => {
   };
 
 
-  const fetchHostelReviews = async (hostelId: string) => {
-    try {
-      setIsLoadingReviews(true);
-      const response = await getReviews(hostelId);
-      const reviews = response.data.message;
-      const result = reviews.map((review: Review) => ({
-        userId: review.userId,
-        hostelId: review.hostelId,
-        rating: review.rating,
-        review: review.review,
-        createdAt: review.createdAt
-      }));
-      setHostelReviews(result)
-      setIsLoadingReviews(false);
-    } catch (error) {
-      console.error('Error fetching hostel reviews:', error);
-      toast.error('Failed to fetch reviews');
-      setHostelReviews([]);
-      setIsLoadingReviews(false);
-    }
-  };
+  // const fetchHostelReviews = async (hostelId: string) => {
+  //   try {
+  //     setIsLoadingReviews(true);
+  //     const response = await getReviews(hostelId);
+  //     const reviews = response.data.message;
+  //     const result = reviews.map((review: Review) => ({
+  //       userId: review.userId,
+  //       hostelId: review.hostelId,
+  //       rating: review.rating,
+  //       review: review.review,
+  //       createdAt: review.createdAt
+  //     }));
+  //     setHostelReviews(result)
+  //     setIsLoadingReviews(false);
+  //   } catch (error) {
+  //     console.error('Error fetching hostel reviews:', error);
+  //     toast.error('Failed to fetch reviews');
+  //     setHostelReviews([]);
+  //     setIsLoadingReviews(false);
+  //   }
+  // };
 
   // const handleViewReviews = async (hostel: Hostel) => {
   //   setSelectedHostel(hostel);
