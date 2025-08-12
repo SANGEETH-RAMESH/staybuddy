@@ -15,7 +15,7 @@ import { toast } from 'react-toastify';
 import { Review } from '../../../types/Review';
 import { Hostel } from '../../../types/Hostel';
 import { HostelData } from '../../../types/Order';
-import { deleteHostel, getHostel, getReviews, searchHostel } from '../../../services/adminServices';
+import { deleteHostel, getHostel, searchHostel } from '../../../services/adminServices';
 
 
 
@@ -75,6 +75,7 @@ const HostelListings = () => {
       setTotalItems(totalCount)
       const totalPages = Math.ceil(totalCount / itemsPerPage);
       setTotalPages(totalPages)
+      setIsLoadingReviews(false)
       const data: Hostel[] = response.data.message.hostels.map((item: HostelData) => {
         return {
           id: item._id,
