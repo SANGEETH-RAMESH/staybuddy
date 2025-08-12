@@ -108,7 +108,7 @@ const ChatApplication: React.FC = () => {
 
   useEffect(() => {
     socket.emit("getOnlineHosts");
-
+    console.log(selectedFile)
     socket.on("onlineHosts", (hosts) => {
       console.log("Online hosts:", hosts);
       setOnlineHosts(hosts);

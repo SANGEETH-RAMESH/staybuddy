@@ -5,7 +5,6 @@ import {
   MapPin,
   User,
   Building,
-  Eye,
   X,
   Loader,
   ChevronLeft,
@@ -122,12 +121,11 @@ const HostelListings = () => {
     }
   };
 
-  // Updated function to handle eye button click
-  const handleViewReviews = async (hostel: Hostel) => {
-    setSelectedHostel(hostel);
-    setShowReviews(true);
-    await fetchHostelReviews(hostel.id);
-  };
+  // const handleViewReviews = async (hostel: Hostel) => {
+  //   setSelectedHostel(hostel);
+  //   setShowReviews(true);
+  //   await fetchHostelReviews(hostel.id);
+  // };
 
   const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {

@@ -46,6 +46,7 @@ const HostChatBody = () => {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      console.log(filePreview)
       setSelectedFile(file);
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
@@ -97,7 +98,7 @@ const HostChatBody = () => {
     });
 
     socket.on('incoming_call', ({ callerId, callerName, chatId }) => {
-      console.log('Incoming call from:', callerName,callerId);
+      console.log('Incoming call from:', callerName,callerId,chatId);
       // console.log(selectedChat,selectedChat?._id,chatId)
      
         setIsCallActive(true);
