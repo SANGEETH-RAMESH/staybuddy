@@ -120,6 +120,7 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
             } else if (typeof hostelData.facilities === 'string') {
                 facilities = hostelData.facilities.split(',').map((f: string) => f.trim().toLowerCase());
             }
+            console.log(hostelData,'Hostelllllll')
             const addingHostelData = Object.assign(
                 {
                     hostelname: hostelData.hostelname,

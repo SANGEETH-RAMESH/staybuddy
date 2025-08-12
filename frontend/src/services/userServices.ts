@@ -123,12 +123,12 @@ export const withdrew = (amount: number) => userApiClient.post(`${apiUrl}/wallet
 
 
 
-export const getChat = (id: mongoose.Types.ObjectId | string) => userApiClient.get(`${apiUrl}/chat/getChat`, {
+export const getChat = (id: mongoose.Types.ObjectId | string) => userApiClient.get(`${apiUrl}/chat/`, {
   params: { id },
   headers: { Authorization: `Bearer` },
 });
 
-export const createChat = (id: mongoose.Types.ObjectId | string) => userApiClient.post(`${apiUrl}/chat/createchat`, {
+export const createChat = (id: mongoose.Types.ObjectId | string) => userApiClient.post(`${apiUrl}/chat/`, {
   ownerId: id
 }, {
   headers: { Authorization: `Bearer` }

@@ -402,75 +402,8 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
   );
 };
 
-const HostelCardGrid: React.FC = () => {
-  const [hostels, setHostels] = useState<Hostel[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
-  const [totalCount, setTotalCount] = useState<number>(0);
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [isSearching, setIsSearching] = useState<boolean>(false);
 
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [hostelToDelete, setHostelToDelete] = useState<string | null>(null);
-  const [hostelNameToDelete, setHostelNameToDelete] = useState<string>('');
-  const [isDeleting, setIsDeleting] = useState(false);
-
-
-  const useDebounce = (value: string, delay: number) => {
-    const [debouncedValue, setDebouncedValue] = useState(value);
-
-    useEffect(() => {
-      const handler = setTimeout(() => {
-        setDebouncedValue(value);
-      }, delay);
-
-
-      return () => {
-        clearTimeout(handler);
-      };
-    }, [value, delay]);
-
-    return debouncedValue;
-  };
-
-
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
-
-  useEffect(() => {
-    if (debouncedSearchTerm !== searchTerm) return;
-
-    if (debouncedSearchTerm.length === 0 || debouncedSearchTerm.length >= 2) {
-      setCurrentPage(1);
-      fetchHostels(1, ITEMS_PER_PAGE, debouncedSearchTerm);
-    }
-  }, [debouncedSearchTerm]);
-
-  const handleDeleteClick = async(hostel: Hostel) => {
-    setHostelToDelete(hostel.id);
-    setHostelNameToDelete(hostel.name);
-    setIsDeleteModalOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (hostelToDelete) {
-      try {
-        await handleDeleteHostel(hostelToDelete);
-        handleCloseModal();
-      } catch (error) {
-        console.error('Error deleting hostel:', error);
-        handleCloseModal();
-      }
-    }
-  };
-
-  const handleCloseModal = () => {
-    setIsDeleteModalOpen(false);
-    setHostelToDelete(null);
-    setHostelNameToDelete('');
-  };
-
-  const SearchBar: React.FC<SearchBarProps> = ({ searchTerm, onSearchChange, totalResults, isSearching }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ searchTerm, onSearchChange, totalResults, isSearching }) => {
     return (
       <div className="mb-4 flex justify-end">
         <div className="relative w-80"> 
@@ -515,7 +448,77 @@ const HostelCardGrid: React.FC = () => {
     );
   };
 
+const HostelCardGrid: React.FC = () => {
+  const [hostels, setHostels] = useState<Hostel[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [isSearching, setIsSearching] = useState<boolean>(false);
+
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [hostelToDelete, setHostelToDelete] = useState<string | null>(null);
+  const [hostelNameToDelete, setHostelNameToDelete] = useState<string>('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+
+  const useDebounce = (value: string, delay: number) => {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+
+
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+
+    return debouncedValue;
+  };
+
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  useEffect(() => {
+    if (debouncedSearchTerm !== searchTerm) return;
+    if (debouncedSearchTerm.length === 0 || debouncedSearchTerm.length >= 2) {
+      setCurrentPage(1);
+      fetchHostels(1, ITEMS_PER_PAGE, debouncedSearchTerm);
+    }
+  }, [debouncedSearchTerm]);
+
+  const handleDeleteClick = async(hostel: Hostel) => {
+    setHostelToDelete(hostel.id);
+    setHostelNameToDelete(hostel.name);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (hostelToDelete) {
+      try {
+        await handleDeleteHostel(hostelToDelete);
+        handleCloseModal();
+      } catch (error) {
+        console.error('Error deleting hostel:', error);
+        handleCloseModal();
+      }
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsDeleteModalOpen(false);
+    setHostelToDelete(null);
+    setHostelNameToDelete('');
+  };
+
+  
+
   const handleSearchChange = (value: string) => {
+    console.log("fldfsdf")
     setSearchTerm(value);
 
     setCurrentPage(1);
@@ -524,6 +527,7 @@ const HostelCardGrid: React.FC = () => {
 
   const fetchHostels = async (page: number = 1, limit: number = ITEMS_PER_PAGE, search: string = '') => {
     try {
+      console.log('1')
       setIsLoading(true);
       setIsSearching(search.length > 0);
 

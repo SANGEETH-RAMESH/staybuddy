@@ -16,24 +16,36 @@ const userRepository = new UserRepository();
 const hostService = new HostService(hostRepository,walletRepository,adminRepository,userRepository);
 const hostController = new HostController(hostService);
 
-host_route.post('/signup',hostController.signUp.bind(hostController))
-host_route.post('/verifyotp',hostController.verifyOtp.bind(hostController))
-host_route.post('/forgotpassword',hostController.forgotPassword.bind(hostController))
-host_route.post('/verifyforgotpasswordotp',hostController.verifyForgotPasswordOtp.bind(hostController))
-host_route.post('/resendotp',hostController.resendOtp.bind(hostController))
-host_route.post('/resetPassword',hostController.resetPassword.bind(hostController))
-host_route.post('/verifylogin',hostController.verifyLogin.bind(hostController))
-host_route.get('/getHost',hostAuthMiddleware,hostController.getHost.bind(hostController))
-host_route.get('/newHost',hostAuthMiddleware,hostController.newHost.bind(hostController))
-host_route.post('/approval',upload.single('file'),hostAuthMiddleware,hostController.requestApproval.bind(hostController))
-host_route.post('/token/refresh',hostController.validateRefreshToken.bind(hostController))
-host_route.get('/getAllCategory',hostController.getAllCategory.bind(hostController))
-host_route.patch('/changepassword',hostAuthMiddleware,hostController.changePassword.bind(hostController))
-host_route.patch('/editprofile',hostAuthMiddleware,hostController.editProfile.bind(hostController))
-host_route.get('/allUsers',hostAuthMiddleware,hostController.getAllUsers.bind(hostController))
-host_route.get('/getAdmin',hostAuthMiddleware,hostController.getAdmin.bind(hostController))
 
-host_route.post('/google/callback',hostController.createGoogleAuth.bind(hostController))
+
+host_route.post('/auth/signup',hostController.signUp.bind(hostController))
+host_route.post('/auth/verify-otp',hostController.verifyOtp.bind(hostController))
+host_route.post('/auth/resend-otp',hostController.resendOtp.bind(hostController))
+host_route.post('/auth/login',hostController.verifyLogin.bind(hostController))
+host_route.post('/auth/google',hostController.createGoogleAuth.bind(hostController))
+
+
+host_route.post('/password/forgot',hostController.forgotPassword.bind(hostController))
+host_route.post('/password/verify-otp',hostController.verifyForgotPasswordOtp.bind(hostController))
+host_route.post('/password/reset',hostController.resetPassword.bind(hostController))
+host_route.patch('/password/change',hostAuthMiddleware,hostController.changePassword.bind(hostController))
+
+
+host_route.post('/token/refresh',hostController.validateRefreshToken.bind(hostController))
+
+
+host_route.get('/',hostAuthMiddleware,hostController.getHost.bind(hostController))
+host_route.get('/new',hostAuthMiddleware,hostController.newHost.bind(hostController))
+host_route.patch('/',hostAuthMiddleware,hostController.editProfile.bind(hostController))
+
+
+host_route.post('/approval',upload.single('file'),hostAuthMiddleware,hostController.requestApproval.bind(hostController))
+
+
+host_route.get('/categories',hostController.getAllCategory.bind(hostController))
+host_route.get('/users',hostAuthMiddleware,hostController.getAllUsers.bind(hostController))
+host_route.get('/admin',hostAuthMiddleware,hostController.getAdmin.bind(hostController))
+
 
 
 

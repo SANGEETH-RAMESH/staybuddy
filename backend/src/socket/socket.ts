@@ -28,7 +28,8 @@ export const initializeSocket = (server: HttpServer, chatService: IChatService) 
 
   io.on("connection", (socket: Socket) => {
     // console.log(`User connected: ${socket.id}`);
-    // console.log("ONline", onlineUsers)
+    console.log("ONline", onlineUsers)
+    console.log('Host Online',onlineHosts)
 
     socket.on('userLoggedIn', (userId) => {
       onlineUsers.add(userId);

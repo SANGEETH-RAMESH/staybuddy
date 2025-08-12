@@ -33,6 +33,7 @@ const HostLandingBody = () => {
       if (accessToken) {
         const decoded = jwtDecode<CustomJwtPayload>(accessToken);
         const hostId = decoded._id
+        console.log(hostId,'dfdflsdfdf')
         if (hostId) {
           socket.emit('hostLoggedIn', hostId);
         }

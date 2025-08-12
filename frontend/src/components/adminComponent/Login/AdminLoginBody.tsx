@@ -35,8 +35,8 @@ const AdminLoginBody = () => {
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     try {
-      const res = await loginUrl({email:formValues.email,password:formValues.password})
-      console.log(res.data.data,'ljsfldsf')
+      const res = await loginUrl({ email: formValues.email, password: formValues.password })
+      console.log(res.data.data, 'ljsfldsf')
       if (res.data.data.message === 'Invalid password') {
         setErrors((prev) => ({
           ...prev,
@@ -51,7 +51,7 @@ const AdminLoginBody = () => {
         dispatch(loginSuccess({
           accessToken: res.data.data.accessToken,
           refreshToken: res.data.data.refreshToken,
-          role:res.data.data.role,
+          role: res.data.data.role,
           isLoggedIn: true
         }));
         toast.success('Login Successful', { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
@@ -61,8 +61,29 @@ const AdminLoginBody = () => {
       const axiosError = error as any;
       console.log(axiosError.response.data, 'hee')
       if (axiosError.response) {
-        const { message, errors } = axiosError.response.data;
-
+        console.log(axiosError.response.data)
+        const { message, errors } = axiosError.response.data.data;
+        console.log(message, 'dfdf')
+        if (message == 'Invalid password') {
+          console.log('sangee')
+          setErrors((prev) => ({
+            ...prev,
+            password: 'Invalid password'
+          }))
+          setTimeout(() => {
+            setErrors(prev => ({ ...prev, password: "" }));
+          }, 3000);
+          return;
+        } else if (message == "Admin not found") {
+          setErrors((prev) => ({
+            ...prev,
+            email: 'Invalid email'
+          }));
+          setTimeout(() => {
+            setErrors(prev => ({ ...prev, email: "" }));
+          }, 3000);
+          return;
+        }
         if (errors) {
           setErrors(errors);
 
@@ -87,7 +108,7 @@ const AdminLoginBody = () => {
       <div className="flex items-center gap-x-2  absolute top-[30px] left-[100px] text-4xl font-semibold text-[#45B8F2]">
         <img src={logo} alt="Logo" className="h-16 w-16" />
         <div>
-        <p className="text-3xl">StayBuddy</p>
+          <p className="text-3xl">StayBuddy</p>
         </div>
       </div>
       <div className="flex flex-col items-center justify-center space-y-6 p-8 border-2 rounded-lg shadow-lg w-full max-w-md border-[#45B8F2]">

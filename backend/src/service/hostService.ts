@@ -98,8 +98,10 @@ class hostService implements IHostService {
                 return Messages.InvalidOtp
             }
             const creatingHost = await this._hostRepository.createHost({ email: hostOtp.email })
+            console.log(creatingHost)
+            console.log(Messages.success,"Service")
             if (creatingHost == Messages.success) {
-                await this._walletRepository.createWallet(hostOtp?.email)
+                await this._walletRepository.createHostWallet(hostOtp?.email)
             }
             return creatingHost;
         } catch (error) {

@@ -41,10 +41,36 @@ const HostelListings = () => {
     fetchHostels(currentPage);
   }, [currentPage]);
 
+  function useDebounce(value:string, delay:number) {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+
+    return debouncedValue;
+  }
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+
+  useEffect(() => {
+    if (debouncedSearchTerm !== searchTerm) return;
+    if (debouncedSearchTerm.length === 0 || debouncedSearchTerm.length >= 2) {
+      setCurrentPage(1);
+      searchHostel(debouncedSearchTerm);
+    }
+  }, [debouncedSearchTerm]);
+
   const fetchHostels = async (page: number) => {
     try {
       setIsLoading(true);
-      const response = await getHostel(page,itemsPerPage)
+      const response = await getHostel(page, itemsPerPage)
       console.log(response.data.message, 'response');
       const totalCount = response.data.message.totalCount
       setTotalItems(totalCount)
@@ -83,7 +109,7 @@ const HostelListings = () => {
         userId: review.userId,
         hostelId: review.hostelId,
         rating: review.rating,
-        review: review.review, 
+        review: review.review,
         createdAt: review.createdAt
       }));
       setHostelReviews(result)
@@ -337,12 +363,7 @@ const HostelListings = () => {
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute top-3 right-3 flex gap-2">
-                      <button
-                        onClick={() => handleViewReviews(hostel)}
-                        className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-colors"
-                      >
-                        <Eye className="w-4 h-4 text-gray-700" />
-                      </button>
+
                       <button
                         onClick={() => confirmDelete(hostel.id)}
                         className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-red-50 transition-colors"

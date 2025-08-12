@@ -47,8 +47,6 @@ const HostChatBody = () => {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      console.log(filePreview)
-      // Create preview for images
       if (file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -100,7 +98,7 @@ const HostChatBody = () => {
 
     socket.on('incoming_call', ({ callerId, callerName, chatId }) => {
       console.log('Incoming call from:', callerName,callerId);
-      console.log(selectedChat,selectedChat?._id,chatId)
+      // console.log(selectedChat,selectedChat?._id,chatId)
      
         setIsCallActive(true);
         setIsCallInitiator(false);
@@ -127,7 +125,7 @@ const HostChatBody = () => {
       try {
         const payloadBase64 = token.split('.')[1];
         const decodedPayload = JSON.parse(atob(payloadBase64));
-        console.log(decodedPayload, "Decoded Payload");
+        // console.log(decodedPayload, "Decoded Payload");
         const id = decodedPayload._id
         setHostId(id)
       } catch (error) {
@@ -137,20 +135,20 @@ const HostChatBody = () => {
   }, [])
 
   const initiateVideoCall = () => {
-    console.log(selectedChat,'chhatttt')
+    // console.log(selectedChat,'chhatttt')
     if (!selectedChat || !onlineUser.includes(receiverId)) {
-      console.log(selectedChat, !onlineUser.includes(receiverId))
+      // console.log(selectedChat, !onlineUser.includes(receiverId))
       alert('User is not online for video call');
       return;
     }
 
-    console.log('Initiating video call to:', selectedChat.name);
+    // console.log('Initiating video call to:', selectedChat.name);
     setIsCallActive(true);
     setIsCallInitiator(true);
   };
 
   const handleEndCall = () => {
-    console.log(' Ending call');
+    // console.log(' Ending call');
     setIsCallActive(false);
     setIsCallInitiator(false);
   };
@@ -161,15 +159,12 @@ const HostChatBody = () => {
       console.log(selectedUser, 'Userr')
       if(!selectedChat?._id) return;
       const res = await getChat(selectedChat?._id);
-      console.log(res.data, "Response")
       if (res.data.message == 'Chat Created') {
         setShowAddChatModal(false)
         const id = hostId
-        console.log('Id', id)
         socket.emit('get_all_hostchats', id);
 
         socket.on('receive_all_hostchats', (chats) => {
-          console.log("Received all chats", chats)
           const setChatss = chats.map((chat: Chats) => {
 
             const formattedTime = chat.updatedAt
@@ -184,7 +179,6 @@ const HostChatBody = () => {
           })
           setChats(setChatss)
 
-          console.log(chats, 'Chattt')
           // setChats(chats)
         })
        
@@ -262,8 +256,6 @@ const HostChatBody = () => {
           const isMatched = chat._id === newMessage.savedMessage?.chatId;
           // console.log("Matched:", chat._id, selectedChat?._id);
           if (isMatched) {
-            console.log("Matched Chat:", chat._id, selectedChat?._id);
-            console.log(newMessage,'sangee')
             return {
               ...chat,
               latestMessage: newMessage.savedMessage.message,
@@ -272,16 +264,13 @@ const HostChatBody = () => {
               unreadCount:newMessage.readCount
             };
           } else {
-            console.log("Unchanged Chat:", chat);
             return chat;
           }
         });
 
-        console.log("All Updated Chats:", updatedChats);
         return updatedChats;
       });
 
-      console.log(chats, 'After')
 
       setTimeout(scrollToBottom, 100);
     });
@@ -343,10 +332,6 @@ const HostChatBody = () => {
         setIsUploading(false);
         return;
       }
-      console.log("Type", messageType)
-      console.log(newMessage, 'heeel')
-      console.log("Selected", selectedFile)
-      console.log("FileData", fileData)
       const message: Message = {
         chatId: selectedChat._id,
         senderId: hostId,

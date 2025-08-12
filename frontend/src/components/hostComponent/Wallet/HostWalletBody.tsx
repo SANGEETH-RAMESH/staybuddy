@@ -59,7 +59,7 @@ const WalletTracker = () => {
         setEmail(host.email)
         setName(host.name)
         setMobile(host.mobile)
-        console.log(response.data)
+        console.log(response.data,'Walletttt')
         setBalance(response.data.message?.balance);
       } catch (error) {
         console.log(error);

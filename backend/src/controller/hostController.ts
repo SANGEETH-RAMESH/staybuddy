@@ -20,8 +20,8 @@ class hostController {
     async signUp(req: Request, res: Response): Promise<void> {
         try {
             let validationErrors: Record<string, string> = {};
-
-            await signupValidation.validate(req.body.hostData, { abortEarly: false })
+            console.log(req.body,'Hoststtt')
+            await signupValidation.validate(req.body, { abortEarly: false })
                 .catch((error: ValidationError) => {
                     error.inner.forEach((err: ValidationError) => {
                         if (err.path) {
@@ -38,8 +38,7 @@ class hostController {
                 })
                 return
             }
-            const { hostData } = req.body
-            const response = await this._hostService.signUp(hostData);
+            const response = await this._hostService.signUp(req.body);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
@@ -214,6 +213,7 @@ class hostController {
 
     async getHost(req: Request, res: Response): Promise<void> {
         try {
+            console.log("Ooi")
             const host = req.customHost;
 
             if (!host?._id) {

@@ -42,7 +42,7 @@ export const blockHost = (hostId: string | mongoose.Types.ObjectId) => AdminApiC
 export const unblockHost = (hostId: string | mongoose.Types.ObjectId) => AdminApiClient.patch(`${apiUrl}/admin/hosts/${hostId}/unblock`);
 
 export const searchHost = (newSearchTerm: string) => AdminApiClient.get(
-    `${apiUrl}/admin/searchhost?name=${newSearchTerm}`
+    `${apiUrl}/admin/hosts/search?name=${newSearchTerm}`
 );
 
 export const fetchHost = (skip: number, limit: number) => AdminApiClient.get(

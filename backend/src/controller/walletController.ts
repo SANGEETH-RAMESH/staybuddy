@@ -49,6 +49,7 @@ class WalletController {
             }
             // const userId = (req.user as { _id: string })._id;
             const response = await this._walletService.getWalletDetails(id);
+            console.log(response,'ResponseWallet')
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });

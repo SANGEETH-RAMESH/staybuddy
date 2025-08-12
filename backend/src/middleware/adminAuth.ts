@@ -20,7 +20,6 @@ declare module "express-serve-static-core" {
 
 const adminAuthMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const token = req.header('Authorization')?.split(' ')[1];
-  console.log("TOkendfs",token)
   if (!token) {
     res.status(401).json({ message: "No token found" });
     return;

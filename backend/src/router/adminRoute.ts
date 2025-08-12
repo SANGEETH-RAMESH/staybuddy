@@ -30,6 +30,7 @@ admin_route.get('/users/search',adminAuthMiddleware,adminController.searchUser.b
 
 
 admin_route.get('/hosts',adminAuthMiddleware,adminController.getHost.bind(adminController));
+admin_route.get('/hosts/search',adminAuthMiddleware,adminController.searchHost.bind(adminController))
 admin_route.get('/hosts/:id',adminAuthMiddleware,adminController.getHostDetails.bind(adminController))
 admin_route.get('/hosts/:id/hostels',adminAuthMiddleware,adminController.getHostHostelData.bind(adminController))
 admin_route.patch('/hosts/:id/block',adminAuthMiddleware,adminController.hostBlock.bind(adminController));
@@ -37,7 +38,6 @@ admin_route.patch('/hosts/:id/unblock',adminAuthMiddleware,adminController.hostU
 admin_route.patch('/hosts/:id/approve',adminAuthMiddleware,adminController.approveHost.bind(adminController))
 admin_route.patch('/hosts/:id/reject',adminAuthMiddleware,adminController.rejectHost.bind(adminController))
 admin_route.delete('/hosts/:id',adminAuthMiddleware,adminController.hostDelete.bind(adminController))
-admin_route.get('/hosts/search',adminAuthMiddleware,adminController.searchHost.bind(adminController))
 
 
 admin_route.get('/hostels',adminAuthMiddleware,adminController.getAllHostels.bind(adminController))

@@ -11,9 +11,9 @@ const chatRepository = new ChatRepository();
 const chatService = new ChatService(chatRepository)
 const chatController = new ChatController(chatService)
 
-chat_route.post('/createchat', userAuthMiddleware, chatController.createChat.bind(chatController));
-chat_route.get('/getChat',userAuthMiddleware,chatController.getChat.bind(chatController))
-chat_route.get('/getHostChat',hostAuthMiddleware,chatController.getHostChat.bind(chatController))
-chat_route.post('/hostChat',hostAuthMiddleware,chatController.createHostChat.bind(chatController))
+chat_route.post('/', userAuthMiddleware, chatController.createChat.bind(chatController));
+chat_route.get('/',userAuthMiddleware,chatController.getChat.bind(chatController))
+chat_route.get('/host',hostAuthMiddleware,chatController.getHostChat.bind(chatController))
+chat_route.post('/host',hostAuthMiddleware,chatController.createHostChat.bind(chatController))
 
 export default chat_route

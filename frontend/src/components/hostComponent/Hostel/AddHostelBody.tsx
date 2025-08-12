@@ -13,7 +13,7 @@ const HostelForm = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [showMap, setShowMap] = useState<boolean>(false);
   const [formData, setFormData] = useState<{
-    name: string;
+    hostelname: string;
     location: string;
     phoneNumber: string;
     photos: File[];
@@ -22,11 +22,11 @@ const HostelForm = () => {
       laundry: boolean;
       food: boolean;
     };
-    bedsPerRoom: string;
+    beds: string;
     policies: string;
     category: string;
-    nearbyAccess: string;
-    advance: string;
+    nearbyaccess: string;
+    advanceamount: string;
     bedShareRate: string;
     foodRate: string;
     host_id: string;
@@ -34,7 +34,7 @@ const HostelForm = () => {
     longitude: number;
     cancellationPolicy: string;
   }>({
-    name: "",
+    hostelname: "",
     location: "",
     phoneNumber: "",
     photos: [],
@@ -43,11 +43,11 @@ const HostelForm = () => {
       laundry: false,
       food: false,
     },
-    bedsPerRoom: "",
+    beds: "",
     policies: "",
     category: "",
-    nearbyAccess: "",
-    advance: "",
+    nearbyaccess: "",
+    advanceamount: "",
     bedShareRate: "",
     foodRate: "",
     host_id: "",
@@ -57,15 +57,15 @@ const HostelForm = () => {
   });
 
   const [errors, setErrors] = useState<{
-    name: string;
+    hostelname: string;
     location: string;
     phoneNumber: string;
     photos: string;
-    bedsPerRoom: string;
+    beds: string;
     policies: string;
     category: string;
-    nearbyAccess: string;
-    advance: string;
+    nearbyaccess: string;
+    advanceamount: string;
     bedShareRate: string;
     foodRate: string;
     facilities: string;
@@ -73,15 +73,15 @@ const HostelForm = () => {
     longitude: string;
     cancellationPolicy: string;
   }>({
-    name: '',
+    hostelname: '',
     location: '',
     phoneNumber: '',
     photos: '',
-    bedsPerRoom: '',
+    beds: '',
     policies: '',
     category: '',
-    nearbyAccess: '',
-    advance: '',
+    nearbyaccess: '',
+    advanceamount: '',
     bedShareRate: '',
     foodRate: '',
     facilities: '',
@@ -97,16 +97,16 @@ const HostelForm = () => {
   };
 
   type FormDataType = {
-    name: string;
+    hostelname: string;
     location: string;
     phoneNumber: string;
     photos: File[];
     facilities: { wifi: boolean; laundry: boolean; food: boolean };
-    bedsPerRoom: string;
+    beds: string;
     policies: string;
     category: string;
-    nearbyAccess: string;
-    advance: string;
+    nearbyaccess: string;
+    advanceamount: string;
     bedShareRate: string;
     foodRate: string;
     cancellationPolicy: string;
@@ -144,11 +144,11 @@ const HostelForm = () => {
     let isValid = true;
     const newErrors = { ...errors };
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Property name is required';
+    if (!formData.hostelname.trim()) {
+      newErrors.hostelname = 'Property name is required';
       isValid = false;
-    } else if (formData.name.length < 3) {
-      newErrors.name = 'Property name must be at least 3 characters';
+    } else if (formData.hostelname.length < 3) {
+      newErrors.hostelname = 'Property name must be at least 3 characters';
       isValid = false;
     }
 
@@ -166,13 +166,13 @@ const HostelForm = () => {
       isValid = false;
     }
 
-    if (!formData.nearbyAccess.trim()) {
-      newErrors.nearbyAccess = 'Nearby access details are required';
+    if (!formData.nearbyaccess.trim()) {
+      newErrors.nearbyaccess = 'Nearby access details are required';
       isValid = false;
     }
 
-    if (!formData.bedsPerRoom) {
-      newErrors.bedsPerRoom = 'Please select number of beds per room';
+    if (!formData.beds) {
+      newErrors.beds = 'Please select number of beds per room';
       isValid = false;
     }
 
@@ -191,11 +191,11 @@ const HostelForm = () => {
       isValid = false;
     }
 
-    if (!formData.advance) {
-      newErrors.advance = 'Advance amount is required';
+    if (!formData.advanceamount) {
+      newErrors.advanceamount = 'Advance amount is required';
       isValid = false;
-    } else if (parseInt(formData.advance) <= 0) {
-      newErrors.advance = 'Advance amount must be greater than 0';
+    } else if (parseInt(formData.advanceamount) <= 0) {
+      newErrors.advanceamount = 'Advance amount must be greater than 0';
       isValid = false;
     }
 
@@ -335,7 +335,6 @@ const HostelForm = () => {
         }
       });
 
-      // Append facilities
       if (formData.facilities) {
         const facilitiesArray = Object.keys(formData.facilities).filter(
           (key) => formData.facilities[key as keyof typeof formData.facilities]
@@ -378,12 +377,12 @@ const HostelForm = () => {
           </div>
           <input
             id="name"
-            value={formData.name}
-            onChange={(e) => handleChange('name', e.target.value)}
+            value={formData.hostelname}
+            onChange={(e) => handleChange('hostelname', e.target.value)}
             placeholder="Enter property name"
-            className={`w-full px-3 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#31AFEF]`}
+            className={`w-full px-3 py-2 border ${errors.hostelname ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#31AFEF]`}
           />
-          {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+          {errors.hostelname && <p className="text-red-500 text-xs mt-1">{errors.hostelname}</p>}
         </div>
 
         <div className="w-full">
@@ -488,12 +487,12 @@ const HostelForm = () => {
           </div>
           <input
             id="nearbyAccess"
-            value={formData.nearbyAccess}
-            onChange={(e) => handleChange('nearbyAccess', e.target.value)}
+            value={formData.nearbyaccess}
+            onChange={(e) => handleChange('nearbyaccess', e.target.value)}
             placeholder="Enter nearby access details"
-            className={`w-full px-3 py-2 border ${errors.nearbyAccess ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#31AFEF]`}
+            className={`w-full px-3 py-2 border ${errors.nearbyaccess ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#31AFEF]`}
           />
-          {errors.nearbyAccess && <p className="text-red-500 text-xs mt-1">{errors.nearbyAccess}</p>}
+          {errors.nearbyaccess && <p className="text-red-500 text-xs mt-1">{errors.nearbyaccess}</p>}
         </div>
 
         <div className="w-full">
@@ -503,9 +502,9 @@ const HostelForm = () => {
           </div>
           <select
             id="bedsPerRoom"
-            value={formData.bedsPerRoom}
-            onChange={(e) => handleChange('bedsPerRoom', e.target.value)}
-            className={`w-full px-3 py-2 border ${errors.bedsPerRoom ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#31AFEF] bg-white`}
+            value={formData.beds}
+            onChange={(e) => handleChange('beds', e.target.value)}
+            className={`w-full px-3 py-2 border ${errors.beds ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#31AFEF] bg-white`}
           >
             <option value="">Select beds per room</option>
             <option value="1">1 Bed</option>
@@ -515,7 +514,7 @@ const HostelForm = () => {
             <option value="5">5 Bed</option>
             <option value="6">6 Bed</option>
           </select>
-          {errors.bedsPerRoom && <p className="text-red-500 text-xs mt-1">{errors.bedsPerRoom}</p>}
+          {errors.beds && <p className="text-red-500 text-xs mt-1">{errors.beds}</p>}
         </div>
 
         {/* Policies */}
@@ -570,12 +569,12 @@ const HostelForm = () => {
           <input
             id="advance"
             type="number"
-            value={formData.advance}
-            onChange={(e) => handleChange('advance', e.target.value)}
+            value={formData.advanceamount}
+            onChange={(e) => handleChange('advanceamount', e.target.value)}
             placeholder="Enter advance amount"
-            className={`w-full px-3 py-2 border ${errors.advance ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#31AFEF]`}
+            className={`w-full px-3 py-2 border ${errors.advanceamount ? 'border-red-500' : 'border-gray-300'} rounded-md focus:outline-none focus:ring-2 focus:ring-[#31AFEF]`}
           />
-          {errors.advance && <p className="text-red-500 text-xs mt-1">{errors.advance}</p>}
+          {errors.advanceamount && <p className="text-red-500 text-xs mt-1">{errors.advanceamount}</p>}
         </div>
         <div className='w-full'>
           <div className='flex items-center space-x-2 mb-2'>

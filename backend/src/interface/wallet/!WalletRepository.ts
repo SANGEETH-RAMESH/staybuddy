@@ -12,6 +12,6 @@ export interface IWalletRepository {
     debitUserWallet(id: Types.ObjectId, amount: number): Promise<string>,
     creditUserWallet(id: Types.ObjectId, orderId: Types.ObjectId, cancellationPolicy: string): Promise<string>,
     debitHostWallet(id: Types.ObjectId, amount: number): Promise<string>,
-
+    createHostWallet(email: string): Promise<string>
 
 }

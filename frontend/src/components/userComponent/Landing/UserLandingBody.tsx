@@ -49,6 +49,7 @@ const UserLandingBody = () => {
     if (accessToken) {
       const decoded = jwtDecode<CustomJwtPayload>(accessToken);
       const userId = decoded?._id
+      console.log(userId,'UserId')
       if (userId) {
         socket.emit('userLoggedIn', userId);
       }

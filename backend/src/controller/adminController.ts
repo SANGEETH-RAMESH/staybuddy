@@ -94,6 +94,7 @@ class adminController {
 
     async getHost(req: Request, res: Response): Promise<void> {
         try {
+            console.log("GettingHost")
             const skip = parseInt(req.query.skip as string)
             const limit = parseInt(req.query.limit as string)
             const response = await this._adminService.getHost(skip, limit);
@@ -233,6 +234,7 @@ class adminController {
 
     async searchHost(req: Request, res: Response): Promise<void> {
         try {
+            console.log('Searching Host')
             const name = req.query.name as string;
             const response = await this._adminService.searchHost(name);
             res.status(StatusCode.OK).json({ message: response })

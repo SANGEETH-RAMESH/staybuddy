@@ -4,7 +4,7 @@ import { ObjectId } from 'bson';
 import Swal from 'sweetalert2';
 import { Trash2, Lock, Unlock, Check, X, Loader, Info, Search, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { PaginationInfo} from '../../../interface/PaginationInfo'
+import { PaginationInfo } from '../../../interface/PaginationInfo'
 import { Host } from '../../../interface/Host';
 import { approveHost, blockHost, deleteHost, fetchHost, rejectHost, searchHost, unblockHost } from '../../../services/adminServices';
 
@@ -14,7 +14,6 @@ const AdminHostManageBody = () => {
   const [hosts, setHosts] = useState<Host[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [detailsLoading, setDetailsLoading] = useState(false);
 
@@ -29,6 +28,30 @@ const AdminHostManageBody = () => {
   const itemsPerPage = 4;
 
   const navigate = useNavigate();
+
+  function useDebounce(value: string, delay: number) {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+
+    return debouncedValue;
+  }
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  useEffect(() => {
+    if (debouncedSearchTerm) {
+      setSearchTerm(debouncedSearchTerm)
+    }
+  }, [debouncedSearchTerm])
 
   const handleApprove = async (hostId: ObjectId) => {
     try {
@@ -47,38 +70,30 @@ const AdminHostManageBody = () => {
     }
   };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const newSearchTerm = e.target.value;
     setSearchTerm(newSearchTerm);
-
-    if (searchTimeout.current) {
-      clearTimeout(searchTimeout.current);
+    if (newSearchTerm.trim() === '') {
+      fetchHosts(1, itemsPerPage);
+      return;
     }
+    try {
+      const response = await searchHost(newSearchTerm);
+      console.log("Response", response.data.message);
+      const searchResults = response.data.message;
+      setHosts(searchResults);
 
-    searchTimeout.current = setTimeout(async () => {
-      if (newSearchTerm.trim() === '') {
-        fetchHosts(1, itemsPerPage);
-        return;
-      }
-
-      try {
-        const response = await searchHost(newSearchTerm);
-        console.log("Response", response.data.message);
-        const searchResults = response.data.message;
-        setHosts(searchResults);
-
-        setPaginationInfo({
-          currentPage: 1,
-          totalPages: 1,
-          totalHosts: searchResults.length,
-          hasNext: false,
-          hasPrev: false
-        });
-        setCurrentPage(1);
-      } catch (error) {
-        console.log("Search error", error);
-      }
-    }, 500);
+      setPaginationInfo({
+        currentPage: 1,
+        totalPages: 1,
+        totalHosts: searchResults.length,
+        hasNext: false,
+        hasPrev: false
+      });
+      setCurrentPage(1);
+    } catch (error) {
+      console.log("Search error", error);
+    }
   }
 
   const handleReject = async (hostId: ObjectId) => {
@@ -179,7 +194,7 @@ const AdminHostManageBody = () => {
     try {
       setLoading(true);
       const skip = (page - 1) * limit;
-      const response = await fetchHost(skip,limit)
+      const response = await fetchHost(skip, limit)
       console.log(response.data.message, 'message');
 
       if (response.data.success) {
@@ -257,29 +272,29 @@ const AdminHostManageBody = () => {
     if (paginationInfo.totalPages <= 1) return null;
 
     const getPageNumbers = () => {
-  const pages: (number | string)[] = [];
-  const current = paginationInfo.currentPage;
-  const total = paginationInfo.totalPages;
+      const pages: (number | string)[] = [];
+      const current = paginationInfo.currentPage;
+      const total = paginationInfo.totalPages;
 
-  if (total <= 5) {
-    for (let i = 1; i <= total; i++) pages.push(i);
-  } else {
-    if (current <= 3) {
-      pages.push(1, 2, 3, 4, '...', total);
-    } else if (current >= total - 2) {
-      pages.push(1, '...', total - 3, total - 2, total - 1, total);
-    } else {
-      pages.push(1, '...', current - 1, current, current + 1, '...', total);
-    }
-  }
+      if (total <= 5) {
+        for (let i = 1; i <= total; i++) pages.push(i);
+      } else {
+        if (current <= 3) {
+          pages.push(1, 2, 3, 4, '...', total);
+        } else if (current >= total - 2) {
+          pages.push(1, '...', total - 3, total - 2, total - 1, total);
+        } else {
+          pages.push(1, '...', current - 1, current, current + 1, '...', total);
+        }
+      }
 
-  return pages;
-};
+      return pages;
+    };
 
     return (
       <div className="flex items-center justify-between mt-6 px-4">
         <div className="text-sm text-gray-400">
-          Showing {((paginationInfo.currentPage - 1) * itemsPerPage) + 1} - {Math.min(paginationInfo.currentPage * itemsPerPage, paginationInfo.totalHosts??0)} of {paginationInfo.totalHosts} hosts
+          Showing {((paginationInfo.currentPage - 1) * itemsPerPage) + 1} - {Math.min(paginationInfo.currentPage * itemsPerPage, paginationInfo.totalHosts ?? 0)} of {paginationInfo.totalHosts} hosts
         </div>
 
         <div className="flex items-center space-x-2">
@@ -297,10 +312,10 @@ const AdminHostManageBody = () => {
               onClick={() => typeof page === 'number' ? handlePageChange(page) : undefined}
               disabled={page === '...'}
               className={`px-3 py-2 rounded-lg transition-colors ${page === paginationInfo.currentPage
-                  ? 'bg-[#45B8F2] text-white'
-                  : page === '...'
-                    ? 'text-gray-400 cursor-default'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                ? 'bg-[#45B8F2] text-white'
+                : page === '...'
+                  ? 'text-gray-400 cursor-default'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                 }`}
             >
               {page}
@@ -352,7 +367,7 @@ const AdminHostManageBody = () => {
 
           </>
         )}
-        {!host.photo &&  host.approvalRequest == '1'  && (
+        {!host.photo && host.approvalRequest == '1' && (
           <div className="text-gray-400 font-medium">Not Approved</div>
         )}
       </div>

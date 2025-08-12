@@ -6,6 +6,7 @@ import baseRepository from "./baseRespository";
 import { Messages } from "../messages/messages";
 import Order from "../model/orderModel";
 import { IWalletResponse } from "../dtos/WalletResponse";
+import Host from "../model/hostModel";
 
 
 
@@ -68,13 +69,40 @@ class walletRepository extends baseRepository<IWallet> implements IWalletReposit
 
     async createWallet(email: string): Promise<string> {
         try {
+            console.log(email,"eamail")
             const findUser = await User.findOne({ email });
+            console.log(findUser,'User')
             if (!findUser) {
                 return Messages.UserNotFound;
             }
             const creatingWallet = new Wallet({
                 userOrHostId: findUser._id
             })
+            console.log(creatingWallet,'Wallet')
+            await creatingWallet.save();
+            findUser.wallet_id = creatingWallet._id as mongoose.Types.ObjectId;
+            findUser.tempExpires = undefined;
+            findUser.temp = false;
+            await findUser.save();
+            return Messages.success;
+        } catch (error) {
+            console.log(error)
+            return error as string
+        }
+    }
+
+    async createHostWallet(email: string): Promise<string> {
+        try {
+            console.log(email,"eamail")
+            const findUser = await Host.findOne({ email });
+            console.log(findUser,'User')
+            if (!findUser) {
+                return Messages.UserNotFound;
+            }
+            const creatingWallet = new Wallet({
+                userOrHostId: findUser._id
+            })
+            console.log(creatingWallet,'Wallet')
             await creatingWallet.save();
             findUser.wallet_id = creatingWallet._id as mongoose.Types.ObjectId;
             findUser.tempExpires = undefined;
@@ -89,6 +117,7 @@ class walletRepository extends baseRepository<IWallet> implements IWalletReposit
 
     async findUserWallet(id: string): Promise<IWalletResponse | string | null> {
         try {
+            console.log(id)
             const userWallet = await Wallet.aggregate([
                 { $match: { userOrHostId: new Types.ObjectId(id) } },
                 {
@@ -99,6 +128,7 @@ class walletRepository extends baseRepository<IWallet> implements IWalletReposit
                     }
                 }
             ]);
+            console.log(userWallet,'Repo')
             if (!userWallet) {
                 return Messages.NoWallet;
             }

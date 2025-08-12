@@ -22,6 +22,30 @@ const AdminCategoryBody = () => {
 
   const navigate = useNavigate()
 
+  function useDebounce(value:string, delay:number) {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+
+    return debouncedValue;
+  }
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  useEffect(() => {
+    if (debouncedSearchTerm) {
+      searchCategory(searchTerm)
+    }
+  }, [debouncedSearchTerm])
+
   const handleDeleteCategory = async (categoryId: ObjectId | string) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
@@ -89,7 +113,7 @@ const AdminCategoryBody = () => {
 
       const skip = (page - 1) * categoriesPerPage;
       const limit = categoriesPerPage;
-      const response = await getAllCategory(skip,limit)
+      const response = await getAllCategory(skip, limit)
       const data = response.data.message.getCategories;
       if (data) {
         setCategories(data || []);

@@ -152,7 +152,6 @@ const ChatApplication: React.FC = () => {
   const fetchAvailableHosts = async () => {
     try {
       const res = await getAllHosts();
-      console.log(res.data.message, 'ss')
       setAvailableHosts(res.data.message || []);
     } catch (error) {
       console.error("Error fetching users", error);
@@ -192,7 +191,6 @@ const ChatApplication: React.FC = () => {
         }));
 
         setChats(formattedChats);
-        console.log(chats)
       } catch (error) {
         console.error("Error fetching chats", error);
       }
@@ -208,7 +206,6 @@ const ChatApplication: React.FC = () => {
 
   useEffect(() => {
     socket.on('receive_old_messages', ({ chatId, messages }) => {
-      console.log("Received old messages:", messages);
       setSelectedChat(prevChat => {
         if (!prevChat || prevChat.id !== chatId) return prevChat;
         return { ...prevChat, messages };
@@ -219,7 +216,6 @@ const ChatApplication: React.FC = () => {
 
     socket.on('receiveMessage', (newMessage) => {
       console.log("New message received:", newMessage);
-      console.log(chats, 'Before')
 
       setSelectedChat(prevChat => {
         if (!prevChat || prevChat.id !== newMessage.savedMessage.chatId) return prevChat;
@@ -228,17 +224,11 @@ const ChatApplication: React.FC = () => {
         return updatedChat;
       });
 
-      console.log(newMessage, 'heee')
       setChats(prevChats =>
         prevChats.map(chat => {
           const isMatched = chat.id === newMessage.savedMessage?.chatId;
-          console.log('Chat ID:', chat.id);
-          console.log('Selected Chat ID:', newMessage.savedMessage.chatId);
-          console.log('Match Found:', isMatched);
 
           if (isMatched) {
-            console.log('Updating chat with message:', newMessage.savedMessage.message);
-            console.log('Timestamp:', newMessage.savedMessage.timestamp);
             return {
               ...chat,
               lastMessage: newMessage.savedMessage.message,
@@ -270,7 +260,6 @@ const ChatApplication: React.FC = () => {
   }, [selectedChat?.messages]);
 
   const handleSelectChat = (chat: Chat, receiverId: string) => {
-    console.log('fdlf', selectedFile)
     setSelectedChat(chat);
     setReceiverId(receiverId);
     socket.emit('join_room', chat.id);
@@ -369,7 +358,6 @@ const ChatApplication: React.FC = () => {
       };
 
       socket.emit('send_message', message);
-      console.log(chats, 'Mumb')
       setSelectedChat((prevChat) => {
         if (!prevChat) return null;
         return {
@@ -377,8 +365,6 @@ const ChatApplication: React.FC = () => {
           messages: [...prevChat.messages, message],
         };
       });
-      console.log(chats, 'chats')
-
       setChats(prevChats => {
         const updatedChats = prevChats.map(chat =>
           chat.id === selectedChat.id
@@ -425,13 +411,11 @@ const ChatApplication: React.FC = () => {
     try {
       // if(!selectedChat._id)
       const res = await createChat(selectedUser?._id)
-      console.log(res.data, "Response")
       if (res.data.chat == 'Chat Created') {
         setShowAddChatModal(false)
         socket.emit('get_all_chats', userId);
 
         socket.on('receive_all_chats', (chats) => {
-          console.log("Received all chats", chats)
           const setChatss = chats.map((chat: Chats) => {
             const formattedTime = chat.updatedAt
             return {

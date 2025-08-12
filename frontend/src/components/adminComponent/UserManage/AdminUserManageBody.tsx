@@ -28,7 +28,31 @@ const AdminUserManageBody = () => {
     hasPrev: false
   });
 
-  // Handle block user
+  function useDebounce(value:string, delay:number) {
+    const [debouncedValue, setDebouncedValue] = useState(value);
+
+    useEffect(() => {
+      const handler = setTimeout(() => {
+        setDebouncedValue(value);
+      }, delay);
+
+      return () => {
+        clearTimeout(handler);
+      };
+    }, [value, delay]);
+
+    return debouncedValue;
+  }
+
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  useEffect(() => {
+    console.log(debouncedSearchTerm,"Changu")
+    if (debouncedSearchTerm) {
+      setSearchTerm(debouncedSearchTerm)
+    }
+  }, [debouncedSearchTerm])
+
   const handleBlockUser = async (userId: ObjectId | string) => {
     try {
       const response = await blockUser(userId);
@@ -86,7 +110,7 @@ const AdminUserManageBody = () => {
 
         if (response.data.success) {
           // Refresh the current page after deletion
-          console.log(itemsPerPage,'Items')
+          console.log(itemsPerPage, 'Items')
           await fetchUsers(currentPage, itemsPerPage);
           Swal.fire('Deleted!', 'The user has been deleted.', 'success');
         } else {
@@ -103,7 +127,7 @@ const AdminUserManageBody = () => {
   const fetchUsers = async (page: number = 1, limit: number = 4) => {
     setIsRefreshing(true);
     try {
-      const response = await fetchUser(page,limit);
+      const response = await fetchUser(page, limit);
       if (response.data.success) {
         const { totalCount, users: fetchedUsers } = response.data.message;
 
@@ -170,12 +194,12 @@ const AdminUserManageBody = () => {
 
     searchTimeout.current = setTimeout(async () => {
       if (newSearchTerm.trim() === '') {
-        fetchUsers(1, itemsPerPage); 
+        fetchUsers(1, itemsPerPage);
         return;
       }
 
       try {
-        const response = await searchUser(newSearchTerm,itemsPerPage)
+        const response = await searchUser(newSearchTerm, itemsPerPage)
         console.log("Response", response.data.message);
         const searchResults = response.data.message;
         setUsers(searchResults);
@@ -195,36 +219,36 @@ const AdminUserManageBody = () => {
   };
 
   const getPageNumbers = () => {
-  const pages: (number | string)[] = [];
-  const { currentPage, totalPages } = paginationInfo;
+    const pages: (number | string)[] = [];
+    const { currentPage, totalPages } = paginationInfo;
 
-  if (totalPages <= 5) {
-    for (let i = 1; i <= totalPages; i++) {
-      pages.push(i);
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+
+      if (currentPage > 3) {
+        pages.push('...');
+      }
+
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (currentPage < totalPages - 2) {
+        pages.push('...');
+      }
+
+      pages.push(totalPages);
     }
-  } else {
-    pages.push(1);
 
-    if (currentPage > 3) {
-      pages.push('...'); 
-    }
-
-    const start = Math.max(2, currentPage - 1);
-    const end = Math.min(totalPages - 1, currentPage + 1);
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-
-    if (currentPage < totalPages - 2) {
-      pages.push('...'); 
-    }
-
-    pages.push(totalPages);
-  }
-
-  return pages;
-};
+    return pages;
+  };
 
   // Error state
   if (error) {
@@ -264,7 +288,7 @@ const AdminUserManageBody = () => {
             <Search className="absolute left-3 top-2.5 text-gray-400 h-5 w-5" />
           </div>
 
-          
+
         </div>
       </div>
 
@@ -272,7 +296,7 @@ const AdminUserManageBody = () => {
       {!isRefreshing && filteredUsers.length > 0 && (
         <div className="mb-4 text-white text-sm">
           Showing {((paginationInfo.currentPage - 1) * itemsPerPage) + 1} to{' '}
-          {Math.min(paginationInfo.currentPage * itemsPerPage, paginationInfo.totalUsers ?? 0 )} of{' '}
+          {Math.min(paginationInfo.currentPage * itemsPerPage, paginationInfo.totalUsers ?? 0)} of{' '}
           {paginationInfo.totalUsers} users
         </div>
       )}
@@ -292,7 +316,7 @@ const AdminUserManageBody = () => {
         <div className="bg-[#212936] rounded-lg shadow-lg p-8 flex flex-col items-center justify-center">
           <UserX className="w-16 h-16 text-gray-500 mb-4" />
           <h3 className="text-xl text-white mb-2">No users found</h3>
-         
+
         </div>
       )}
 
@@ -449,8 +473,8 @@ const AdminUserManageBody = () => {
               onClick={() => handlePageChange(paginationInfo.currentPage - 1)}
               disabled={!paginationInfo.hasPrev}
               className={`p-2 rounded-lg transition-colors ${!paginationInfo.hasPrev
-                  ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                  : 'bg-[#212936] text-white hover:bg-[#2D394E]'
+                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                : 'bg-[#212936] text-white hover:bg-[#2D394E]'
                 }`}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -462,8 +486,8 @@ const AdminUserManageBody = () => {
                 key={page}
                 onClick={() => handlePageChange(page as number)}
                 className={`px-3 py-2 rounded-lg transition-colors ${page === paginationInfo.currentPage
-                    ? 'bg-[#45B8F2] text-white'
-                    : 'bg-[#212936] text-white hover:bg-[#2D394E]'
+                  ? 'bg-[#45B8F2] text-white'
+                  : 'bg-[#212936] text-white hover:bg-[#2D394E]'
                   }`}
               >
                 {page}
@@ -475,8 +499,8 @@ const AdminUserManageBody = () => {
               onClick={() => handlePageChange(paginationInfo.currentPage + 1)}
               disabled={!paginationInfo.hasNext}
               className={`p-2 rounded-lg transition-colors ${!paginationInfo.hasNext
-                  ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                  : 'bg-[#212936] text-white hover:bg-[#2D394E]'
+                ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                : 'bg-[#212936] text-white hover:bg-[#2D394E]'
                 }`}
             >
               <ChevronRight className="w-4 h-4" />
