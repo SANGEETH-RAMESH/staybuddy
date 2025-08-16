@@ -392,7 +392,9 @@ class hostController {
     async createGoogleAuth(req: Request, res: Response): Promise<void> {
         try {
             const { credential } = req.body;
+            console.log(req.body,'BOdy')
             const response = await this._hostService.createGoogleAuth(credential);
+            console.log(response,'REsponse')
             res.status(StatusCode.OK).json(response)
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });

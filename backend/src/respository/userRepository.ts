@@ -12,8 +12,8 @@ import Notification from "../model/notificationModel";
 
 type ResetPasswordData = {
     email: string;
-    password: string;
     newPassword: string;
+    confirmPassword: string;
 };
 
 interface TempUserData {
@@ -183,14 +183,15 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
             if (!existingUser || !existingUser.password) {
                 return { message: Messages.UserNotFoundOrPassword };
             }
-            if (typeof userData.password !== 'string') {
+            console.log(userData,'hfdff')
+            if (typeof userData.newPassword !== 'string') {
                 return { message: Messages.InvalidPasswordFormat };
             }
-            const isMatch = await bcrypt.compare(userData.password, existingUser.password);
+            const isMatch = await bcrypt.compare(userData.newPassword, existingUser.password);
             if (isMatch) {
                 return Messages.SamePassword;
             } else {
-                const hashedPassword = await bcrypt.hash(userData.password, 10);
+                const hashedPassword = await bcrypt.hash(userData.newPassword, 10);
                 existingUser.password = hashedPassword;
                 existingUser.tempExpires = undefined;
                 await existingUser.save();

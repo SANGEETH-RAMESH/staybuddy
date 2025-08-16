@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Search, ArrowLeft, RefreshCw, Wifi, UtensilsCrossed, Shirt, MapPin, Star, Users, Phone, Heart, Home, Edit, Trash2, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Search, ArrowLeft, RefreshCw, Wifi, UtensilsCrossed, Shirt, MapPin, Star, Users, Phone, Heart, Home, Edit, Trash2, ChevronLeft, ChevronRight, X, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { deleteHostel, getAllHostels } from '../../../services/hostServices';
 import { SearchBarProps } from '../../../interface/Search';
@@ -10,7 +10,7 @@ import DeleteConfirmationModal from '../../commonComponents/DeleteConfirmationMo
 const ITEMS_PER_PAGE = 6;
 
 
-type Facilities = {
+interface Facilities  {
   wifi: boolean;
   food: boolean;
   laundry: boolean;
@@ -35,6 +35,7 @@ interface Hostel {
   photos: string;
   isActive: boolean
   inactiveReason: string
+  bookingType: string
 };
 
 interface HostelData {
@@ -43,11 +44,12 @@ interface HostelData {
   location: string;
   bedShareRoom: string;
   phone: string;
-  facilities: string;
+  facilities: Facilities;
   photos: string[];
   beds: string;
   isActive: boolean;
   inactiveReason: string;
+  bookingType: string
 };
 
 type HostelCardProps = {
@@ -138,7 +140,6 @@ const EmptyState = () => {
   );
 };
 
-// FacilityBadge Component
 const FacilityBadge: React.FC<FacilityBadgeProps> = ({ icon, label, available, color }) => {
   const colors: Record<string, string> = {
     green: available ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400',
@@ -245,24 +246,35 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel, onDelete }) => {
         </div>
 
         <div className="mb-3">
-          <div className="flex items-center justify-between">
-            {/* <div className="flex items-center gap-2">
-              <div className={`relative w-3 h-3 rounded-full ${hostel.isActive ? 'bg-green-500' : 'bg-red-500'}`}>
-                {hostel.isActive && (
-                  <div className="absolute inset-0 rounded-full bg-green-500 animate-pulse"></div>
-                )}
-              </div>
-              <span className={`text-sm font-semibold ${hostel.isActive ? 'text-green-700' : 'text-red-700'}`}>
-                {hostel.isActive ? 'Active' : 'Inactive'}
-              </span>
-            </div> */}
-
-            {/* Status Badge */}
+          <div className="flex items-center justify-start gap-2">
             <div className={`px-2 py-1 rounded-full text-xs font-medium ${hostel.isActive
               ? 'bg-green-100 text-green-800 border border-green-200'
               : 'bg-red-100 text-red-800 border border-red-200'
               }`}>
               {hostel.isActive ? '✓ Available' : '✗ Unavailable'}
+            </div>
+
+            <div className={`px-3 py-1 rounded-full text-xs font-semibold border-2 transition-all duration-200 ${hostel.bookingType === 'one month'
+              ? 'bg-blue-50 text-blue-700 border-blue-200 shadow-sm'
+              : 'bg-purple-50 text-purple-700 border-purple-200 shadow-sm'
+              }`}>
+              <div className="flex items-center gap-1">
+                {hostel.bookingType === 'one month' ? (
+                  <>
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                    </svg>
+                    Monthly
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                    </svg>
+                    Daily
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -404,49 +416,49 @@ const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onPage
 
 
 const SearchBar: React.FC<SearchBarProps> = ({ searchTerm, onSearchChange, totalResults, isSearching }) => {
-    return (
-      <div className="mb-4 flex justify-end">
-        <div className="relative w-80"> 
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search hostels..."
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-all duration-300 text-sm bg-white shadow-sm"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => onSearchChange('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
+  return (
+    <div className="mb-4 flex justify-end">
+      <div className="relative w-80">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <input
+            type="text"
+            placeholder="Search hostels..."
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-all duration-300 text-sm bg-white shadow-sm"
+          />
           {searchTerm && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg p-2 shadow-sm z-10">
-              {isSearching ? (
-                <div className="flex items-center gap-2 text-blue-600">
-                  <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-xs">Searching...</span>
-                </div>
-              ) : (
-                <p className="text-xs text-gray-600">
-                  {totalResults > 0
-                    ? `${totalResults} result${totalResults > 1 ? 's' : ''}`
-                    : 'No results found'
-                  }
-                </p>
-              )}
-            </div>
+            <button
+              onClick={() => onSearchChange('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
           )}
         </div>
+
+        {searchTerm && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg p-2 shadow-sm z-10">
+            {isSearching ? (
+              <div className="flex items-center gap-2 text-blue-600">
+                <div className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-xs">Searching...</span>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-600">
+                {totalResults > 0
+                  ? `${totalResults} result${totalResults > 1 ? 's' : ''}`
+                  : 'No results found'
+                }
+              </p>
+            )}
+          </div>
+        )}
       </div>
-    );
-  };
+    </div>
+  );
+};
 
 const HostelCardGrid: React.FC = () => {
   const [hostels, setHostels] = useState<Hostel[]>([]);
@@ -456,7 +468,7 @@ const HostelCardGrid: React.FC = () => {
   const [totalCount, setTotalCount] = useState<number>(0);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
-
+  const [totalHostels, setTotalHostels] = useState<number>(0);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [hostelToDelete, setHostelToDelete] = useState<string | null>(null);
   const [hostelNameToDelete, setHostelNameToDelete] = useState<string>('');
@@ -483,6 +495,23 @@ const HostelCardGrid: React.FC = () => {
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
+  const sortOptions = [
+    { value: 'default', label: 'Default' },
+    { value: 'price_low_high', label: 'Price: Low to High' },
+    { value: 'price_high_low', label: 'Price: High to Low' },
+    { value: 'name_a_z', label: 'Name: A to Z' },
+    { value: 'name_z_a', label: 'Name: Z to A' },
+  ];
+
+  const [sortOption, setSortOption] = useState<string>('default');
+
+  const handleSortChange = (newSort: string) => {
+    setSortOption(newSort);
+    setCurrentPage(1);
+    console.log(searchTerm, 'lsdfsdf')
+    fetchHostels(1, ITEMS_PER_PAGE, searchTerm, newSort);
+  };
+
   useEffect(() => {
     if (debouncedSearchTerm !== searchTerm) return;
     if (debouncedSearchTerm.length === 0 || debouncedSearchTerm.length >= 2) {
@@ -491,7 +520,7 @@ const HostelCardGrid: React.FC = () => {
     }
   }, [debouncedSearchTerm]);
 
-  const handleDeleteClick = async(hostel: Hostel) => {
+  const handleDeleteClick = async (hostel: Hostel) => {
     setHostelToDelete(hostel.id);
     setHostelNameToDelete(hostel.name);
     setIsDeleteModalOpen(true);
@@ -515,7 +544,7 @@ const HostelCardGrid: React.FC = () => {
     setHostelNameToDelete('');
   };
 
-  
+
 
   const handleSearchChange = (value: string) => {
     console.log("fldfsdf")
@@ -525,7 +554,7 @@ const HostelCardGrid: React.FC = () => {
   };
 
 
-  const fetchHostels = async (page: number = 1, limit: number = ITEMS_PER_PAGE, search: string = '') => {
+  const fetchHostels = async (page: number = 1, limit: number = ITEMS_PER_PAGE, search: string = '', sort?: string) => {
     try {
       console.log('1')
       setIsLoading(true);
@@ -538,24 +567,24 @@ const HostelCardGrid: React.FC = () => {
       params.append('skip', skip.toString());
       params.append('page', page.toString());
 
-      // Only add search if it has value
       if (search && search.length >= 2) {
         params.append('search', search);
       }
 
+      if (sort && sort !== 'default') {
+        params.append('sort', sort);
+      }
+
       const response = await getAllHostels(params);
       const data = response.data.message;
-      console.log(data, 'API Response');
-
+      console.log(data.hostels, 'API Response');
+      setTotalHostels(data.totalCount)
       const hostels = data.hostels.map((item: HostelData) => {
-        const facilitiesArray: string[] = Array.isArray(item.facilities)
-          ? item.facilities.map((f: string) => f.trim().toLowerCase())
-          : [];
 
         const facilitiesObj = {
-          wifi: facilitiesArray.includes('wifi'),
-          food: facilitiesArray.includes('food'),
-          laundry: facilitiesArray.includes('laundry'),
+          wifi: !!item.facilities.wifi,
+          food: !!item.facilities.food,
+          laundry: !!item.facilities.laundry,
         };
 
         return {
@@ -568,7 +597,8 @@ const HostelCardGrid: React.FC = () => {
           photos: item.photos[0] || '',
           occupancy: item.beds,
           isActive: item.isActive,
-          inactiveReason: item.inactiveReason
+          inactiveReason: item.inactiveReason,
+          bookingType: item.bookingType
         };
       });
 
@@ -635,6 +665,29 @@ const HostelCardGrid: React.FC = () => {
           totalResults={totalCount}
           isSearching={isSearching}
         />
+
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+          <div className="text-xs sm:text-sm text-gray-600">
+            {totalHostels > 0 && `${totalHostels} results found`}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs sm:text-sm text-gray-600">Sort by:</span>
+            <div className="relative">
+              <select
+                value={sortOption}
+                onChange={(e) => handleSortChange(e.target.value)}
+                className="appearance-none bg-white border border-gray-300 rounded-lg px-3 sm:px-4 py-2 pr-6 sm:pr-8 text-xs sm:text-sm focus:border-blue-500 focus:outline-none cursor-pointer"
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+            </div>
+          </div>
+        </div>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">

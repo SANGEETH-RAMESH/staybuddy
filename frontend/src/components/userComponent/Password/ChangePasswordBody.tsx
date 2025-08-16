@@ -62,11 +62,11 @@ const ChangePasswordBody = () => {
     if (formData.newPassword === formData.confirmPassword) {
       try {
         const response = await changePassword(formData)
-        console.log("Response",response)
-        if (response.data.message === 'Current password does not match') {
+        console.log("Response",response.data.message)
+        if (response.data.message === 'Current Password does not match') {
           setErrors((prev) => ({ ...prev, currentPassword: 'Current password does not match' }));
-        } else if (response.data.message === 'New password cannot be the same as the current password') {
-          setErrors((prev) => ({ ...prev, newPassword: 'New password cannot be same as current password' }));
+        } else if (response.data.message === 'New Password Cannot be Same as Current Password') {
+          setErrors((prev) => ({ ...prev, newPassword: 'New Password cannot be same as current password' }));
         } else if (response.data.message === 'Password changed successfully') {
           toast.success("Password changed")
           navigate('/profile')

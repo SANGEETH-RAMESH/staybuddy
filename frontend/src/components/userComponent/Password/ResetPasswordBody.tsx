@@ -1,8 +1,9 @@
-import  { useState } from "react";
+import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import lock_icon from '../../../assets/lock.png'
-import { resendOtp } from "../../../services/userServices";
+import { resetPassword } from "../../../services/userServices";
+import { Eye, EyeOff } from "lucide-react";
 
 const ResetPasswordBody = () => {
   const [password, setPassword] = useState("");
@@ -11,13 +12,21 @@ const ResetPasswordBody = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email;
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  
+  const [errors, setErrors] = useState({
+    newPassword: '',
+    confirmPassword: '',
+  });
+
   const handleSubmit = async () => {
     if (password === confirmPassword) {
       setLoading(true);
       try {
-        const response = await resendOtp({email,password})
+        const newPassword = password
+        const response = await resetPassword(email, newPassword, confirmPassword)
+        console.log(response, "Response")
         if (response.data.message === "Same password") {
           toast.error("Cannot use existing password")
         } else if (response.data.message === "Password Changed") {
@@ -25,8 +34,25 @@ const ResetPasswordBody = () => {
           navigate('/login')
         }
       } catch (error) {
-        console.error("Error resetting password:", error);
-        toast.error("An error occurred while resetting the password.");
+        const axiosError = error as any;
+
+        if (axiosError.response) {
+          const { message, errors } = axiosError.response.data;
+          console.log('catch', message, errors)
+          if (errors) {
+            setErrors(errors);
+
+            return;
+          }
+
+          toast.error(message || "Otp failed", {
+            style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+          });
+        } else {
+          toast.error("An unexpected error occurred", {
+            style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+          });
+        }
       } finally {
         setLoading(false);
       }
@@ -62,13 +88,22 @@ const ResetPasswordBody = () => {
             className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400"
           />
           <input
-            type="password"
+            type={showPassword ? "text" : "password"}
             placeholder="New Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full border border-gray-300 rounded-lg pl-8 sm:pl-10 py-2 sm:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#31AFEF]"
             required
           />
+          <div
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </div>
+          {errors.newPassword&& (
+              <div className="mt-2 text-red-600 text-sm">{errors.newPassword}</div>
+            )}
         </div>
 
         <div className="relative mb-4 sm:mb-6">
@@ -78,13 +113,22 @@ const ResetPasswordBody = () => {
             className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400"
           />
           <input
-            type="password"
+            type={showConfirmPassword ? "text" : "password"}
             placeholder="Confirm Password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             className="w-full border border-gray-300 rounded-lg pl-8 sm:pl-10 py-2 sm:py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#31AFEF]"
             required
           />
+          <div
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+          >
+            {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </div>
+          {errors.confirmPassword&& (
+              <div className="mt-2 text-red-600 text-sm">{errors.confirmPassword}</div>
+            )}
         </div>
 
         <button

@@ -141,6 +141,9 @@ class walletRepository extends baseRepository<IWallet> implements IWalletReposit
 
     async creditHostWallet(id: Types.ObjectId, amount: number): Promise<string> {
         try {
+            console.log(id,amount,'Repommm')
+            const wallet = await Wallet.findOne({userOrHostId:id})
+            console.log(wallet,"Walletssss")
             await Wallet.updateOne(
                 { userOrHostId: id },
                 {

@@ -21,6 +21,7 @@ export interface IHostel extends Document {
     cancellationPolicy:string,
     totalRooms:number;
     isFull?:boolean;
+    bookingType:string;
 }
 
 const hostelModel: Schema = new Schema(
@@ -66,7 +67,7 @@ const hostelModel: Schema = new Schema(
             required: true,
         },
         facilities: {
-            type: [String],
+            type: Object,
             required: true,
         },
         bedShareRoom: {
@@ -98,6 +99,10 @@ const hostelModel: Schema = new Schema(
         },
         totalRooms:{
             type:Number,
+            required:true
+        },
+        bookingType:{
+            type:String,
             required:true
         }
     },

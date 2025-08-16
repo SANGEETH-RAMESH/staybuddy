@@ -58,10 +58,10 @@ const HostBookings = () => {
 
       const totalCount = data.totalCount || 0;
       const totalPages = Math.ceil(totalCount / limit);
-      console.log(data.bookings[0].name, 'dfsdjf')
-      setBookings(data.bookings || []);
+      console.log(data?.bookings[0]?.name, 'dfsdjf')
+      setBookings(data?.bookings || []);
       setPaginationData({
-        bookings: data.bookings || [],
+        bookings: data?.bookings || [],
         totalCount,
         currentPage: page,
         totalPages,

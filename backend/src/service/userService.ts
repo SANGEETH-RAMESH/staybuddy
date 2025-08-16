@@ -140,12 +140,12 @@ class UserService implements IUserService {
         }
     }
 
-    async resetPassword(userData: { email: string; password: string }): Promise<string | { message: string }> {
+    async resetPassword(userData: { email: string; newPassword: string }): Promise<string | { message: string }> {
         try {
             const resetData = {
                 email: userData.email,
-                password: userData.password,
-                newPassword: userData.password,
+                newPassword: userData.newPassword,
+                confirmPassword: userData.newPassword,
             };
             const existingUser = await this._userRepository.findUserByEmail(resetData.email)
             if (existingUser) {
@@ -179,7 +179,8 @@ class UserService implements IUserService {
                 name:1,
                 email:1,
                 mobile:1,
-                wallet_id:1
+                wallet_id:1,
+                userType:1
             }
             const response = await this._userRepository.findUserById(userId,projection);
             return response;

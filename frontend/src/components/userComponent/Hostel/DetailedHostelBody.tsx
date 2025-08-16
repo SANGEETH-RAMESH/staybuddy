@@ -27,6 +27,7 @@ import mongoose from 'mongoose';
 import { Hostel } from '../../../interface/Hostel';
 import { Order } from '../../../interface/Order';
 import { User } from '../../../interface/User';
+import { Facilities } from '../../../interface/Facilities';
 
 interface BookingData {
     fromDate: string;
@@ -50,7 +51,6 @@ const ImageGallery = ({ photos }: { photos: string[] | string }) => {
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden mb-4 sm:mb-6">
             <div className="relative">
-                {/* Desktop Layout */}
                 <div className="hidden lg:grid grid-cols-2 gap-4 p-4">
                     <div className="relative h-[400px] xl:h-[480px] rounded-lg overflow-hidden">
                         <img
@@ -77,7 +77,6 @@ const ImageGallery = ({ photos }: { photos: string[] | string }) => {
                     </div>
                 </div>
 
-                {/* Mobile/Tablet Layout */}
                 <div className="lg:hidden relative h-[250px] sm:h-[300px] md:h-[350px]">
                     <img
                         src={photos[currentImageIndex] || defaultImage}
@@ -122,6 +121,7 @@ const HostelDetailPage = () => {
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [orderDetails, setOrderDetails] = useState([]);
     const [userData, setUserData] = useState<User | null>(null)
+    const [enabledFacilities, setEnabledFacilities] = useState<string[]>([]);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -130,19 +130,20 @@ const HostelDetailPage = () => {
                 if (!id) return;
 
                 const response = await getSingleHostel(id);
-                console.log(response.data.message, 'Response')
                 setHostel(response.data.message);
                 const userData = await getUserDetails();
                 setUserData(userData?.data?.data)
                 const orderResponse = await getOrderBookingByHostelId(new mongoose.Types.ObjectId(response.data.message._id));
-                console.log(orderResponse.data.message, 'ldflsdfsdf')
                 const allBookings = orderResponse?.data?.message || [];
-
+                console.log(response.data.message, 'hey')
                 const hostelBookings = allBookings.filter((booking: Order) =>
                     booking.hostel_id.toString() === id
                 );
                 console.log(hostelBookings, 'Hostel Bookings')
-
+                const facilitiesArray = Object.keys(response.data.message.facilities).filter(
+                    (key) => response.data.message.facilities[key as keyof Facilities]
+                );
+                setEnabledFacilities(facilitiesArray);
                 setOrderDetails(hostelBookings);
                 setLoading(false);
             } catch (err) {
@@ -244,16 +245,11 @@ const HostelDetailPage = () => {
         );
     }
 
-    const facilities: string[] = Array.isArray(hostel.facilities)
-        ? hostel.facilities
-        : typeof hostel.facilities === 'string'
-            ? hostel.facilities.split(',').map((f: string) => f.trim())
-            : [];
+    
 
     return (
         <div className="bg-gray-50 min-h-screen py-4 sm:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-8">
             <div className="max-w-6xl mx-auto">
-                {/* Sticky Header */}
                 <div
                     className="sticky z-20 bg-white/95 backdrop-blur-md shadow-sm mb-4 sm:mb-6 -mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4 md:rounded-lg"
                     style={{ top: '64px' }}
@@ -267,7 +263,6 @@ const HostelDetailPage = () => {
                             <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                             <span className="text-sm sm:text-base font-medium">Back</span>
                         </button>
-                        {/* Mobile Header */}
                         <div className="block lg:hidden">
                             <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
                                 {hostel.hostelname}
@@ -294,7 +289,6 @@ const HostelDetailPage = () => {
                             </div>
                         </div>
 
-                        {/* Desktop Header */}
                         <div className="hidden lg:flex justify-between items-center">
                             <div>
                                 <h1 className="text-2xl xl:text-3xl font-bold text-gray-800">
@@ -327,9 +321,7 @@ const HostelDetailPage = () => {
 
                 <ImageGallery photos={hostel.photos} />
 
-                {/* Content Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    {/* Basic Information */}
                     <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
                         <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
                             <Star className="text-blue-500" size={18} />
@@ -347,7 +339,7 @@ const HostelDetailPage = () => {
                                 <Users className="mr-3 text-green-500 flex-shrink-0" size={18} />
                                 <div>
                                     <p className="text-xs sm:text-sm text-gray-500">Occupancy</p>
-                                    <p className="font-medium text-sm sm:text-base">{hostel.isFull?"Rooms not available":"Rooms Available"} </p>
+                                    <p className="font-medium text-sm sm:text-base">{hostel.isFull ? "Rooms not available" : "Rooms Available"} </p>
                                 </div>
                             </div>
                             <div className="flex items-center">
@@ -367,38 +359,65 @@ const HostelDetailPage = () => {
                         </div>
                     </div>
 
-                    {/* Pricing Details */}
                     <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
                         <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 flex items-center gap-2">
                             <IndianRupee className="text-green-500" size={18} />
                             Pricing Details
                         </h2>
                         <div className="space-y-3 sm:space-y-4">
-                            <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                                <IndianRupee className="mr-3 text-green-500 flex-shrink-0" size={18} />
-                                <div>
-                                    <p className="text-xs sm:text-sm text-gray-500">Monthly Rent</p>
-                                    <p className="font-medium text-sm sm:text-base">₹{hostel?.bedShareRoom?.toLocaleString()}</p>
+                            {hostel.bookingType === 'one month' ? (
+                                <>
+                                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                                        <IndianRupee className="mr-3 text-green-500 flex-shrink-0" size={18} />
+                                        <div>
+                                            <p className="text-xs sm:text-sm text-gray-500">Monthly Rent</p>
+                                            <p className="font-medium text-sm sm:text-base">₹{hostel?.bedShareRoom?.toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                                        <IndianRupee className="mr-3 text-blue-500 flex-shrink-0" size={18} />
+                                        <div>
+                                            <p className="text-xs sm:text-sm text-gray-500">Advance Amount</p>
+                                            <p className="font-medium text-sm sm:text-base">₹{hostel?.advanceamount?.toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                                        <UtensilsCrossed className="mr-3 text-orange-500 flex-shrink-0" size={18} />
+                                        <div>
+                                            <p className="text-xs sm:text-sm text-gray-500">Food Rate (Monthly)</p>
+                                            <p className="font-medium text-sm sm:text-base">₹{hostel?.foodRate?.toLocaleString() || "No Food"}</p>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : hostel.bookingType === 'one day' ? (
+                                <>
+                                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                                        <IndianRupee className="mr-3 text-green-500 flex-shrink-0" size={18} />
+                                        <div>
+                                            <p className="text-xs sm:text-sm text-gray-500">Daily Rate</p>
+                                            <p className="font-medium text-sm sm:text-base">₹{hostel?.bedShareRoom?.toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                                        <UtensilsCrossed className="mr-3 text-orange-500 flex-shrink-0" size={18} />
+                                        <div>
+                                            <p className="text-xs sm:text-sm text-gray-500">Food Rate (Daily)</p>
+                                            <p className="font-medium text-sm sm:text-base">₹{hostel?.foodRate?.toLocaleString() || "No Food"}</p>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                                    <IndianRupee className="mr-3 text-green-500 flex-shrink-0" size={18} />
+                                    <div>
+                                        <p className="text-xs sm:text-sm text-gray-500">Rate</p>
+                                        <p className="font-medium text-sm sm:text-base">₹{hostel?.bedShareRoom?.toLocaleString()}</p>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                                <IndianRupee className="mr-3 text-blue-500 flex-shrink-0" size={18} />
-                                <div>
-                                    <p className="text-xs sm:text-sm text-gray-500">Advance Amount</p>
-                                    <p className="font-medium text-sm sm:text-base">₹{hostel?.advanceamount?.toLocaleString()}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center p-3 bg-gray-50 rounded-lg">
-                                <UtensilsCrossed className="mr-3 text-orange-500 flex-shrink-0" size={18} />
-                                <div>
-                                    <p className="text-xs sm:text-sm text-gray-500">Food Rate (Monthly)</p>
-                                    <p className="font-medium text-sm sm:text-base">₹{hostel?.foodRate?.toLocaleString() || "No Food"}</p>
-                                </div>
-                            </div>
+                            )}
                         </div>
                     </div>
 
-                    {/* Location & Accessibility */}
                     <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
                         <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Location & Accessibility</h2>
                         <div className="flex items-start p-3 sm:p-4 bg-gray-50 rounded-lg mb-3 sm:mb-4">
@@ -421,22 +440,34 @@ const HostelDetailPage = () => {
                         )}
                     </div>
 
-                    {/* Facilities */}
-                    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-                        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Facilities</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                            {facilities.map((facility, index) => (
-                                <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
-                                    {facility.toLowerCase().includes('wifi') && <Wifi className="mr-2 text-blue-500 flex-shrink-0" size={16} />}
-                                    {facility.toLowerCase().includes('food') && <UtensilsCrossed className="mr-2 text-green-500 flex-shrink-0" size={16} />}
-                                    {facility.toLowerCase().includes('laundry') && <Shirt className="mr-2 text-purple-500 flex-shrink-0" size={16} />}
-                                    <span className="capitalize text-xs sm:text-sm">{facility}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                     <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+      <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
+        Facilities
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        {enabledFacilities.map((facility, index) => (
+          <div
+            key={index}
+            className="flex items-center p-3 bg-gray-50 rounded-lg"
+          >
+            {facility.toLowerCase().includes("wifi") && (
+              <Wifi className="mr-2 text-blue-500 flex-shrink-0" size={16} />
+            )}
+            {facility.toLowerCase().includes("food") && (
+              <UtensilsCrossed
+                className="mr-2 text-green-500 flex-shrink-0"
+                size={16}
+              />
+            )}
+            {facility.toLowerCase().includes("laundry") && (
+              <Shirt className="mr-2 text-purple-500 flex-shrink-0" size={16} />
+            )}
+            <span className="capitalize text-xs sm:text-sm">{facility}</span>
+          </div>
+        ))}
+      </div>
+    </div>
 
-                    {/* Hostel Policies */}
                     <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:col-span-2">
                         <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Hostel Policies</h2>
                         <div className="flex items-start p-3 sm:p-4 bg-gray-50 rounded-lg">
@@ -448,7 +479,6 @@ const HostelDetailPage = () => {
                         </div>
                     </div>
 
-                    {/* Cancellation Policy */}
                     <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:col-span-2">
                         <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Cancellation Policy</h2>
                         <div className="flex items-start p-3 sm:p-4 bg-gray-50 rounded-lg">
@@ -470,7 +500,6 @@ const HostelDetailPage = () => {
                         </div>
                     </div>
 
-                    {/* Reviews */}
                     <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:col-span-2">
                         <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Reviews</h2>
                         <button

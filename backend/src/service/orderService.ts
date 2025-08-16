@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { IOrderRepository } from "../interface/order/!OrderRepository";
 import { IOrderService } from "../interface/order/!OrderService";
 import { ObjectId } from "mongodb";
@@ -11,7 +11,7 @@ import { reviewData } from "../dtos/ReviewData";
 
 
 class OrderService implements IOrderService {
-    constructor(private _orderRepository: IOrderRepository,private _walletRepository:IWalletRepository) { }
+    constructor(private _orderRepository: IOrderRepository, private _walletRepository: IWalletRepository) { }
 
 
     async userBookings(orderData: IOrderResponse): Promise<string> {
@@ -19,6 +19,7 @@ class OrderService implements IOrderService {
             const foodRate = orderData.foodRate ?? 0;
             const amount = orderData.totalDepositAmount + orderData.totalRentAmount + foodRate;
             const response = await this._orderRepository.orderBookings(orderData);
+            console.log(orderData.host_id, 'HOstId in service')
             await this._walletRepository.creditHostWallet(orderData.host_id, amount)
             if (orderData.paymentMethod == 'wallet') {
                 // const foodRate = orderData.foodRate?orderData.foodRate : 0;
@@ -135,7 +136,21 @@ class OrderService implements IOrderService {
     async verifyPayment(bookingId: string): Promise<string> {
         try {
             const response = await this._orderRepository.verifyPayment(bookingId);
-            return response
+            const orderId = new mongoose.Types.ObjectId(bookingId);
+            console.log(orderId,"ORderrrrId");
+            const getOrderDetails = await this._orderRepository.getOrderDetails(orderId);
+            console.log(getOrderDetails,'dfdfdf')
+            console.log(typeof getOrderDetails)
+            if (!getOrderDetails) {
+                return Messages.NoOrder
+            }
+            if(typeof getOrderDetails == "string"){
+                return Messages.NoOrder;
+            }
+            const foodRate = getOrderDetails.foodRate ?? 0;
+            const amount = getOrderDetails.totalDepositAmount + getOrderDetails.totalRentAmount + foodRate;
+            await this._walletRepository.creditHostWallet(getOrderDetails.host_id, amount)
+            return response;
         } catch (error) {
             return error as string
         }
@@ -153,8 +168,23 @@ class OrderService implements IOrderService {
     async repaymentSuccess(id: string): Promise<string> {
         try {
             const response = await this._orderRepository.repaymentSuccess(id);
+            console.log(response,"dd",id)
+            const orderId = new mongoose.Types.ObjectId(id);
+            console.log(orderId,"ORderrrrId");
+            const getOrderDetails = await this._orderRepository.getOrderDetails(orderId);
+            console.log(getOrderDetails,'dfdfdf')
+            console.log(typeof getOrderDetails)
+            if (!getOrderDetails) {
+                return Messages.NoOrder
+            }
+            if(typeof getOrderDetails == "string"){
+                return Messages.NoOrder;
+            }
+            const foodRate = getOrderDetails.foodRate ?? 0;
+            const amount = getOrderDetails.totalDepositAmount + getOrderDetails.totalRentAmount + foodRate;
+            await this._walletRepository.creditHostWallet(getOrderDetails.host_id, amount)
             return response;
-        } catch (error) { 
+        } catch (error) {
             return error as string;
         }
     }

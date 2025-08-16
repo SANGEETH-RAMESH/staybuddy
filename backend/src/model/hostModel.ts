@@ -28,11 +28,9 @@ const hostModel: Schema = new Schema(
         },
         password: {
             type: String,
-            required: true,
         },
         mobile: {
             type: String,
-            required: true,
         },
         isBlock: {
             type: Boolean,

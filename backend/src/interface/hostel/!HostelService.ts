@@ -11,9 +11,9 @@ export interface IHostelService {
     maxPrice?: number;
     sort?: string;
   }): Promise<{ hostels: IUpdateHostelInput[]; totalCount: number } | string>,
-  getSingleHostel(id: Types.ObjectId): Promise<IUpdateHostelInput | string>,
+  getSingleHostel(id: Types.ObjectId):  Promise<(IUpdateHostelInput & { isFull: boolean }) | string>,
   addHostel(hostData: IUpdateHostelInput): Promise<string>,
-  getHostHostels(id: Types.ObjectId, limit: number, skip: number, search: string): Promise<{ hostels: IUpdateHostelInput[]; totalCount: number } | string>,
+  getHostHostels(id: Types.ObjectId, limit: number, skip: number, search: string,sort?:string): Promise<{ hostels: IUpdateHostelInput[]; totalCount: number } | string>,
   deleteHostel(hostelId: string): Promise<string>,
   updateHostel(hostelData: IUpdateHostelInput): Promise<string>,
   getOneHostel(id: Types.ObjectId): Promise<IUpdateHostelInput | string>,

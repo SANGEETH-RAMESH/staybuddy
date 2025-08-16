@@ -34,5 +34,6 @@ export interface IOrderResponse   {
     cancellationPolicy: string,
     cancelled: boolean,
     status: string,
-    razorpay_order_id?: string
-}
+    razorpay_order_id?: string,
+    bookingType:string
+} 

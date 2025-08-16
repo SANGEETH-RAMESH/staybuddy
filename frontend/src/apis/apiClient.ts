@@ -1,90 +1,12 @@
-// import axios from 'axios';
-// import store from '../redux/store';
-// import { loginSuccess, logout } from '../redux/userAuthSlice';
-
-// const apiClient = axios.create({
-//   baseURL: 'http://localhost:4000',
-//   headers: {
-//     "Content-Type": "application/json"
-//   }
-// });
-
-// // Request Interceptor
-// apiClient.interceptors.request.use(
-//   (config) => {
-//     const state = store.getState();
-//     const accessToken = state.userAuth.accessToken || localStorage.getItem('userAccessToken');
-//     // console.log(accessToken, 'accessToken');
-//     if (accessToken) {
-//       config.headers.Authorization = `Bearer ${accessToken}`;
-//     }
-//     return config;
-//   },
-//   (error) => Promise.reject(error)
-// );
-
-// // Response Interceptor
-// apiClient.interceptors.response.use(
-//   (response) => response,
-//   async (error) => {
-//     const originalRequest = error.config;
-
-//     if (error.response?.status === 401 && !originalRequest._retry) {
-//       originalRequest._retry = true;
-//       try {
-//         console.log('hey')
-//         const refreshToken = store.getState().userAuth.refreshToken || localStorage.getItem("userRefreshToken");
-//         // console.log(localStorage.getItem('userAccessToken'),'AccessToken')
-//         console.log(localStorage.getItem('userRefreshToken'),'RefreshTOken')
-//         if (!refreshToken) {
-//           console.log('ehllodsfd')
-//         }
-//         console.log(refreshToken,'hello')
-//         const { data } = await apiClient.post("/user/refresh", { refreshToken });
-//         // console.log(data,'daata')
-//         // const { accessToken, refreshToken:newRefreshToken } = ;
-//         const accessToken = data.message.accessToken
-//         store.dispatch(loginSuccess({
-//           accessToken:data.message.accessToken,
-//           refreshToken: data.message.refreshToken,
-//           isLoggedIn: true
-//         }));
-
-//         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
-//         return apiClient(originalRequest);
-//       } catch (refreshError) {
-//         console.error(refreshError);
-//         // Clear the user's session if refresh fails
-//         store.dispatch(logout({ isLoggedIn: false }));
-//         localStorage.removeItem("userAccessToken");
-//         localStorage.removeItem("userRefreshToken");
-//         window.location.href = "/user/login";
-//       }
-//     }
-
-//     if (error.response?.status === 403) {
-//       console.warn("User is blocked. Logging out...");
-
-//       store.dispatch(logout({ isLoggedIn: false }));
-//       localStorage.removeItem("userAccessToken");
-//       localStorage.removeItem("userRefreshToken");
-//       window.location.href = "/user/login";
-//     }
-
-//     return Promise.reject(error);
-//   }
-// );
-
-// export default apiClient;
 
 
-// src/api/apiClient.ts
 import axios from 'axios';
 import store from '../redux/store';
 import { loginSuccess as userLogin, logout as userLogout } from '../redux/userAuthSlice';
 import { loginSuccess as hostLogin, logout as hostLogout } from '../redux/hostAuthSlice';
 import { loginSuccess as adminLogin, logout as adminLogout } from '../redux/adminAuthSlice';
 import type { ActionCreatorWithPayload } from '@reduxjs/toolkit';
+const apiUrl = import.meta.env.VITE_BACKEND_URL;
 
 type Role = 'user' | 'host' | 'admin';
 
@@ -114,7 +36,7 @@ const authConfig: Record<Role, AuthConfig> = {
       logout: userLogout,
     },
     refreshEndpoint: '/user/token/refresh',
-    loginRedirect: '/user/login',
+    loginRedirect: '/login',
   },
   host: {
     accessTokenKey: 'hostAccessToken',
@@ -142,7 +64,7 @@ const createApiClient = (role: Role) => {
   const config = authConfig[role];
 
   const instance = axios.create({
-    baseURL: 'http://localhost:4000',
+    baseURL: apiUrl,
     headers: { 'Content-Type': 'application/json' },
   });
 
@@ -162,14 +84,20 @@ const createApiClient = (role: Role) => {
     (response) => response,
     async (error) => {
       const originalRequest = error.config;
-
+      console.log(error.response.status,'Status',originalRequest._retry)
+      if(error.response.status == 404 || error.response.status== 401){
+        store.dispatch(config.slice.logout({ isLoggedIn: false }));
+          localStorage.removeItem(config.accessTokenKey);
+          localStorage.removeItem(config.refreshTokenKey);
+          window.location.href = config.loginRedirect;
+      }
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
         try {
           const newRefreshToken = localStorage.getItem(config.refreshTokenKey);
           if (!newRefreshToken) throw new Error('Refresh token missing');
           const { data } = await axios.post(
-            `http://localhost:4000${config.refreshEndpoint}`,
+            `${apiUrl}${config.refreshEndpoint}`,
             { refreshToken:newRefreshToken }
           );
           const { accessToken, refreshToken } = data.message;
@@ -189,14 +117,14 @@ const createApiClient = (role: Role) => {
           store.dispatch(config.slice.logout({ isLoggedIn: false }));
           localStorage.removeItem(config.accessTokenKey);
           localStorage.removeItem(config.refreshTokenKey);
-          // window.location.href = config.loginRedirect;
+          window.location.href = config.loginRedirect;
         }
       }
 
 
       if (error.response?.status == 403 && error.response.message == `Access denied:Not a ${role.toUpperCase()}`) {
         console.warn(`Access denied:Not a ${role.toUpperCase()}`);
-        //  window.location.href = config.loginRedirect;
+         window.location.href = config.loginRedirect;
       }
       console.log(error, 'Error Und')
       if (error.response?.status === 403) {
@@ -204,7 +132,7 @@ const createApiClient = (role: Role) => {
         store.dispatch(config.slice.logout({ isLoggedIn: false }));
         localStorage.removeItem(config.accessTokenKey);
         localStorage.removeItem(config.refreshTokenKey);
-        // window.location.href = config.loginRedirect;
+        window.location.href = config.loginRedirect;
       }
 
       return Promise.reject(error);

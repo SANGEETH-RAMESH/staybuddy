@@ -1,8 +1,10 @@
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { IHostelRepository } from "../interface/hostel/!HostelRepository";
 import { IHostelService } from "../interface/hostel/!HostelService";
 import { IUpdateHostelInput } from "../dtos/HostelData";
 import { Messages } from "../messages/messages";
+import { IOrderRepository } from "../interface/order/!OrderRepository";
+import { IOrderResponse } from "../dtos/OrderResponse";
 
 function getDistanceInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
     // const R = 6371;
@@ -28,7 +30,7 @@ function toPlainHostel(hostel: any) {
 
 
 class hostelService implements IHostelService {
-    constructor(private _hostelRepository: IHostelRepository) { }
+    constructor(private _hostelRepository: IHostelRepository, private _orderRepository: IOrderRepository) { }
 
 
     async getHostels(
@@ -111,7 +113,8 @@ class hostelService implements IHostelService {
                     facilities: 1,
                     phone: 1,
                     inactiveReason: 1,
-                    bedShareRoom: 1
+                    bedShareRoom: 1,
+                    bookingType: 1
                 }
             } else {
                 projection = {
@@ -133,6 +136,32 @@ class hostelService implements IHostelService {
                     return false;
                 });
             }
+
+            const today = new Date();
+            allHostels = await Promise.all(
+                allHostels.map(async (hostel) => {
+                    const startDate = { $lte: today };
+                    const endDate = { $gte: today }
+                    const orderList = await this._orderRepository.findHostels({
+                        hostel_id: hostel._id!,
+                        active: true,
+                        startDate,
+                        endDate,
+                    });
+                    let bookedBeds = 0;
+                    if (Array.isArray(orderList)) {
+                        bookedBeds = orderList.reduce(
+                            (sum, order) => sum + (order.selectedBeds || 0),
+                            0
+                        );
+                    }
+                    const isFull = bookedBeds >= hostel.totalRooms;
+
+                    return { ...hostel, isFull };
+                })
+            );
+
+
             if (ratedHostels.length > 0) {
                 allHostels = allHostels.map(hostel => {
                     const plainHostel = toPlainHostel(hostel);
@@ -168,10 +197,37 @@ class hostelService implements IHostelService {
         }
     }
 
-    async getSingleHostel(id: Types.ObjectId): Promise<IUpdateHostelInput | string> {
+    async getSingleHostel(id: Types.ObjectId): Promise<(IUpdateHostelInput & { isFull: boolean }) | string> {
         try {
-            const response = await this._hostelRepository.getSingleHostel(id);
-            return response
+            const hostel = await this._hostelRepository.getSingleHostel(id);
+            if (!hostel) {
+                return Messages.NoHostel;
+            }
+
+            if (typeof hostel === "string") {
+                return hostel;
+            }
+
+            if (!hostel._id) {
+                return Messages.NoHostelId
+            }
+
+            const today = new Date();
+            const orders = await this._orderRepository.findHostel(hostel._id.toString(), today);
+
+            if (typeof orders === "string") {
+                return orders;
+            }
+
+            if (!orders) {
+                return { ...hostel, isFull: false };
+            }
+
+
+            const bookedBeds = (orders.selectedBeds || 0);
+            const isFull = bookedBeds >= hostel.totalRooms;
+
+            return { ...hostel, isFull };
         } catch (error) {
             return error as string
         }
@@ -179,7 +235,43 @@ class hostelService implements IHostelService {
 
     async addHostel(hostData: IUpdateHostelInput): Promise<string> {
         try {
-            const response = await this._hostelRepository.addHostel(hostData)
+            const host_id = new mongoose.Types.ObjectId(
+                typeof hostData.host_id === 'string'
+                    ? hostData.host_id
+                    : hostData.host_id instanceof mongoose.Types.ObjectId
+                        ? hostData.host_id
+                        : hostData.host_id._id
+            );
+
+            
+            const addingHostelData = {
+                hostelname: hostData.hostelname,
+                location: hostData.location,
+                nearbyaccess: hostData.nearbyaccess,
+                beds: hostData.beds,
+                totalRooms: hostData.beds,
+                policies: hostData.policies,
+                category: hostData.category,
+                advanceamount: hostData.advanceamount,
+                facilities: hostData.facilities,
+                bedShareRoom: hostData.bedShareRate ? Number(hostData.bedShareRate) : undefined,
+                isFull: false,
+                isActive: true,
+                foodRate: hostData.foodRate,
+                phone: hostData.phone,
+                host_id: host_id,
+                longitude: Number(hostData.longitude),
+                latitude: Number(hostData.latitude),
+                cancellationPolicy: hostData.cancellationPolicy.toLowerCase(),
+                bookingType: hostData.bookingType,
+                photos: Array.isArray(hostData.photos)
+                    ? hostData.photos
+                    : hostData.photos
+                        ? [hostData.photos]
+                        : [],
+            };
+            console.log(addingHostelData, 'Service')
+            const response = await this._hostelRepository.addHostel(addingHostelData);
             return response
         } catch (error) {
             console.log(error);
@@ -187,9 +279,24 @@ class hostelService implements IHostelService {
         }
     }
 
-    async getHostHostels(id: Types.ObjectId, limit: number, skip: number, search: string): Promise<{ hostels: IUpdateHostelInput[]; totalCount: number } | string> {
+    async getHostHostels(id: Types.ObjectId, limit: number, skip: number, search: string, sort?: string): Promise<{ hostels: IUpdateHostelInput[]; totalCount: number } | string> {
         try {
-            const response = await this._hostelRepository.getHostHostels(id, limit, skip, search);
+            let sortOption: any = { createdAt: -1 };
+            switch (sort) {
+                case 'price_low_high':
+                    sortOption = { bedShareRoom: 1 };
+                    break;
+                case 'price_high_low':
+                    sortOption = { bedShareRoom: -1 };
+                    break;
+                case 'name_a_z':
+                    sortOption = { hostelname: 1 };
+                    break;
+                case 'name_z_a':
+                    sortOption = { hostelname: -1 };
+                    break;
+            }
+            const response = await this._hostelRepository.getHostHostels(id, limit, skip, search, sortOption);
             return response
         } catch (error) {
             console.log(error);
@@ -208,8 +315,54 @@ class hostelService implements IHostelService {
 
     async updateHostel(hostelData: IUpdateHostelInput): Promise<string> {
         try {
-            const response = await this._hostelRepository.updateHostel(hostelData);
+
+            const hostelId = new mongoose.Types.ObjectId(hostelData.hostelId);
+            const existingHostel = await this._hostelRepository.getOneHostel(hostelId);
+            if (!existingHostel) {
+                throw new Error(Messages.HostelNotFound);
+            }
+
+            if (typeof existingHostel === "string") {
+                throw new Error(existingHostel);
+            }
+
+
+            const currentTotalRooms = existingHostel.totalRooms || 0;
+            const currentBeds = existingHostel.beds || 0;
+            const additionalRooms = hostelData.beds || 0;
+            const updatedTotalRooms = currentTotalRooms + additionalRooms;
+            const updatedBeds = currentBeds + additionalRooms;
+
+            const updateFields: any = {
+                hostelname: hostelData.hostelname,
+                location: hostelData.location,
+                nearbyaccess: hostelData.nearbyaccess,
+                beds: updatedBeds,
+                policies: hostelData.policies,
+                category: hostelData.category,
+                advanceamount: hostelData.advanceamount,
+                facilities:hostelData.facilities,
+                photos: hostelData.photos,
+                longitude: Number(hostelData.longitude),
+                latitude: Number(hostelData.latitude),
+                cancellationPolicy: hostelData.cancellationPolicy,
+                totalRooms: updatedTotalRooms,
+                bookingType: hostelData.bookingType
+            };
+            console.log(updateFields, 'updateFieds')
+          
+            if (hostelData.facilities.food) {
+    updateFields.foodRate = hostelData.foodRate;
+}
+
+            if (!hostelData.hostelId) {
+                throw new Error("Hostel ID is required for update.");
+            }
+
+            const response = await this._hostelRepository.updateHostel(hostelData.hostelId, updateFields);
             return response;
+            // const response = await this._hostelRepository.updateHostel(hostelData);
+            // return response;
         } catch (error) {
             return error as string;
         }

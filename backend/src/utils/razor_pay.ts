@@ -122,6 +122,7 @@ export const makeOrder = async (req: Request, res: Response) => {
         startDate: bookingDetails.startDate,
         endDate: bookingDetails.endDate,
         cancellationPolicy: bookingDetails.cancellationPolicy,
+        bookingType:bookingDetails.bookingType,
         status: 'created',
     })
     await newOrder.save()

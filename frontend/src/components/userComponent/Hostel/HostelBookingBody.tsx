@@ -65,7 +65,8 @@ const BookingForm = () => {
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
   const [bookingMonths, setBookingMonths] = useState(1);
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
+  const [bookingType, setBookingType] = useState('');
   // const [facilityError, setFacilityError] = useState<string>('');
 
   const { id } = useParams();
@@ -200,6 +201,7 @@ const BookingForm = () => {
         const walletData = walletResponse.data.message;
         console.log(userData, 'hee')
         setCancellationPolicy(hostelData.cancellationPolicy);
+        setBookingType(hostelData.bookingType);
         setWalletBalance(walletData.balance);
         setUserId(userData._id)
         setCustomerEmail(userData.email);
@@ -294,6 +296,7 @@ const BookingForm = () => {
       tenantPreferred,
       selectedFacilities,
       host_id,
+      bookingType,
       hostel_id: id,
       foodRate: selectedFacilities.food ? foodRate : null,
       category,
@@ -305,7 +308,7 @@ const BookingForm = () => {
 
     try {
       const response = await createBooking(bookingDetails);
-      console.log(response,'Anshi')
+      console.log(response, 'Anshi')
       if (response.data.message === 'Hostel Booked') {
         const newNotification: Notification = {
           receiver: userId,
@@ -354,6 +357,7 @@ const BookingForm = () => {
         totalDepositAmount,
         tenantPreferred,
         selectedFacilities,
+        bookingType,
         host_id,
         hostel_id: id,
         foodRate: selectedFacilities.food ? foodRate : null,
@@ -366,8 +370,8 @@ const BookingForm = () => {
       };
       const response = await createOrder(bookingDetails);
 
-      const { order_id,amount,hostelname,currency,beds,customername,customeremail,customerphone,booking_id } = response.data;
-      console.log(amount,hostelname,currency,booking_id,'Booking')
+      const { order_id, amount, hostelname, currency, beds, customername, customeremail, customerphone, booking_id } = response.data;
+      console.log(amount, hostelname, currency, booking_id, 'Booking')
       const options = {
         key: 'rzp_test_s0Bm198VJWlvQ2',
         amount: amount * 100,
@@ -390,7 +394,7 @@ const BookingForm = () => {
         },
         modal: {
           ondismiss: () => {
-             paymentFail(booking_id);
+            paymentFail(booking_id);
           },
         },
       };
@@ -416,7 +420,7 @@ const BookingForm = () => {
     }
   };
 
-  const handleSubmit = async (bookingId:string) => {
+  const handleSubmit = async (bookingId: string) => {
     // const bookingDetails = {
     //   customerName,
     //   customerPhone,
@@ -438,9 +442,9 @@ const BookingForm = () => {
 
     try {
       console.log(bookingId)
-      console.log(typeof bookingId,'fhdfldfdf')
+      console.log(typeof bookingId, 'fhdfldfdf')
       const response = await verifyPayment(bookingId);
-      console.log(response,'REss')
+      console.log(response, 'REss')
       if (response.data.message === 'Payment verified successfully') {
         const newNotification: Notification = {
           receiver: userId,
@@ -458,7 +462,7 @@ const BookingForm = () => {
           isRead: true
         }
         console.log('rece', newNotification)
-        console.log("host ",hostNotification)
+        console.log("host ", hostNotification)
         socket.emit('send_notification', newNotification)
         socket.emit('send_notification', hostNotification)
         // toast.success('Hostel Booked Successfully');
@@ -473,12 +477,12 @@ const BookingForm = () => {
     }
   };
 
-  const paymentFail = async(bookingId:string) => {
+  const paymentFail = async (bookingId: string) => {
     try {
-      console.log(bookingId,'dlfd')
+      console.log(bookingId, 'dlfd')
       const response = await paymentFailed(bookingId);
       console.log(response)
-      if(response.data.message == 'Payment Failed'){
+      if (response.data.message == 'Payment Failed') {
         toast.error('Payment failed,hostel Booked')
         navigate('/hostel')
       }
@@ -710,6 +714,18 @@ const BookingForm = () => {
               />
               {renderError('customerEmail')}
             </div>
+
+            {bookingType && (
+              <div>
+                <label className="block text-sm text-blue-400 mb-1">Booking Type</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={bookingType === 'one month' ? 'Monthly Booking' : 'Daily Booking'}
+                  className="w-full p-2 border rounded-lg bg-gray-50"
+                />
+              </div>
+            )}
 
             {selectedFacilities.food && (
               <div>

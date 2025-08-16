@@ -7,6 +7,7 @@ export const categoryValidation = Yup.object({
   name: Yup.string()
     .trim()
     .min(2, 'Name must be at least 2 characters')
+    .max(15, 'Name cannot be more than 15 characters')
     .matches(/^[A-Za-z ]+$/, 'Name cannot contain special characters or numbers')
     .required('Category name is required'),
 

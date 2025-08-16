@@ -11,8 +11,8 @@ import { ChangePasswordData } from "../../dtos/ChangePasswordData";
 
 type ResetPasswordData = {
     email: string;
-    password: string;
     newPassword: string;
+    confirmPassword: string;
 };
 
 

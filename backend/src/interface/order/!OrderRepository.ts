@@ -16,6 +16,8 @@ export interface IOrderRepository {
     verifyPayment(bookingId:string): Promise<string>,
     paymentFailed(bookingId:string):Promise<string>,
     repaymentSuccess(id: string): Promise<string>,
-    getSales(): Promise<IOrderResponse[] | string | null>
+    getSales(): Promise<IOrderResponse[] | string | null>,
+    findHostels({hostel_id,active,startDate,endDate}:{hostel_id:string,active:boolean, startDate: Date | Record<string, Date>; endDate: Date | Record<string, Date> }):Promise<IOrderResponse[] | null | string>,
+    findHostel(hostelId: string, today: Date): Promise<IOrderResponse | null | string>
 
 }

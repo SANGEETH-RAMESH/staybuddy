@@ -1,8 +1,9 @@
 import { Types } from "mongoose";
 import { IHostResponse } from "./HostResponse";
+import { IFacilities } from "./FacilitiyResponse";
 
 export interface IUpdateHostelInput {
-  _id:string;
+  _id?:string;
   hostelname: string;
   location: string;
   mobile?: string;
@@ -14,13 +15,15 @@ export interface IUpdateHostelInput {
   bedShareRate?: string;
   foodRate: string | number;
   host_id: string | Types.ObjectId |IHostResponse ;
-  facilities: string | string[]; 
+  facilities: IFacilities; 
   longitude:number;
   latitude:number;
   photos?: string | string[]; 
   hostelId?:string;
-  phoneNumber?:string;
+  phone?:string | string[];
   cancellationPolicy:string;
   totalRooms:number;
   isFull?:boolean;
+  bookingType?:string;
+  bedShareRoom?:number
 }

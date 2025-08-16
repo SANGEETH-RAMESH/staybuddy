@@ -55,6 +55,7 @@ class orderRepository implements IOrderRepository {
                 startDate: orderData.startDate,
                 endDate: orderData.endDate,
                 cancellationPolicy: orderData.cancellationPolicy,
+                bookingType: orderData.bookingType,
                 status: 'paid',
             });
             if (addBookings) {
@@ -79,9 +80,9 @@ class orderRepository implements IOrderRepository {
         }
     }
 
-    
 
-    
+
+
 
     async createReview(data: reviewData): Promise<string> {
         try {
@@ -237,6 +238,30 @@ class orderRepository implements IOrderRepository {
         try {
             const response = await Order.find().lean<IOrderResponse[]>();
             return response;
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async findHostels({ hostel_id, active, startDate, endDate }: { hostel_id: string, active: boolean, startDate: Date | Record<string, Date>; endDate: Date | Record<string, Date> }): Promise<IOrderResponse[] | null | string> {
+        try {
+            const response = await Order.find({ hostel_id: hostel_id, active: active, startDate: startDate, endDate: endDate })
+                .lean<IOrderResponse[]>();
+            return response;
+        } catch (error) {
+            return error as string
+        }
+    }
+
+    async findHostel(hostelId: string, today: Date): Promise<IOrderResponse | null | string> {
+        try {
+            return await Order.find({
+                hostel_id: hostelId,
+                active: true,
+                startDate: { $lte: today },
+                endDate: { $gte: today },
+            })
+                .lean<IOrderResponse>();
         } catch (error) {
             return error as string
         }

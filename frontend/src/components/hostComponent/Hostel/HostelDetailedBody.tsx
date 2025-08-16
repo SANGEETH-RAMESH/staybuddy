@@ -15,18 +15,19 @@ import {
   ChevronRight,
   Star,
   Power,
-  X
+  X,
+  Calendar
 } from 'lucide-react';
 import { Hostel } from '../../../interface/Hostel';
 import { getSingleHostel, status } from '../../../services/hostServices';
 import toast from 'react-hot-toast';
 import LocationDisplay from '../../commonComponents/LocationDisplay';
 
-const InactiveReasonModal = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  loading 
+const InactiveReasonModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  loading
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -59,7 +60,7 @@ const InactiveReasonModal = ({
             <X size={20} />
           </button>
         </div>
-        
+
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -75,7 +76,7 @@ const InactiveReasonModal = ({
               disabled={loading}
             />
           </div>
-          
+
           <div className="flex gap-3 justify-end">
             <button
               type="button"
@@ -115,7 +116,6 @@ const ImageGallery = ({ photos }: { photos: string[] }) => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden mb-6">
       <div className="relative">
-        {/* Desktop Layout */}
         <div className="hidden md:grid grid-cols-3 gap-4 p-4">
           <div className="relative h-[480px] col-span-2 rounded-lg overflow-hidden">
             <img
@@ -137,7 +137,6 @@ const ImageGallery = ({ photos }: { photos: string[] }) => {
           </div>
         </div>
 
-        {/* Mobile Layout */}
         <div className="md:hidden relative h-[400px]">
           <img
             src={photos[currentImageIndex] || defaultImage}
@@ -185,7 +184,7 @@ const HostelDetailPage = () => {
   useEffect(() => {
     const fetchHostelData = async () => {
       try {
-        if(!id) return;
+        if (!id) return;
         const response = await getSingleHostel(id);
         setHostel(response.data.message);
         setLoading(false);
@@ -199,12 +198,11 @@ const HostelDetailPage = () => {
     fetchHostelData();
   }, [id]);
 
-  // Function to handle status toggle
   const handleStatusToggle = async (inactiveReason?: string) => {
     if (!hostel || !id) return;
 
     setToggleLoading(true);
-    
+
     try {
       const payload = {
         id: id,
@@ -213,16 +211,16 @@ const HostelDetailPage = () => {
       };
 
       console.log('Sending to backend:', payload);
-      
+
       const response = await status(payload);
-      console.log("response",response)
-      if(response.data.message == 'Status Updated'){
+      console.log("response", response)
+      if (response.data.message == 'Status Updated') {
         toast.success('Status Updated')
       }
-      
+
       setHostel(prev => prev ? { ...prev, isActive: !prev.isActive } : null);
       setShowModal(false);
-      
+
     } catch (error) {
       console.error('Error updating hostel status:', error);
     } finally {
@@ -232,11 +230,33 @@ const HostelDetailPage = () => {
 
   const handleToggleClick = () => {
     if (!hostel) return;
-    
+
     if (hostel.isActive) {
       setShowModal(true);
     } else {
       handleStatusToggle();
+    }
+  };
+
+  const getBookingTypeText = (bookingType: string) => {
+    switch (bookingType?.toLowerCase()) {
+      case 'one month':
+        return 'Monthly Booking';
+      case 'one day':
+        return 'Daily Booking';
+      default:
+        return bookingType || 'Not specified';
+    }
+  };
+
+  const getBookingTypeColor = (bookingType: string) => {
+    switch (bookingType?.toLowerCase()) {
+      case 'one month':
+        return 'text-blue-500';
+      case 'one day':
+        return 'text-green-500';
+      default:
+        return 'text-gray-500';
     }
   };
 
@@ -257,15 +277,14 @@ const HostelDetailPage = () => {
   }
 
   const facilities: string[] = Array.isArray(hostel.facilities)
-  ? hostel.facilities
-  : typeof hostel.facilities === 'string'
-    ? (hostel.facilities as string).split(',').map((f: string) => f.trim())
-    : [];
+    ? hostel.facilities
+    : typeof hostel.facilities === 'string'
+      ? (hostel.facilities as string).split(',').map((f: string) => f.trim())
+      : [];
 
   return (
     <div className="bg-gray-50 min-h-screen pt-20 pb-8 px-4 md:px-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
@@ -273,11 +292,10 @@ const HostelDetailPage = () => {
                 <h1 className="text-3xl font-bold text-gray-800">
                   {hostel.hostelname}
                 </h1>
-                <div className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  hostel.isActive 
-                    ? 'bg-green-100 text-green-800' 
+                <div className={`px-3 py-1 rounded-full text-sm font-medium ${hostel.isActive
+                    ? 'bg-green-100 text-green-800'
                     : 'bg-red-100 text-red-800'
-                }`}>
+                  }`}>
                   {hostel.isActive ? 'Active' : 'Inactive'}
                 </div>
               </div>
@@ -290,33 +308,38 @@ const HostelDetailPage = () => {
                   <Users className="mr-1" size={18} />
                   <span>{hostel.beds} Beds/Room</span>
                 </div>
+                {hostel.bookingType && (
+                  <div className="flex items-center text-gray-600">
+                    <Calendar className="mr-1" size={18} />
+                    <span>{getBookingTypeText(hostel.bookingType)}</span>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex flex-col items-end gap-3">
               <div className="text-2xl font-bold text-blue-600">
-                ₹{hostel.bedShareRoom}/month
+                ₹{hostel.bedShareRoom}
+                {hostel.bookingType === 'one day' ? '/day' : '/month'}
               </div>
               {hostel.foodRate && (
                 <div className="text-sm text-gray-500">
                   + ₹{hostel.foodRate} for food
                 </div>
               )}
-              
-              {/* Status Toggle Button */}
+
               <button
                 onClick={handleToggleClick}
                 disabled={toggleLoading}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 ${
-                  hostel.isActive
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 ${hostel.isActive
                     ? 'bg-red-600 hover:bg-red-700 text-white'
                     : 'bg-green-600 hover:bg-green-700 text-white'
-                }`}
+                  }`}
               >
                 <Power size={16} />
-                {toggleLoading 
-                  ? 'Updating...' 
-                  : hostel.isActive 
-                    ? 'Inactivate' 
+                {toggleLoading
+                  ? 'Updating...'
+                  : hostel.isActive
+                    ? 'Inactivate'
                     : 'Activate'
                 }
               </button>
@@ -327,9 +350,7 @@ const HostelDetailPage = () => {
         <ImageGallery photos={[hostel.photos]} />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Main Info Column */}
           <div className="md:col-span-2 space-y-6">
-            {/* Facilities */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                 <Star className="text-blue-500" size={20} />
@@ -347,7 +368,6 @@ const HostelDetailPage = () => {
               </div>
             </div>
 
-            {/* Location & Access */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold mb-4">Location & Accessibility</h2>
               <div className="flex items-center p-4 bg-gray-50 rounded-lg">
@@ -358,16 +378,15 @@ const HostelDetailPage = () => {
                 </div>
               </div>
               {hostel.latitude && hostel.longitude && (
-                            <LocationDisplay
-                                latitude={hostel.latitude}
-                                longitude={hostel.longitude}
-                                locationName={hostel.location}
-                                hostelName={hostel.hostelname}
-                            />
-                        )}
+                <LocationDisplay
+                  latitude={hostel.latitude}
+                  longitude={hostel.longitude}
+                  locationName={hostel.location}
+                  hostelName={hostel.hostelname}
+                />
+              )}
             </div>
 
-            {/* Policies */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold mb-4">Hostel Policies</h2>
               <div className="flex items-start p-4 bg-gray-50 rounded-lg">
@@ -380,9 +399,7 @@ const HostelDetailPage = () => {
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="space-y-6">
-            {/* Host Information */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold mb-4">Host Information</h2>
               <div className="space-y-4">
@@ -403,14 +420,25 @@ const HostelDetailPage = () => {
               </div>
             </div>
 
-            {/* Pricing Details */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold mb-4">Pricing Details</h2>
               <div className="space-y-4">
+                {hostel.bookingType && (
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                    <Calendar className={`mr-3 ${getBookingTypeColor(hostel.bookingType)}`} />
+                    <div>
+                      <p className="text-sm text-gray-500">Booking Type</p>
+                      <p className="font-medium">{getBookingTypeText(hostel.bookingType)}</p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex items-center p-3 bg-gray-50 rounded-lg">
                   <IndianRupee className="mr-3 text-green-500" />
                   <div>
-                    <p className="text-sm text-gray-500">Monthly Rent</p>
+                    <p className="text-sm text-gray-500">
+                      {hostel.bookingType === 'one day' ? 'Daily Rate' : 'Monthly Rent'}
+                    </p>
                     <p className="font-medium">₹{hostel.bedShareRoom?.toLocaleString()}</p>
                   </div>
                 </div>
@@ -425,7 +453,9 @@ const HostelDetailPage = () => {
                   <div className="flex items-center p-3 bg-gray-50 rounded-lg">
                     <UtensilsCrossed className="mr-3 text-orange-500" />
                     <div>
-                      <p className="text-sm text-gray-500">Food Rate (Monthly)</p>
+                      <p className="text-sm text-gray-500">
+                        Food Rate ({hostel.bookingType === 'one day' ? 'Daily' : 'Monthly'})
+                      </p>
                       <p className="font-medium">₹{hostel.foodRate?.toLocaleString()}</p>
                     </div>
                   </div>
@@ -436,7 +466,6 @@ const HostelDetailPage = () => {
         </div>
       </div>
 
-      {/* Inactive Reason Modal */}
       <InactiveReasonModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}

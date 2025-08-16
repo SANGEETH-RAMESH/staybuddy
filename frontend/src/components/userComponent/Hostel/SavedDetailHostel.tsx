@@ -175,7 +175,7 @@ const SavedDetailHostel = () => {
             if (response.data.message == 'Payment Success') {
                 console.log("Scucldsjf")
                 setBooking((prev) => {
-                    if (!prev) return prev; 
+                    if (!prev) return prev;
                     return {
                         ...prev,
                         status: 'paid',
@@ -319,7 +319,19 @@ const SavedDetailHostel = () => {
             );
         }
 
-        if (bookingEnded) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        let fromDate: Date | null = null;
+        if (booking?.fromDate) {
+            fromDate = new Date(booking.fromDate);
+            fromDate.setHours(0, 0, 0, 0);
+        }
+        if (bookingEnded && booking && fromDate && booking.fromDate && fromDate < today) {
+            console.log("Booking Ended:", bookingEnded);
+            console.log("Booking Object:", booking.cancelled);
+            console.log("From Date:", booking.fromDate);
+            console.log("From Date Parsed:", new Date(booking.fromDate));
+            console.log("Current Date:", new Date());
             return (
                 <button
                     onClick={() => setShowReviewModal(true)}
@@ -337,17 +349,20 @@ const SavedDetailHostel = () => {
         return (
             <div className="space-y-2">
                 {/* Cancellation Status */}
-                <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${cancellationAllowed
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-red-100 text-red-700'
-                    }`}>
-                    {cancellationAllowed ? (
-                        <CheckCircle size={16} />
-                    ) : (
-                        <XCircle size={16} />
-                    )}
-                    <span>{cancellationMessage}</span>
-                </div>
+                {booking && booking.cancelled !== true && (
+                    <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm ${cancellationAllowed
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-red-100 text-red-700'
+                        }`}>
+                        {cancellationAllowed ? (
+                            <CheckCircle size={16} />
+                        ) : (
+                            <XCircle size={16} />
+                        )}
+                        <span>{booking && booking.cancelled == false ? cancellationMessage : ''}</span>
+                    </div>
+                )}
+
 
                 {booking && booking.status == 'failed' ? (
                     <button
@@ -369,7 +384,7 @@ const SavedDetailHostel = () => {
                             <p>Pay</p>
                         </div>
                     </button>
-                ) : (
+                ) : (booking?.cancelled !== true && (
                     <button
                         onClick={handleEndBooking}
                         disabled={false}
@@ -382,6 +397,7 @@ const SavedDetailHostel = () => {
                             {isEndingBooking ? 'Ending Booking...' : 'End Booking'}
                         </div>
                     </button>
+                )
                 )
                 }
 

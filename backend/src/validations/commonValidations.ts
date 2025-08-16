@@ -4,6 +4,7 @@ export const signupValidation = Yup.object({
 	name: Yup.string()
 		.trim()
 		.min(3, "Name must be at least 3 characters")
+		.max(15,"Name cannot be more than 15 characters")
 		.matches(/^[A-Za-z]+( [A-Za-z]+)*$/,'Invalid name format')
 		.required("Please enter your name"),
 
@@ -14,6 +15,7 @@ export const signupValidation = Yup.object({
 
 	mobile: Yup.string()
 		.trim()
+		.length(10, "Mobile number must be exactly 10 digits")
 		.matches(/^[6-9][0-9]{9}$/, "Mobile number must start with a digit between 6 and 9 and be 10 digits long")
 		.test('no-consecutive-zeros', 'Mobile number cannot contain more than 5 consecutive zeros', value => {
 			if (value) {
@@ -26,6 +28,7 @@ export const signupValidation = Yup.object({
 	password: Yup.string()
 		.trim()
 		.min(8, "Password must be at least 8 characters")
+		.max(15, "Password cannot be more than 15 characters")
 		.matches(/[a-z]/, "Password must contain at least one lowercase letter")
 		.matches(/[A-Z]/, "Password must contain at least one uppercase letter")
 		.matches(/[0-9]/, "Password must contain at least one number")

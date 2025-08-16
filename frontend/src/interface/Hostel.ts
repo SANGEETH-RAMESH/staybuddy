@@ -36,5 +36,6 @@ export interface Hostel {
   category: string;
   cancellationPolicy?:string;
   isFull?:boolean;
+  bookingType:string
 };
 

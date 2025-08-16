@@ -365,14 +365,18 @@ class hostService implements IHostService {
                     userType: 'google',
                     mobile: '',
                 }
-                const id = await this._userRepository.createGoogleAuth(data)
-                await this._walletRepository.createWallet(payload.email)
+                console.log(data,'Data')
+                const id = await this._hostRepository.createGoogleAuth(data)
+                await this._walletRepository.createWallet(payload.email);
+                console.log(id,'HEyyyy')
                 const userPayload = {
                     _id: new Types.ObjectId(id),
                     role: 'host' as const
                 };
+                console.log(userPayload,'dlfsdf',id)
                 const accessToken = generateAccessToken(userPayload);
                 const refreshToken = generateRefreshToken(userPayload);
+                console.log(Messages.UserCreated,accessToken,refreshToken)
                 return { message: Messages.UserCreated, accessToken, refreshToken, role: 'host' }
             } catch (error) {
                 return error as string

@@ -11,7 +11,7 @@ export interface IUserService {
     verifyLogin(userData: IUserResponse): Promise<{ message: string;accessToken?: string;refreshToken?: string;role?: string;}>,
     resendOtp(userData: IUserResponse): Promise<string | null>,
     forgotPassword(userData: IUserResponse): Promise<{ email: string; temp: boolean } | null>,
-    resetPassword(userData: { email: string; password: string }): Promise<string | { message: string }>,
+    resetPassword(userData: { email: string; newPassword: string }): Promise<string | { message: string }>,
     getUserDetails(userId: Types.ObjectId): Promise<IUserResponse | null>
     changePassword(userData: { userId: string; currentPassword: string; newPassword: string }): Promise<string>,
     editUserDetail(userData: { userId: Types.ObjectId, name: string, mobile: string }): Promise<string>,

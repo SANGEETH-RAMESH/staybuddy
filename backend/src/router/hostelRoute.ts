@@ -1,5 +1,6 @@
 import { Router } from "express";
 import HostelRepository from "../respository/hostelRepository";
+import OrderRepository from "../respository/orderRepository";
 import HostelService from "../service/hostelService";
 import HostelController from "../controller/hostelController";
 import userAuthMiddleware from "../middleware/userAuth";
@@ -9,7 +10,8 @@ import hostAuthMiddleware from "../middleware/hostAuth";
 const hostel_route = Router();
 
 const hostelRepository = new HostelRepository();
-const hostelService = new HostelService(hostelRepository);
+const orderRepository = new OrderRepository();
+const hostelService = new HostelService(hostelRepository,orderRepository);
 const hostelController = new HostelController(hostelService)
 
 const user_route = Router()

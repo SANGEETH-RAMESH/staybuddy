@@ -1,6 +1,6 @@
 import { createLogger, format, transports } from 'winston';
 import path from 'path';
-
+import fs from 'fs';
 
 const customLevels = {
   error: 0,
@@ -9,6 +9,10 @@ const customLevels = {
   http: 3,
   debug: 4,
 };
+
+const errorLogPath = path.join('logs', 'error.log');
+const combinedLogPath = path.join('logs', 'combined.log');
+
 
 const logger = createLogger({
   levels: customLevels,
@@ -34,5 +38,16 @@ export const stream = {
     logger.http(message.trim());
   },
 };
+
+const clearLogs = () => {
+  try {
+    fs.writeFileSync(errorLogPath, '');
+    fs.writeFileSync(combinedLogPath, '');
+  } catch (err) {
+    console.error('Error clearing logs:', err);
+  }
+};
+
+setInterval(clearLogs, 60 * 60 * 1000);
 
 export default logger;

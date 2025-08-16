@@ -22,6 +22,7 @@ const UserProfileBody = () => {
         setBalance(walletDetails?.data?.message?.balance)
         setName(response?.data.data?.name);
         setEmail(response?.data?.data?.email)
+        console.log(response.data.data,'UserType')
         setUserType(response?.data?.data?.userType)
         console.log(email, name)
       } catch (error) {
@@ -102,7 +103,6 @@ const UserProfileBody = () => {
             gap: '20px',
           }}
         >
-          {/* Change Password */}
           {userType === 'local' && (
             <div
               style={{

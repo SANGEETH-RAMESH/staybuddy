@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { IUserService } from "../interface/user/!UserService";
 import mongoose from "mongoose";
-import { forgotPasswordValidation, otpValidation, signInValidation, signupValidation } from "../validations/commonValidations";
+import { forgotPasswordValidation, otpValidation, resetPasswordValidation, signInValidation, signupValidation } from "../validations/commonValidations";
 import { ValidationError } from "yup";
 import { StatusCode } from "../status/statusCode";
 import { profileUpdateValidation } from "../validations/profileUpdateValidation ";
@@ -17,6 +17,8 @@ class UserController {
     async userSignUp(req: Request, res: Response): Promise<void> {
         try {
             let validationErrors: Record<string, string> = {};
+            console.log("dfldjfdf")
+            console.log(req.body)
             await signupValidation.validate(req.body, { abortEarly: false })
                 .catch((error: ValidationError) => {
                     error.inner.forEach((err: ValidationError) => {
@@ -144,7 +146,7 @@ class UserController {
                         }
                     });
                 });
-
+            console.log(Object.keys(validationErrors.length))
             if (Object.keys(validationErrors).length > 0) {
                 res.status(StatusCode.BAD_REQUEST).json({
                     success: false,
@@ -153,6 +155,8 @@ class UserController {
                 });
                 return;
             }
+            console.log("hi")
+
             const existingUser = await this._userService.forgotPassword(req.body);
             if (existingUser && existingUser.temp === false) {
                 res.status(StatusCode.OK).json({ success: true, message: Messages.UserFound });
@@ -167,7 +171,7 @@ class UserController {
     async verifyForgotPasswordOtp(req: Request, res: Response): Promise<void> {
         try {
             const response = await this._userService.verifyOtp(req.body);
-            res.json({ success: true, message: response });
+            res.status(StatusCode.OK).json({ success: true, message: response });
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }
@@ -175,8 +179,30 @@ class UserController {
 
     async resetPassword(req: Request, res: Response): Promise<void> {
         try {
+            console.log(req.body, 'dlfdfldfdf')
+            const { newPassword, confirmPassword } = req.body;
+            let validationErrors: Record<string, string> = {};
+            await resetPasswordValidation.validate({ newPassword, confirmPassword }, { abortEarly: false })
+                .catch((error: ValidationError) => {
+                    error.inner.forEach((err: ValidationError) => {
+                        if (err.path) {
+                            validationErrors[err.path] = err.message;
+                        }
+                    })
+                })
+            console.log(Object.keys(validationErrors).length,'Lneght')
+            if (Object.keys(validationErrors).length > 0) {
+                res.status(StatusCode.BAD_REQUEST).json({
+                    success: false,
+                    message: Messages.ValidationFailed,
+                    errors: validationErrors
+                })
+                return;
+            }
+            console.log("hee")
             const response = await this._userService.resetPassword(req.body);
-            res.json({ success: true, message: response });
+            console.log(response, "Respons")
+            res.status(StatusCode.OK).json({ success: true, message: response });
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
         }

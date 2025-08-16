@@ -10,6 +10,7 @@ export const profileUpdateValidation = Yup.object({
 
     mobile: Yup.string()
         .trim()
+        .length(10, "Mobile number must be exactly 10 digits")
         .matches(/^[6-9][0-9]{9}$/, "Mobile number must start with a digit between 6 and 9 and be 10 digits long")
         .test('no-consecutive-zeros', 'Mobile number cannot contain more than 5 consecutive zeros', value => {
             if (value) {

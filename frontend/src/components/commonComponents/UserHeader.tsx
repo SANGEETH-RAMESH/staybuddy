@@ -5,7 +5,9 @@ import { logout } from '../../redux/userAuthSlice';
 import { useNavigate } from 'react-router-dom';
 import { Notification } from '../../interface/Notification';
 import { formatDistanceToNow } from 'date-fns';
+import 'react-tooltip/dist/react-tooltip.css';
 import { socket } from '../../utils/socket';
+import { Tooltip } from 'react-tooltip'
 import { getUserDetails } from '../../services/userServices';
 import logo from '../../assets/logo.png'
 
@@ -33,7 +35,7 @@ export const UserHeader: React.FC = () => {
   const [userId, setUserId] = useState('')
 
   useEffect(() => {
-    console.log(userId,'dfldfsdlfjdsfdf')
+    console.log(userId, 'dfldfsdlfjdsfdf')
     if (userId) {
       socket.emit('join_notification_room', userId);
     }
@@ -52,15 +54,15 @@ export const UserHeader: React.FC = () => {
       setNotification(notifications)
       setIsRead(notifications[0]?.isRead)
       const unreadCount = notifications.filter(n => n.isRead).length;
-      console.log(unreadCount,'Read')
+      console.log(unreadCount, 'Read')
       setReadCount(unreadCount)
     }
 
 
     const handleMarkedAllNotification = (receiverId: string) => {
       console.log(receiverId)
-      
-      console.log(readCount,'cou')
+
+      console.log(readCount, 'cou')
     }
 
     socket.emit('get_old_notifications', userId);
@@ -83,9 +85,9 @@ export const UserHeader: React.FC = () => {
     if (userId) {
       try {
         console.log('heee')
-        socket.emit('mark_all_notification', ({ receiverId:userId }))
+        socket.emit('mark_all_notification', ({ receiverId: userId }))
         // setNotification([])
-      setReadCount(0)
+        setReadCount(0)
 
       } catch (error) {
         console.log(error)
@@ -141,7 +143,6 @@ export const UserHeader: React.FC = () => {
       <header className="fixed top-0 left-0 w-full bg-white shadow-sm z-[100]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo */}
             <button
               onClick={() => navigate('/')}
               className="flex items-center gap-x-2 text-xl font-bold bg-gradient-to-r from-[#31AFEF] to-[#2196F3] bg-clip-text text-transparent"
@@ -150,18 +151,18 @@ export const UserHeader: React.FC = () => {
               <p>StayBuddy</p>
             </button>
 
-            {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-4">
-              {/* Notification Button with Dropdown */}
               <div className="relative notification-container z-[60]">
                 <button
                   onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                  className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                  className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 group"
+                  // data-tooltip-id='headers-tooltip'
+                  // data-tooltip-content="Notificationfffs"
                 >
                   <Bell
                     onClick={handleOpenNotifications}
                     className="w-6 h-6 text-gray-600" />
-                  {isRead && readCount>0 && (
+                  {isRead && readCount > 0 && (
                     <>
                       <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 animate-ping" />
                       <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500" />
@@ -170,12 +171,15 @@ export const UserHeader: React.FC = () => {
                       </span>
                     </>
                   )}
+                  <span className="absolute -bottom-8 left-1/2 -translate-x-1/2
+                   bg-gray-800 text-white text-xs px-2 py-1 rounded
+                   opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                    Notification
+                  </span>
                 </button>
 
-                {/* Notification Dropdown */}
                 {isNotificationOpen && (
                   <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-[70]">
-                    {/* Header */}
                     <div className="px-4 py-3 border-b border-gray-200">
                       <div className="flex items-center justify-between">
                         <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
@@ -187,7 +191,6 @@ export const UserHeader: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Scrollable Notification List */}
                     <div className="max-h-96 overflow-y-auto">
                       {notification && notification.length > 0 ? (
                         notification.map((notif) => (
@@ -230,7 +233,6 @@ export const UserHeader: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Footer */}
                     {notification && notification.length > 0 && (
                       <div className="px-4 py-3 border-t border-gray-200">
                         <button className="w-full text-center text-sm text-blue-600 hover:text-blue-800 font-medium">
@@ -244,35 +246,57 @@ export const UserHeader: React.FC = () => {
 
               <button
                 onClick={() => navigate(`/wishlist/${userId}`)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
+                className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 group"
+              >
                 <Heart className="w-6 h-6 text-gray-600" />
+                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2
+                   bg-gray-800 text-white text-xs px-2 py-1 rounded
+                   opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                  Wishlist
+                </span>
               </button>
 
               <button
                 onClick={() => navigate(`/chat/${userId}`)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200">
+                className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 group"
+              >
                 <MessageCircle className="w-6 h-6 text-gray-600" />
+                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2
+                   bg-gray-800 text-white text-xs px-2 py-1 rounded
+                   opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                  Chat
+                </span>
               </button>
 
               <button
                 onClick={() => navigate('/profile')}
-                className="flex items-center space-x-3 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                className="relative flex items-center space-x-3 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-full transition-colors duration-200 group"
               >
                 <div className="w-8 h-8 rounded-full border-2 border-[#31AFEF] p-0.5">
                   <User className="w-full h-full text-gray-600" />
                 </div>
                 <span className="text-sm font-medium text-gray-700">{name || '..Loading'}</span>
+
+                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2
+                   bg-gray-800 text-white text-xs px-2 py-1 rounded
+                   opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                  Profile
+                </span>
               </button>
 
               <button
                 onClick={handleLogout}
-                className="p-2 hover:bg-red-100 rounded-full transition-colors duration-200"
+                className="relative p-2 hover:bg-red-100 rounded-full transition-colors duration-200 group"
               >
                 <LogOut className="w-6 h-6 text-red-600" />
+                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2
+                   bg-gray-800 text-white text-xs px-2 py-1 rounded
+                   opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+                  Logout
+                </span>
               </button>
             </nav>
 
-            {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
@@ -287,11 +311,9 @@ export const UserHeader: React.FC = () => {
         </div>
       </header>
 
-      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="fixed inset-x-0 top-16 bg-white shadow-lg md:hidden z-[9998]">
           <div className="px-4 py-2 space-y-1">
-            {/* Mobile Notifications */}
             <button
               onClick={() => setIsNotificationOpen(!isNotificationOpen)}
               className="flex items-center justify-between w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200">
@@ -327,11 +349,14 @@ export const UserHeader: React.FC = () => {
 
             <button
               onClick={() => navigate('/profile')}
+              data-tooltip-id="headers-tooltip"
+              data-tooltip-content="Profile"
               className="flex items-center w-full px-4 py-3 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200"
             >
               <User className="w-5 h-5 mr-3" />
               <span className="text-sm font-medium">Profile</span>
             </button>
+            <Tooltip id="headers-tooltip" place="bottom" />
 
             <button
               onClick={handleLogout}
@@ -342,7 +367,6 @@ export const UserHeader: React.FC = () => {
             </button>
           </div>
 
-          {/* Mobile Notification Dropdown */}
           {isNotificationOpen && (
             <div className="mx-4 mb-4 bg-gray-50 rounded-lg shadow-inner relative z-[9999]">
               <div className="max-h-64 overflow-y-auto">

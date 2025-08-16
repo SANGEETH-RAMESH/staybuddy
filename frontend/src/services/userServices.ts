@@ -160,9 +160,9 @@ export const resendOtp = ({ email, name, mobile, password, }: { email: string; n
     ...(password && { password }),
   });
 
-export const resetPassword = (email: string, password: string) => axios.post(
+export const resetPassword = (email: string, newPassword: string,confirmPassword:string) => axios.post(
   `${apiUrl}/user/auth/reset-password`,
-  { email, password }
+  { email, newPassword,confirmPassword }
 );
 
 export const signUp = (formValues: { name: string; email: string; password: string; mobile?: string }) => axios.post(`${apiUrl}/user/auth/signup`, formValues );

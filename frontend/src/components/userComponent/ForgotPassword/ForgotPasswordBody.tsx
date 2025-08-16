@@ -15,47 +15,49 @@ const ForgotPasswordBody = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
 
-    const handleSubmit = async (e:React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        
+
         setIsSubmitting(true);
 
         try {
-            
-          
-            const response = await forgotPassword({email:emailValue})
+
+
+            const response = await forgotPassword({ email: emailValue })
 
             if (response.data.message === 'User found') {
                 navigate('/forgotpasswordotp', {
                     state: { email: emailValue },
                 });
             } else if (response.data.message === 'User not found') {
-                setErrors((prev)=>({
+                setErrors((prev) => ({
                     ...prev,
-                    email:'Incorrect email'}));
+                    email: 'Incorrect email'
+                }));
             }
         } catch (error) {
             const axiosError = error as any;
 
-      if (axiosError.response) {
-        const { message, errors } = axiosError.response.data;
-        console.log('catch', message, errors)
-        if (errors) {
-          setErrors(errors);
+            if (axiosError.response) {
+                console.log(axiosError,"Axios")
+                const { message, errors } = axiosError.response.data;
+                console.log('catch', message, errors)
+                if (errors) {
+                    setErrors(errors);
 
-          return;
-        }
+                    return;
+                }
 
-        toast.error(message || "Otp failed", {
-          style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
-        });
-      } else {
-        toast.error("An unexpected error occurred", {
-          style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
-        });
-      }
+                toast.error(message || "Otp failed", {
+                    style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+                });
+            } else {
+                toast.error("An unexpected error occurred", {
+                    style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }
+                });
+            }
 
-      console.error("Otp error:", error);
+            console.error("Otp error:", error);
         } finally {
             setIsSubmitting(false);
         }

@@ -39,7 +39,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
 
   const toggleNotifications = () => {
     console.log("notification", adminIds)
-    socket.emit('mark_all_notification', ({ receiverId:adminIds }))
+    socket.emit('mark_all_notification', ({ receiverId: adminIds }))
     setNotificationOpen(!notificationOpen);
   };
 
@@ -88,20 +88,20 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
 
       const handleNotification = (notificationss: Notification) => {
         console.log(' Notification received:', notificationss);
-      
+
 
         setNotifications((prev) => {
-        const updated: Notification[] = [notificationss, ...prev];
-        console.log('Updated notifications:', updated);
+          const updated: Notification[] = [notificationss, ...prev];
+          console.log('Updated notifications:', updated);
 
-        const unreadCount = updated.filter((n) => n.isRead).length;
-        console.log(unreadCount, 'unread');
+          const unreadCount = updated.filter((n) => n.isRead).length;
+          console.log(unreadCount, 'unread');
 
-        setIsRead(false);
-        setReadCount(unreadCount);
+          setIsRead(false);
+          setReadCount(unreadCount);
 
-        return updated;
-      });
+          return updated;
+        });
         // // setNotification([notifications])
         // setIsRead(notificationss.isRead)
         // setReadCount((prev) => prev + 1);
@@ -118,7 +118,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
         setReadCount(unreadCount)
       }
 
-      const handleMarkedAllNotification = (receiverId:string) => {
+      const handleMarkedAllNotification = (receiverId: string) => {
         console.log(receiverId)
         setNotifications([])
       }
@@ -151,8 +151,8 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
 
       {/* Logo */}
       <div className="flex items-center gap-x-2 text-lg sm:text-xl md:text-2xl font-bold text-[#45B8F2] ml-2 sm:ml-4 lg:ml-16 truncate">
-       <img src={logo} alt="Logo" className="h-16 w-16" />
-            <p>StayBuddy</p>
+        <img src={logo} alt="Logo" className="h-16 w-16" />
+        <p>StayBuddy</p>
       </div>
 
       {/* Right Section */}
@@ -161,7 +161,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
         <div className="relative" ref={notificationRef}>
           <button
             onClick={toggleNotifications}
-            className="text-white hover:text-[#45B8F2] transition-colors relative p-1.5 sm:p-2 hover:bg-[#45B8F2]/10 rounded-md"
+            className="text-white hover:text-[#45B8F2] transition-colors relative p-1.5 sm:p-2 group hover:bg-[#45B8F2]/10 rounded-md"
             aria-label="Notifications"
           >
             {!isRead ? (
@@ -174,12 +174,15 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
                 <span className="text-[8px] sm:text-[10px]">{readCount}</span>
               </span>
             )}
+            <span className="absolute -bottom-8 left-1/2 -translate-x-1/2
+                   bg-gray-800 text-white text-xs px-2 py-1 rounded
+                   opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap">
+              Notification
+            </span>
           </button>
 
-          {/* Notification Dropdown */}
           {notificationOpen && (
             <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-60 max-h-[80vh] overflow-hidden">
-              {/* Header */}
               <div className="p-3 sm:p-4 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#212936] rounded-t-lg gap-2 sm:gap-0">
                 <h3 className="text-base sm:text-lg font-semibold text-white">Admin Notifications</h3>
                 {hasUnreadNotifications && (
@@ -193,14 +196,12 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
               </div>
 
               {notification.length === 0 ? (
-                // Empty state
                 <div className="p-6 sm:p-8 text-center">
                   <Bell className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mx-auto mb-3 sm:mb-4" />
                   <h4 className="text-gray-600 font-medium mb-2 text-sm sm:text-base">No notifications yet</h4>
                   <p className="text-gray-400 text-xs sm:text-sm">System notifications will appear here</p>
                 </div>
               ) : (
-                // Scrollable notifications list
                 <div className="max-h-80 sm:max-h-96 overflow-y-auto">
                   {notification.map((notifications, index) => (
                     <div
@@ -209,7 +210,6 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
                       className={`p-3 sm:p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${!notifications.isRead ? getNotificationTypeBg(notifications.type) : ''
                         }`}
                     >
-                      {/* Notification Header */}
                       <div className="flex justify-between items-start mb-2 gap-2">
                         <h4 className={`text-xs sm:text-sm font-medium flex items-center gap-2 flex-1 ${!notifications.isRead ? 'text-gray-900' : 'text-gray-700'
                           }`}>
@@ -225,12 +225,10 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
                         )}
                       </div>
 
-                      {/* Notification Message */}
                       <p className="text-xs sm:text-sm text-gray-600 mb-2 ml-3.5 sm:ml-4 leading-relaxed">
                         {notifications.message}
                       </p>
 
-                      {/* Notification Footer */}
                       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center ml-3.5 sm:ml-4 gap-1 sm:gap-0">
                         <p className="text-xs text-gray-400">
                           {formatDistanceToNow(new Date(notifications.createdAt ?? ''), { addSuffix: true })}
@@ -251,7 +249,6 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
           )}
         </div>
 
-        {/* Admin Profile Section */}
         <div className="flex items-center gap-2 sm:gap-3">
           <img
             src={admin_icon}

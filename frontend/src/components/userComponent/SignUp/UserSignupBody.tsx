@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Lock, Phone, ArrowRight } from 'lucide-react';
+import { User, Mail, Lock, Phone, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { signUp } from '../../../services/userServices';
 
@@ -21,31 +21,33 @@ const UserSignUpBody = () => {
         mobile: '',
     });
 
+    const [showPassword, setShowPassword] = useState(false);
+    
     const [errors, setErrors] = useState<Partial<SignupValues>>({});
 
     const navigate = useNavigate();
 
 
-     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-            const { name, value } = e.target;
-    
-            setFormValues(prev => ({ ...prev, [name]: value }));
-    
-            setErrors(prev => {
-                const updated = { ...prev };
-                delete updated[name as keyof SignupValues];
-                return updated;
-            });
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
 
-        };
+        setFormValues(prev => ({ ...prev, [name]: value }));
+
+        setErrors(prev => {
+            const updated = { ...prev };
+            delete updated[name as keyof SignupValues];
+            return updated;
+        });
+
+    };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         try {
-           
+
             const res = await signUp(formValues)
-            const {message} = res.data;
+            const { message } = res.data;
 
             if (message === 'Otp sent successfully') {
                 navigate('/otp', {
@@ -61,14 +63,14 @@ const UserSignUpBody = () => {
                     style: { backgroundColor: '#FFFFFF', color: '#31AFEF' }
                 });
             }
-        } catch (error:unknown) {
-           const axiosError = error as any;
+        } catch (error: unknown) {
+            const axiosError = error as any;
 
             if (axiosError.response) {
                 const { message, errors } = axiosError.response.data;
-                console.log('catch',message,errors)
+                console.log('catch', message, errors)
                 if (errors) {
-                    setErrors(errors); 
+                    setErrors(errors);
                     return;
                 }
 
@@ -146,20 +148,26 @@ const UserSignUpBody = () => {
                                 {errors.email && <div className="text-red-500 text-xs">{errors.email}</div>}
                             </div>
 
-                            {/* Password Input */}
                             <div className="space-y-1">
                                 <label className="text-sm font-medium text-gray-700">Password</label>
                                 <div className="relative">
                                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                     <input
-                                        type="password"
+                                       type={showPassword ? "text" : "password"}
                                         name="password"
                                         value={formValues.password}
                                         onChange={handleChange}
                                         placeholder="Create a password"
                                         className='w-full pl-9 pr-4 py-2 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all text-sm'
                                     />
+                                    <div
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                                 </div>
+                                </div>
+                                
                                 {errors.password && <div className="text-red-500 text-xs">{errors.password}</div>}
                             </div>
 
