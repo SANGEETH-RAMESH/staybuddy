@@ -55,7 +55,7 @@ const ImageGallery = ({ photos }: { photos: string[] | string }) => {
                 <div className="hidden lg:grid grid-cols-2 gap-4 p-4">
                     <div className="relative h-[400px] xl:h-[480px] rounded-lg overflow-hidden">
                         <img
-                            src={photos[0]? `${imageUrl}/${photos[0]}`: defaultImage}
+                            src={photos[0] ? `${imageUrl}/${photos[0]}` : defaultImage}
                             alt="Main hostel view"
                             className="w-full h-full object-cover"
                         />
@@ -63,14 +63,14 @@ const ImageGallery = ({ photos }: { photos: string[] | string }) => {
                     <div className="grid grid-rows-2 gap-4">
                         <div className="relative rounded-lg overflow-hidden">
                             <img
-                                src={photos[0]? `${imageUrl}/${photos[0]}`: defaultImage}
+                                src={photos[0] ? `${imageUrl}/${photos[0]}` : defaultImage}
                                 alt="Second hostel view"
                                 className="w-full h-[190px] xl:h-[235px] object-cover"
                             />
                         </div>
                         <div className="relative rounded-lg overflow-hidden">
                             <img
-                                src={photos[0]? `${imageUrl}/${photos[0]}`: defaultImage}
+                                src={photos[0] ? `${imageUrl}/${photos[0]}` : defaultImage}
                                 alt="Third hostel view"
                                 className="w-full h-[190px] xl:h-[235px] object-cover"
                             />
@@ -80,7 +80,7 @@ const ImageGallery = ({ photos }: { photos: string[] | string }) => {
 
                 <div className="lg:hidden relative h-[250px] sm:h-[300px] md:h-[350px]">
                     <img
-                        src={photos[0]? `${imageUrl}/${photos[0]}`: defaultImage}
+                        src={photos[0] ? `${imageUrl}/${photos[0]}` : defaultImage}
                         alt={`Hostel view ${currentImageIndex + 1}`}
                         className="w-full h-full object-cover"
                     />
@@ -141,8 +141,9 @@ const HostelDetailPage = () => {
                     booking.hostel_id.toString() === id
                 );
                 console.log(hostelBookings, 'Hostel Bookings')
-                const facilitiesArray = Object.keys(response.data.message.facilities).filter(
-                    (key) => response.data.message.facilities[key as keyof Facilities]
+                const facilitiesData = response.data.message.facilities || {};
+                const facilitiesArray = Object.keys(facilitiesData).filter(
+                    (key) => facilitiesData[key as keyof Facilities]
                 );
                 setEnabledFacilities(facilitiesArray);
                 setOrderDetails(hostelBookings);
@@ -246,7 +247,7 @@ const HostelDetailPage = () => {
         );
     }
 
-    
+
 
     return (
         <div className="bg-gray-50 min-h-screen py-4 sm:py-6 lg:py-8 px-3 sm:px-4 md:px-6 lg:px-8">
@@ -441,33 +442,33 @@ const HostelDetailPage = () => {
                         )}
                     </div>
 
-                     <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
-      <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
-        Facilities
-      </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        {enabledFacilities.map((facility, index) => (
-          <div
-            key={index}
-            className="flex items-center p-3 bg-gray-50 rounded-lg"
-          >
-            {facility.toLowerCase().includes("wifi") && (
-              <Wifi className="mr-2 text-blue-500 flex-shrink-0" size={16} />
-            )}
-            {facility.toLowerCase().includes("food") && (
-              <UtensilsCrossed
-                className="mr-2 text-green-500 flex-shrink-0"
-                size={16}
-              />
-            )}
-            {facility.toLowerCase().includes("laundry") && (
-              <Shirt className="mr-2 text-purple-500 flex-shrink-0" size={16} />
-            )}
-            <span className="capitalize text-xs sm:text-sm">{facility}</span>
-          </div>
-        ))}
-      </div>
-    </div>
+                    <div className="bg-white rounded-lg shadow-md p-4 sm:p-6">
+                        <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">
+                            Facilities
+                        </h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                            {enabledFacilities.map((facility, index) => (
+                                <div
+                                    key={index}
+                                    className="flex items-center p-3 bg-gray-50 rounded-lg"
+                                >
+                                    {facility.toLowerCase().includes("wifi") && (
+                                        <Wifi className="mr-2 text-blue-500 flex-shrink-0" size={16} />
+                                    )}
+                                    {facility.toLowerCase().includes("food") && (
+                                        <UtensilsCrossed
+                                            className="mr-2 text-green-500 flex-shrink-0"
+                                            size={16}
+                                        />
+                                    )}
+                                    {facility.toLowerCase().includes("laundry") && (
+                                        <Shirt className="mr-2 text-purple-500 flex-shrink-0" size={16} />
+                                    )}
+                                    <span className="capitalize text-xs sm:text-sm">{facility}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
 
                     <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:col-span-2">
                         <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4">Hostel Policies</h2>
