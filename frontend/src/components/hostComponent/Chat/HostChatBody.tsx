@@ -152,8 +152,7 @@ const HostChatBody = () => {
   const handleAddNewChat = async (selectedUser: User) => {
     try {
       console.log(selectedUser, 'Userr')
-      if(!selectedChat?._id) return;
-      const res = await getChat(selectedChat?._id);
+      const res = await getChat(selectedUser?._id?.toString());
       if (res.data.message == 'Chat Created') {
         setShowAddChatModal(false)
         const id = hostId
