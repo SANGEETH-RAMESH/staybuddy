@@ -224,7 +224,7 @@ class hostelService implements IHostelService {
 
             const hostelObj = hostel.toObject();
             const hostelDto =  HostelDto.from({ ...hostelObj, isFull });
-            console.log('Returning hostel DTO:', JSON.stringify(hostelDto, null, 2));
+            console.log('Returning hostel DTO:s', JSON.stringify(hostelDto, null, 2));
             return hostelDto;
         } catch (error) {
             return error as string
