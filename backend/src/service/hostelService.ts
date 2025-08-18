@@ -223,7 +223,9 @@ class hostelService implements IHostelService {
             const isFull = bookedBeds >= hostel.totalRooms;
 
             const hostelObj = hostel.toObject();
-            return HostelDto.from({ ...hostelObj, isFull });
+            const hostelDto =  HostelDto.from({ ...hostelObj, isFull });
+            console.log('Returning hostel DTO:', JSON.stringify(hostelDto, null, 2));
+            return hostelDto;
         } catch (error) {
             return error as string
         }
