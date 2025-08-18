@@ -311,7 +311,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
     );
   };
 
-  const f = Array.isArray(hostel.facilities)
+  const facilitiesList = Array.isArray(hostel.facilities)
     ? hostel.facilities
     : typeof hostel.facilities === "string"
       ? hostel.facilities.split(",").map(f => f.trim().toLowerCase())
