@@ -11,7 +11,7 @@ import { FilterState } from '../../../interface/FilterState';
 import { PaginationProps } from '../../../interface/PaginationProps';
 import { Facilities } from '../../../interface/Facilities';
 import FilterComponent from '../../commonComponents/FilterComponent';
-const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const imageUrl = "https://res.cloudinary.com/dxidgmofu/image/upload"
 
 interface HostelCardProps {
   hostel: Hostel;

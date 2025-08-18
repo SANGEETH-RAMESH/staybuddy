@@ -22,7 +22,7 @@ import { Hostel } from '../../../interface/Hostel';
 import { getSingleHostel, status } from '../../../services/hostServices';
 import toast from 'react-hot-toast';
 import LocationDisplay from '../../commonComponents/LocationDisplay';
-const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const imageUrl = "https://res.cloudinary.com/dxidgmofu/image/upload"
 
 const InactiveReasonModal = ({
   isOpen,

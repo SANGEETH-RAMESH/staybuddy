@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { deleteHostel, getAllHostels } from '../../../services/hostServices';
 import { SearchBarProps } from '../../../interface/Search';
 import DeleteConfirmationModal from '../../commonComponents/DeleteConfirmationModal';
-const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const imageUrl = "https://res.cloudinary.com/dxidgmofu/image/upload"
 
 const ITEMS_PER_PAGE = 6;
 

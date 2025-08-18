@@ -28,7 +28,7 @@ import { Hostel } from '../../../interface/Hostel';
 import { Order } from '../../../interface/Order';
 import { User } from '../../../interface/User';
 import { Facilities } from '../../../interface/Facilities';
-const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const imageUrl = "https://res.cloudinary.com/dxidgmofu/image/upload"
 
 interface BookingData {
     fromDate: string;
