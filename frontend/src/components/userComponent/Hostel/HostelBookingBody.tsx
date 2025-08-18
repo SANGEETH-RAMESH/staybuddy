@@ -106,13 +106,7 @@ const BookingForm = () => {
     return undefined;
   };
 
-  const validateFacilities = (facilities: { [key: string]: boolean }): string | undefined => {
-    const selectedCount = Object.values(facilities).filter(value => value).length;
-    if (selectedCount === 0) {
-      return 'Please select at least one facility';
-    }
-    return undefined;
-  };
+  
 
   const handleBlur = (field: keyof ValidationErrors) => {
     setTouched(prev => ({ ...prev, [field]: true }));
@@ -168,7 +162,6 @@ const BookingForm = () => {
       customerPhone: validatePhone(customerPhone),
       customerEmail: validateEmail(customerEmail),
       selectedBeds: validateBeds(selectedBeds),
-      facilities: validateFacilities(selectedFacilities),
     };
 
     setErrors(newErrors);
@@ -245,15 +238,7 @@ const BookingForm = () => {
       setFoodRate(0);
     }
 
-    const facilityValidationError = validateFacilities(newFacilities);
-    setErrors(prev => ({
-      ...prev,
-      facilities: facilityValidationError
-    }));
-    setTouched(prev => ({
-      ...prev,
-      facilities: true
-    }));
+    
   };
 
   const loadRazorpayScript = () => {
