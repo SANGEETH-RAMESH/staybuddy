@@ -80,7 +80,7 @@ const ImageGallery = ({ photos }: { photos: string[] | string }) => {
 
                 <div className="lg:hidden relative h-[250px] sm:h-[300px] md:h-[350px]">
                     <img
-                        src={photos[currentImageIndex] || defaultImage}
+                        src={photos[0]? `${imageUrl}/${photos[0]}`: defaultImage}
                         alt={`Hostel view ${currentImageIndex + 1}`}
                         className="w-full h-full object-cover"
                     />
