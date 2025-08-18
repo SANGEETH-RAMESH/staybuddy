@@ -203,28 +203,19 @@ class hostelService implements IHostelService {
                 return orders;
             }
 
-            if (!orders) {
-                const hostelDto = HostelDto.from({
-                    _id: hostel._id,
-                    hostelname: hostel.hostelname,
-                    location: hostel.location,
-                    facilities: hostel.facilities,
-                    totalRooms: hostel.totalRooms,
-                    photos: hostel.photos,
-                    phone: hostel.phone,
-                    category: hostel.category,
-                    isFull: false
-                });
-                return hostelDto;
-            }
-
-
-            const bookedBeds = (orders.selectedBeds || 0);
+            const bookedBeds = orders && typeof orders !== 'string' ? orders.selectedBeds || 0 : 0;
             const isFull = bookedBeds >= hostel.totalRooms;
 
             const hostelObj = hostel.toObject();
-            const hostelDto =  HostelDto.from({ ...hostelObj, isFull });
-            console.log('Returning hostel DTO:s', JSON.stringify(hostelDto, null, 2));
+
+            hostelObj.facilities = hostelObj.facilities || { wifi: false, laundry: false, food: false };
+
+            hostelObj.isFull = isFull;
+
+            const hostelDto = HostelDto.from(hostelObj);
+
+            console.log('Returning hostel DTO:', JSON.stringify(hostelDto, null, 2));
+
             return hostelDto;
         } catch (error) {
             return error as string
