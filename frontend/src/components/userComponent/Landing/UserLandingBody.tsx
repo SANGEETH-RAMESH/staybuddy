@@ -3,25 +3,19 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../../../redux/userAuthSlice';
 import { ArrowRight, Shield, Zap, Users, MapPin } from 'lucide-react';
-import landing_1 from '../../../assets/landing_1.jpg'
 import { jwtDecode } from 'jwt-decode';
 import { socket } from '../../../utils/socket';
 import {Hostel} from '../../../interface/Hostel'
 import { getAllHostel } from '../../../services/userServices';
-
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const landing_1 = `${imageUrl}/v1755417528/landing_1_yc4lhp.jpg`
 
 
 interface CustomJwtPayload {
   _id: string;
 }
 
-// interface Room {
-//   _id: string;
-//   bedShareRoom: string;
-//   hostelname: string;
-//   location: string;
-//   photos: string[]
-// }
+
 
 const UserLandingBody = () => {
   const location = useLocation();
@@ -85,7 +79,6 @@ const UserLandingBody = () => {
     }
   }, []);
 
-  // Featured rooms data
 
 
   return (
@@ -93,15 +86,12 @@ const UserLandingBody = () => {
       {loading ? (
         <div className="min-h-screen flex items-center justify-center">
           <div className="relative w-16 h-16">
-            {/* Outer circle */}
             <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
-            {/* Spinning arc */}
             <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
           </div>
         </div>
       ) : (
         <div className="min-h-screen bg-gray-50">
-          {/* Hero Section */}
           <div className="relative h-screen">
             <div className="absolute inset-0">
               <img
@@ -128,7 +118,6 @@ const UserLandingBody = () => {
             </div>
           </div>
 
-          {/* Room Rental Section */}
           <div className="py-16 px-4 max-w-7xl mx-auto">
             <div className="text-center mb-12">
               <h2 className="text-4xl font-bold text-gray-900 mb-4">Find Your Perfect Room</h2>
@@ -137,7 +126,6 @@ const UserLandingBody = () => {
               </p>
             </div>
 
-            {/* Features */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
               <div className="bg-white p-6 rounded-xl shadow-md flex flex-col items-center text-center">
                 <div className="bg-blue-100 p-3 rounded-full mb-4">
@@ -164,7 +152,6 @@ const UserLandingBody = () => {
               </div>
             </div>
 
-            {/* Featured Rooms */}
             <div className="mb-16">
               <h3 className="text-2xl font-bold mb-8 text-center">Featured Rooms</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -174,10 +161,7 @@ const UserLandingBody = () => {
                     <div className="p-6">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="text-xl font-bold">{room.hostelname}</h4>
-                        {/* <div className="flex items-center">
-                          <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                          <span className="ml-1 text-gray-700">{room.rating}</span>
-                        </div> */}
+                       
                       </div>
                       <div className="flex items-center text-gray-600 mb-4">
                         <MapPin className="w-4 h-4 mr-1" />
@@ -188,11 +172,7 @@ const UserLandingBody = () => {
                         <span>{room.bedShareRoom} per night</span>
                       </div>
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {/* {room.amenities.map((amenity, index) => (
-                          <span key={index} className="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-sm">
-                            {amenity}
-                          </span>
-                        ))} */}
+                      
                       </div>
                       <button
                         onClick={() => navigate(`/singlehostel/${room._id}`)}
@@ -214,7 +194,6 @@ const UserLandingBody = () => {
               </div>
             </div>
 
-            {/* Call to Action */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 md:p-12 text-white text-center">
               <h3 className="text-2xl md:text-3xl font-bold mb-4">Ready to Find Your Perfect Room?</h3>
               <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto">

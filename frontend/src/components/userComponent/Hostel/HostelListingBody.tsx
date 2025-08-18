@@ -11,6 +11,7 @@ import { FilterState } from '../../../interface/FilterState';
 import { PaginationProps } from '../../../interface/PaginationProps';
 import { Facilities } from '../../../interface/Facilities';
 import FilterComponent from '../../commonComponents/FilterComponent';
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
 
 interface HostelCardProps {
   hostel: Hostel;
@@ -43,13 +44,11 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 lg:hidden">
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
       />
 
-      {/* Modal */}
       <div className="fixed inset-y-0 right-0 max-w-sm w-full bg-white shadow-xl">
         <div className="flex items-center justify-between p-4 border-b">
           <h2 className="text-lg font-semibold text-gray-800">Filters</h2>
@@ -327,7 +326,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
     >
       <div className="relative">
         <img
-          src={hostel.photos || "/api/placeholder/400/250"}
+          src={hostel.photos ? `${imageUrl}/${hostel.photos}` : "/api/placeholder/400/250"}
           alt={hostel.hostelname}
           className="w-full h-40 sm:h-48 object-cover rounded-t-lg"
         />
@@ -920,7 +919,6 @@ const HostelCardGrid: React.FC = () => {
     fetchHostels(1, ITEMS_PER_PAGE, searchTerm, selectedLat, selectedLng, filters, newSort);
   };
 
-  // Add these helper functions inside your HostelCardGrid component:
 
   const sortOptions = [
     { value: 'default', label: 'Default' },
@@ -987,18 +985,7 @@ const HostelCardGrid: React.FC = () => {
       filters.priceRange.max !== 50000;
   };
 
-  // if (loading && !isSearching) {
-  //   return (
-  //     <div className="mb-4 flex items-center justify-between">
-  //       <div className="relative w-16 h-16">
 
-  //         <div className="absolute inset-0 border-4 border-gray-200 rounded-full"></div>
-
-  //         <div className="absolute inset-0 border-4 border-blue-500 rounded-full border-t-transparent animate-spin"></div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
 
   if (error) {
     return (

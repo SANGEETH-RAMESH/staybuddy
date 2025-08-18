@@ -12,14 +12,13 @@ import jwt from 'jsonwebtoken';
 import { Messages } from "../messages/messages";
 import { IHostResponse } from "../dtos/HostResponse";
 import { INotificationResponse } from "../dtos/NotficationResponse";
+import { otpgenerator } from '../utils/otp';
+import { UserDto } from "../dto/response/userdto";
+import HashedPassword from "../utils/hashedPassword";
+import { IUser } from "../model/userModel";
 
 
 
-
-
-function otpgenerator(): number {
-    return Math.floor(1000 + Math.random() * 9000);
-}
 
 
 
@@ -37,7 +36,21 @@ class UserService implements IUserService {
             const otp = otpgenerator();
             sendOtp(userData.email, otp);
             await this._userRepository.otpGenerating(userData.email, otp);
-            await this._userRepository.tempStoreUser(userData);
+            if (!userData.password) {
+                return Messages.InvalidPassword;
+            }
+
+            const hashedPassword = await HashedPassword.hashPassword(userData.password);
+
+            await this._userRepository.insertUser({
+                name: userData.name,
+                mobile: userData.mobile,
+                email: userData.email,
+                password: hashedPassword,
+                temp: true,
+                userType: "local"
+            })
+
 
             return Messages.OtpSentSuccess;
         } catch (error) {
@@ -47,15 +60,20 @@ class UserService implements IUserService {
 
     async verifyOtp(userOtp: { email: string; otp: number }): Promise<string> {
         try {
-            const verifiedOtp = await this._userRepository.otpVerifying(userOtp);
-            if (verifiedOtp === Messages.OtpNotVerified) {
+            const user = await this._userRepository.findOtpByEmail(userOtp.email);
+            if (!user) {
+                return Messages.UserNotFound;
+            }
+            if (userOtp.otp !== user.otp) {
                 return Messages.InvalidOtp;
             }
-            const user = await this._userRepository.createUser(userOtp);
-            if (user == Messages.success) {
-                await this._walletRepository.createWallet(userOtp.email)
+            if (userOtp.otp == user.otp) {
+                const createUser = await this._userRepository.createUser(userOtp);
+                if (createUser == Messages.success) {
+                    await this._walletRepository.createWallet(userOtp.email)
+                }
             }
-            return user;
+            return Messages.success;
         } catch (error) {
             return error as string
         }
@@ -80,8 +98,8 @@ class UserService implements IUserService {
             if (checkingUser?.isBlock) {
                 return { message: Messages.UserIsBlocked };
             }
-            if(!checkingUser.password || !userData.password){
-                return { message:Messages.InvalidPassword}
+            if (!checkingUser.password || !userData.password) {
+                return { message: Messages.InvalidPassword }
             }
 
             const isMatch = await bcrypt.compare(userData.password, checkingUser.password);
@@ -107,12 +125,23 @@ class UserService implements IUserService {
         }
     }
 
-    async resendOtp(userData: IUserResponse): Promise<string | null> {
+    async resendOtp(userData: Partial<IUser>): Promise<string | null> {
         try {
             const otp = otpgenerator();
-            sendOtp(userData.email, otp);
-            await this._userRepository.otpGenerating(userData.email, otp);
-            await this._userRepository.tempStoreUser(userData);
+            sendOtp(userData.email!, otp);
+            await this._userRepository.otpGenerating(userData.email!, otp);
+            if (!userData.password) {
+                return Messages.InvalidPassword;
+            }
+            const hashedPassword = await HashedPassword.hashPassword(userData.password);
+            await this._userRepository.insertUser({
+                name: userData.name,
+                mobile: userData.mobile,
+                email: userData.email,
+                password: hashedPassword,
+                temp: true,
+                userType: "local",
+            })
             return Messages.OtpResentSucess;
         } catch (error) {
             console.error(error);
@@ -142,17 +171,27 @@ class UserService implements IUserService {
 
     async resetPassword(userData: { email: string; newPassword: string }): Promise<string | { message: string }> {
         try {
-            const resetData = {
-                email: userData.email,
-                newPassword: userData.newPassword,
-                confirmPassword: userData.newPassword,
-            };
-            const existingUser = await this._userRepository.findUserByEmail(resetData.email)
-            if (existingUser) {
-                const changedPassword = await this._userRepository.resetPassword(resetData);
-                return changedPassword;
+            // const resetData = {
+            //     email: userData.email,
+            //     newPassword: userData.newPassword,
+            //     confirmPassword: userData.newPassword,
+            // };
+            // const existingUser = await this._userRepository.findUserByEmail(resetData.email)
+            // if (existingUser) {
+            //     const changedPassword = await this._userRepository.resetPassword(resetData);
+            //     return changedPassword;
+            // }
+            // return Messages.NoUser
+            const existingUser = await this._userRepository.findUserByEmail(userData.email);
+            if (!existingUser || !existingUser.password) {
+                return Messages.UserNotFoundOrPassword;
             }
-            return Messages.NoUser
+
+            const isSame = await bcrypt.compare(userData.newPassword, existingUser.password);
+            if (isSame) return Messages.SamePassword;
+            const hashed = await bcrypt.hash(userData.newPassword, 10);
+            const updated = await this._userRepository.resetPassword(userData.email, hashed);
+            return updated ? Messages.PasswordChanged : Messages.PasswordChangeFailed;
 
         } catch (error) {
             return error as string
@@ -173,17 +212,11 @@ class UserService implements IUserService {
         }
     }
 
-    async getUserDetails(userId: Types.ObjectId): Promise<IUserResponse | null> {
+    async getUserDetails(userId: Types.ObjectId): Promise<UserDto | null> {
         try {
-            const projection = {
-                name:1,
-                email:1,
-                mobile:1,
-                wallet_id:1,
-                userType:1
-            }
-            const response = await this._userRepository.findUserById(userId,projection);
-            return response;
+            const user = await this._userRepository.findUserById(userId);
+            if (!user) return null;
+            return UserDto.from(user)
         } catch (error) {
             console.error(error);
             return null;
@@ -192,8 +225,19 @@ class UserService implements IUserService {
 
     async changePassword(userData: { userId: string; currentPassword: string; newPassword: string }): Promise<string> {
         try {
-            const response = await this._userRepository.changePassword(userData);
-            return response;
+            const user = await this._userRepository.findUserById(userData.userId);
+            if (!user) return Messages.UserNotFound;
+
+            const isCurrentMatch = await bcrypt.compare(userData.currentPassword, user.password);
+            if (!isCurrentMatch) return Messages.CurrentPasswordDoesNotMatch;
+
+            const isSamePassword = await bcrypt.compare(userData.newPassword, user.password);
+            if (isSamePassword) return Messages.NewPasswordCannotbeSame;
+
+            const hashed = await bcrypt.hash(userData.newPassword, 10);
+            const updated = await this._userRepository.updatePassword(userData.userId, hashed);
+
+            return updated ? Messages.PasswordChangedSuccess : Messages.PasswordNotUpdated;
         } catch (error) {
             console.error(error);
             return error as string
@@ -252,7 +296,7 @@ class UserService implements IUserService {
 
     async sendNotification(notification: INotificationResponse): Promise<INotificationResponse | string | null> {
         try {
-            console.log(notification,'Notiii')
+            console.log(notification, 'Notiii')
             const response = await this._userRepository.sendNotification(notification);
             return response
         } catch (error) {

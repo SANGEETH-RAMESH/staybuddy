@@ -41,13 +41,11 @@ const TransactionHistory = () => {
     fetchTransactions();
   }, []);
 
-  // Filter transactions based on type
   const filteredTransactions = transactions.filter(transaction => {
     if (filterType === 'all') return true;
     return transaction.type === filterType;
   });
 
-  // Pagination calculations
   const indexOfLastTransaction = currentPage * transactionsPerPage;
   const indexOfFirstTransaction = indexOfLastTransaction - transactionsPerPage;
   const currentTransactions = filteredTransactions.slice(indexOfFirstTransaction, indexOfLastTransaction);

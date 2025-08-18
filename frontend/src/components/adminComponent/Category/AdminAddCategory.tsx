@@ -33,7 +33,6 @@ const AdminAddCategoryPage = () => {
       image: ''
     });
 
-    // Create preview
     const reader = new FileReader();
     reader.onload = () => {
       setImagePreview(reader.result as string);
@@ -41,7 +40,6 @@ const AdminAddCategoryPage = () => {
     reader.readAsDataURL(file);
   };
 
-  // Submit form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 

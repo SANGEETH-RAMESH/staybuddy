@@ -5,7 +5,7 @@ export interface IUserResponse {
   name: string;
   email: string;
   mobile: string;
-  isAdmin: boolean;
+  isAdmin?: boolean;
   isBlock: boolean;
   wallet_id?: Types.ObjectId | null;
   temp?:boolean;

@@ -19,15 +19,6 @@ const HostSignUpOtpBody = () => {
   const mobile = location.state.mobile;
   const password = location.state.password
 
-//   useEffect(() => {
-//     const queryParams = new URLSearchParams(window.location.search);
-//     const emailFromUrl = queryParams.get("email");
-//     if (emailFromUrl) {
-//       setEmail(emailFromUrl);
-//     }
-//   }, []);
-
-  // Timer countdown for resending OTP
   useEffect(() => {
     let countdown: ReturnType<typeof setTimeout>;
     if (timer > 0) {
@@ -40,7 +31,6 @@ const HostSignUpOtpBody = () => {
     return () => clearTimeout(countdown);
   }, [timer]);
 
-  // Resend OTP
   const handleResendOtp = async () => {
     setCanResend(false);
     setTimer(59);
@@ -54,7 +44,6 @@ const HostSignUpOtpBody = () => {
     }
   };
 
-  // Verify OTP
   const handleVerifyOtp = async () => {
     setLoading(true);
     try {
@@ -63,7 +52,7 @@ const HostSignUpOtpBody = () => {
       console.log(response.data.message, "response");
       if (response.data.message === "success") {
         navigate("/host/login");
-      } else if (response.data.message === "Invalid otp") {
+      } else if (response.data.message === "Invalid OTP") {
         setErrors((prev)=>({
           ...prev,
           otp:"Invalid OTP"

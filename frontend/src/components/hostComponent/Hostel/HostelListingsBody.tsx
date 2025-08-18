@@ -4,8 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { deleteHostel, getAllHostels } from '../../../services/hostServices';
 import { SearchBarProps } from '../../../interface/Search';
 import DeleteConfirmationModal from '../../commonComponents/DeleteConfirmationModal';
-
-
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
 
 const ITEMS_PER_PAGE = 6;
 
@@ -64,7 +63,6 @@ type FacilityBadgeProps = {
   color: 'green' | 'blue' | 'purple';
 };
 
-// EmptyState Component
 const EmptyState = () => {
   const navigate = useNavigate();
 
@@ -158,8 +156,9 @@ const FacilityBadge: React.FC<FacilityBadgeProps> = ({ icon, label, available, c
   );
 };
 
-// HostelCard Component
 const HostelCard: React.FC<HostelCardProps> = ({ hostel, onDelete }) => {
+  console.log(imageUrl,hostel.photos)
+  console.log(hostel.photos,'Phttttt')
   const [isLiked, setIsLiked] = useState(false);
   const navigate = useNavigate();
 
@@ -179,7 +178,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel, onDelete }) => {
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onDelete(hostel); // Pass the entire hostel object
+    onDelete(hostel);
   };
 
   return (
@@ -189,7 +188,7 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel, onDelete }) => {
     >
       <div className="relative">
         <img
-          src={hostel.photos || "/api/placeholder/400/250"}
+          src={hostel?.photos ? `${imageUrl}/${hostel.photos}` : "/api/placeholder/400/250"}
           alt={hostel.name}
           className="w-full h-48 object-cover rounded-t-lg"
         />

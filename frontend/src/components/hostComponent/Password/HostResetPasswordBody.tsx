@@ -1,9 +1,10 @@
 import  { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import lock_icon from "../../../assets/lock.png";
 import { changePasswordValues } from "../../../interface/ChangePassword";
 import { resetPassword } from "../../../services/hostServices";
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const lock_icon = `${imageUrl}/v1755417527/lock_prz3ad.png`
 
 const HostResetPasswordBody = () => {
   const [password, setPassword] = useState("");
@@ -61,9 +62,7 @@ const HostResetPasswordBody = () => {
       } finally {
         setLoading(false);
       }
-    // } else {
-    //   toast.error("Passwords do not match. Please try again!");
-    // }
+    
   };
 
   return (

@@ -79,18 +79,7 @@ const WalletTracker = () => {
     }
   }, [error]);
 
-  // const addTransaction = (type: string, value: number): void => {
-  //   const newTransaction = {
-  //     id: Date.now(),
-  //     type,
-  //     description: '',
-  //     amount: value,
-  //     date: new Date().toISOString(),
-  //   };
-
-  //   // setTransactions((prev) => [newTransaction, ...(prev || [])]);
-  // };
-
+ 
   const loadRazorpayScript = () => {
     return new Promise((resolve) => {
       const script = document.createElement('script');
@@ -103,7 +92,6 @@ const WalletTracker = () => {
 
 
   const handlePayment = async () => {
-    // Check for empty input
     const numericAmount = parseFloat(amount);
 
     if (!amount || amount.trim() === '') {
@@ -177,7 +165,6 @@ const WalletTracker = () => {
   };
 
   const handleWithdraw = async () => {
-    // Check for empty input
     const numericAmount = parseFloat(amount);
 
     if (!amount || amount.trim() === '') {

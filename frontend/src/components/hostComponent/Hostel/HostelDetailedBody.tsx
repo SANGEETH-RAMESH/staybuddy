@@ -22,6 +22,7 @@ import { Hostel } from '../../../interface/Hostel';
 import { getSingleHostel, status } from '../../../services/hostServices';
 import toast from 'react-hot-toast';
 import LocationDisplay from '../../commonComponents/LocationDisplay';
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
 
 const InactiveReasonModal = ({
   isOpen,
@@ -119,7 +120,7 @@ const ImageGallery = ({ photos }: { photos: string[] }) => {
         <div className="hidden md:grid grid-cols-3 gap-4 p-4">
           <div className="relative h-[480px] col-span-2 rounded-lg overflow-hidden">
             <img
-              src={photos[currentImageIndex] || defaultImage}
+              src={photos[0]? `${imageUrl}/${photos[0]}`: defaultImage}
               alt="Main hostel view"
               className="w-full h-full object-cover"
             />
@@ -128,7 +129,7 @@ const ImageGallery = ({ photos }: { photos: string[] }) => {
             {[1, 2, 3].map((offset) => (
               <div key={offset} className="relative rounded-lg overflow-hidden">
                 <img
-                  src={photos[(currentImageIndex + offset) % totalImages] || defaultImage}
+                  src={photos[0]? `${imageUrl}/${photos[0]}`: defaultImage}
                   alt={`Hostel view ${offset + 1}`}
                   className="w-full h-[152px] object-cover"
                 />
@@ -139,7 +140,7 @@ const ImageGallery = ({ photos }: { photos: string[] }) => {
 
         <div className="md:hidden relative h-[400px]">
           <img
-            src={photos[currentImageIndex] || defaultImage}
+            src={photos[0]? `${imageUrl}/${photos[0]}`: defaultImage}
             alt={`Hostel view ${currentImageIndex + 1}`}
             className="w-full h-full object-cover"
           />

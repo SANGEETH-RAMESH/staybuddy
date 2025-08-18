@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import lock_icon from '../../../assets/lock.png'
 import { resetPassword } from "../../../services/userServices";
 import { Eye, EyeOff } from "lucide-react";
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const lock_icon = `${imageUrl}/v1755417527/lock_prz3ad.png`
 
 const ResetPasswordBody = () => {
   const [password, setPassword] = useState("");

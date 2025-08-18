@@ -14,62 +14,42 @@ import { IHostResponse } from "../dtos/HostResponse";
 import { IUserResponse } from "../dtos/UserResponse";
 import { ICategoryResponse } from "../dtos/CategoryResponse";
 import { IOtpVerify } from "../dtos/OtpVerify";
+import { otpgenerator } from "../utils/otp";
 import jwt from 'jsonwebtoken';
-
-function otpgenerator() {
-    return Math.floor(1000 + Math.random() * 9000);
-}
-
-function generateRandomPassword() {
-    const lowerCase = 'abcdefghijklmnopqrstuvwxyz';
-    const upperCase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const numbers = '0123456789';
-
-    let password = '';
-
-    password += lowerCase[Math.floor(Math.random() * lowerCase.length)];
-    password += upperCase[Math.floor(Math.random() * upperCase.length)];
-    password += numbers[Math.floor(Math.random() * numbers.length)];
-
-    const allCharacters = lowerCase + upperCase + numbers;
-    for (let i = 0; i < 5; i++) {
-        password += allCharacters[Math.floor(Math.random() * allCharacters.length)];
-    }
-
-    password = password.split('').sort(() => Math.random() - 0.5).join('');
-
-    return password;
-}
-
-function generateRandomMobileNumber() {
-    const firstDigit = Math.floor(Math.random() * 5) + 6;
-    let mobileNumber = firstDigit.toString();
-
-    for (let i = 0; i < 9; i++) {
-        mobileNumber += Math.floor(Math.random() * 10).toString();
-    }
-
-    return mobileNumber;
-}
-
+import { IHost } from "../model/hostModel";
 
 
 class hostService implements IHostService {
     constructor(private _hostRepository: IHostRepository, private _walletRepository: IWalletRepository,
-    private _adminRepository : IAdminRepository,private _userRepository :IUserRespository
+        private _adminRepository: IAdminRepository, private _userRepository: IUserRespository
     ) { }
 
     async signUp(hostData: IHostResponse): Promise<string> {
         try {
-            const existingUser = await this._hostRepository.findHostByEmail(hostData.email)
+            const existingUser = await this._hostRepository.findHostByEmail(hostData.email);
             if (existingUser) {
-                return Messages.Existing
+                return Messages.Existing;
             }
-            const Otp = otpgenerator();
-            sendOtp(hostData.email, Otp);
-            await this._hostRepository.otpGenerating(hostData.email, Otp)
-            await this._hostRepository.tempStoreHost(hostData);
-            return Messages.OtpSuccess
+
+            const otpCode = otpgenerator();
+            sendOtp(hostData.email, otpCode);
+            await this._userRepository.otpGenerating(hostData.email, otpCode);
+            if (!hostData.password) {
+                return Messages.InvalidPassword;
+            }
+            const hashedPassword = await HashedPassword.hashPassword(hostData.password);
+
+            await this._hostRepository.insertHost({
+                name: hostData.name,
+                mobile: hostData.mobile,
+                email: hostData.email,
+                password: hashedPassword,
+                temp: true,
+                hostType: "local"
+            })
+
+
+            return Messages.OtpSentSuccess;
 
 
         } catch (error) {
@@ -78,12 +58,23 @@ class hostService implements IHostService {
         }
     }
 
-    async resendOtp(hostData: IHostResponse): Promise<string | null> {
+    async resendOtp(hostData: Partial<IHost>): Promise<string | null> {
         try {
             const Otp = otpgenerator();
-            sendOtp(hostData.email, Otp);
-            await this._hostRepository.otpGenerating(hostData.email, Otp);
-            await this._hostRepository.tempStoreHost(hostData);
+            sendOtp(hostData.email!, Otp);
+            await this._hostRepository.otpGenerating(hostData.email!, Otp);
+            if (!hostData.password) {
+                return Messages.InvalidPassword;
+            }
+            const hashedPassword = await HashedPassword.hashPassword(hostData.password);
+            await this._hostRepository.insertHost({
+                name: hostData.name,
+                mobile: hostData.mobile,
+                email: hostData.email,
+                password: hashedPassword,
+                temp: true,
+                hostType: "local",
+            })
             return Messages.OtpSuccess
         } catch (error) {
             console.log(error)
@@ -91,21 +82,23 @@ class hostService implements IHostService {
         }
     }
 
-    async verifyOtp(hostOtp: IOtpVerify): Promise<string> {
+    async verifyOtp(hostOtp: { email: string; otp: number }): Promise<string> {
         try {
-            const checkOtp = await this._hostRepository.otpChecking(hostOtp);
-            if (checkOtp == Messages.HostNotVerified) {
-                return Messages.InvalidOtp
+            const host = await this._hostRepository.findOtpByEmail(hostOtp.email);
+            if (!host) {
+                return Messages.UserNotFound;
             }
-            const creatingHost = await this._hostRepository.createHost({ email: hostOtp.email })
-            console.log(creatingHost)
-            console.log(Messages.success,"Service")
-            if (creatingHost == Messages.success) {
-                await this._walletRepository.createHostWallet(hostOtp?.email)
+            if (hostOtp.otp !== host.otp) {
+                return Messages.InvalidOtp;
             }
-            return creatingHost;
+            if (hostOtp.otp == host.otp) {
+                const createUser = await this._hostRepository.createHost(hostOtp);
+                if (createUser == Messages.success) {
+                    await this._walletRepository.createWallet(hostOtp.email)
+                }
+            }
+            return Messages.success;
         } catch (error) {
-            console.log(error)
             return error as string
         }
     }
@@ -153,6 +146,10 @@ class hostService implements IHostService {
                 return { message: Messages.HostIsBlocked };
             }
 
+            if (!checkhost.password) {
+                return { message: Messages.InvalidPassword };
+            }
+
             const isMatch = await bcrypt.compare(hostData.password, checkhost.password);
 
             if (!isMatch) {
@@ -174,7 +171,7 @@ class hostService implements IHostService {
                 role: 'host'
             };
         } catch (error) {
-            return { message: error as string};
+            return { message: error as string };
         }
     }
 
@@ -212,50 +209,24 @@ class hostService implements IHostService {
         }
     }
 
-
-
-    async hostGoogleSignUp(hostData: IHostResponse): Promise<{ message: string; accessToken: string; refreshToken: string } | string> {
-        try {
-            const password = generateRandomPassword();
-            const mobile = generateRandomMobileNumber();
-            const hashed = await HashedPassword.hashPassword(password);
-            const data = { ...hostData, name: hostData.name, password: hashed, mobile };
-            const response = await this._hostRepository.addGoogleHost(data);
-
-            if (typeof response === 'object' && response !== null && 'message' in response) {
-                if (response.message === Messages.Success) {
-                    const hostPayload: hostPayload = {
-                        _id: response.host?._id as Types.ObjectId,
-                        role: 'host'
-                    }
-                    const accessToken = generateAccessToken(hostPayload);
-                    const refreshToken = generateAccessToken(hostPayload);
-                    return { message: response.message, accessToken, refreshToken }
-                } else if (response.message == Messages.Already) {
-                    const hostPayload: hostPayload = {
-                        _id: response.host?._id as Types.ObjectId,
-                        role: 'host'
-                    }
-                    const accessToken = generateAccessToken(hostPayload);
-                    const refreshToken = generateRefreshToken(hostPayload);
-                    return { message: Messages.Success, accessToken, refreshToken }
-                }
-            }
-            return response as string
-        } catch (error) {
-            console.log(error)
-            return error as string
-        }
-    }
-
     async getHost(id: Types.ObjectId): Promise<IHostResponse | string> {
         try {
             const projection = {
-                name:1,
-                email:1,
-                mobile:1
+                name: 1,
+                email: 1,
+                mobile: 1
             }
-            const response = await this._hostRepository.findHostById(id,projection);
+            const host = await this._hostRepository.findHostById(id, projection);
+            if (!host || typeof host === "string") {
+                return Messages.HostNotFound;
+            }
+
+            const response: IHostResponse = {
+                _id: (host._id as Types.ObjectId).toString(),
+                name: host.name,
+                email: host.email,
+                mobile: host.mobile
+            }
             return response
         } catch (error) {
             console.log(error);
@@ -272,9 +243,9 @@ class hostService implements IHostService {
 
             if (typeof decoded == 'object' && decoded !== null) {
                 const projection = {
-                    _id:1
+                    _id: 1
                 }
-                const response = await this._hostRepository.findHostById(decoded._id,projection)
+                const response = await this._hostRepository.findHostById(decoded._id, projection)
 
                 if (!response || typeof response === 'string') {
                     return Messages.NoHosts;
@@ -323,7 +294,7 @@ class hostService implements IHostService {
             return error as string
         }
     }
-    
+
     async getAllUsers(): Promise<IUserResponse[] | string | null> {
         try {
             const response = await this._userRepository.getAllUsers();
@@ -343,45 +314,45 @@ class hostService implements IHostService {
     }
 
     async createGoogleAuth(credential: string): Promise<{ message: string; accessToken: string; refreshToken: string; role: string } | string> {
-            try {
-                const payload = jwt.decode(credential);
-                if (!payload || typeof payload === 'string') {
-                    return Messages.NoUser
-                }
-                const checkUser = await this._hostRepository.findHostByEmail(payload.email)
-                if (checkUser) {
-                    const userPayload = {
-                        _id: checkUser._id as Types.ObjectId,
-                        role: 'user' as const
-                    };
-                    const accessToken = generateAccessToken(userPayload);
-                    const refreshToken = generateRefreshToken(userPayload);
-                    return { message: Messages.UserAlreadyExist, accessToken, refreshToken, role: 'user' }
-                }
-    
-                const data = {
-                    email: payload.email,
-                    name: payload?.name,
-                    userType: 'google',
-                    mobile: '',
-                }
-                console.log(data,'Data')
-                const id = await this._hostRepository.createGoogleAuth(data)
-                await this._walletRepository.createWallet(payload.email);
-                console.log(id,'HEyyyy')
+        try {
+            const payload = jwt.decode(credential);
+            if (!payload || typeof payload === 'string') {
+                return Messages.NoUser
+            }
+            const checkUser = await this._hostRepository.findHostByEmail(payload.email)
+            if (checkUser) {
                 const userPayload = {
-                    _id: new Types.ObjectId(id),
-                    role: 'host' as const
+                    _id: checkUser._id as Types.ObjectId,
+                    role: 'user' as const
                 };
-                console.log(userPayload,'dlfsdf',id)
                 const accessToken = generateAccessToken(userPayload);
                 const refreshToken = generateRefreshToken(userPayload);
-                console.log(Messages.UserCreated,accessToken,refreshToken)
-                return { message: Messages.UserCreated, accessToken, refreshToken, role: 'host' }
-            } catch (error) {
-                return error as string
+                return { message: Messages.UserAlreadyExist, accessToken, refreshToken, role: 'user' }
             }
+
+            const data = {
+                email: payload.email,
+                name: payload?.name,
+                userType: 'google',
+                mobile: '',
+            }
+            console.log(data, 'Data')
+            const id = await this._hostRepository.createGoogleAuth(data)
+            await this._walletRepository.createWallet(payload.email);
+            console.log(id, 'HEyyyy')
+            const userPayload = {
+                _id: new Types.ObjectId(id),
+                role: 'host' as const
+            };
+            console.log(userPayload, 'dlfsdf', id)
+            const accessToken = generateAccessToken(userPayload);
+            const refreshToken = generateRefreshToken(userPayload);
+            console.log(Messages.UserCreated, accessToken, refreshToken)
+            return { message: Messages.UserCreated, accessToken, refreshToken, role: 'host' }
+        } catch (error) {
+            return error as string
         }
+    }
 }
 
 export default hostService

@@ -37,7 +37,7 @@ const HostSignUpBody = () => {
         try {
 
             const res = await signUp(formValues);
-            if (res.data.message === 'Otp success') {
+            if (res.data.message === "Otp sent successfully") {
                 navigate('/host/otp', { state: formValues });
             } else if (res.data.message === 'host exist') {
                 toast.error('Host already exists', { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });

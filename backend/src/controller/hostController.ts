@@ -264,25 +264,6 @@ class hostController {
         }
     }
 
-
-
-    // async hostGoogleSignUp(req: Request, res: Response): Promise<void> {
-    //     try {
-    //         const host = req.user;
-    //         const hostData = { name: host?.displayName, email: host?.email };
-    //         const response = await this._hostService.hostGoogleSignUp(hostData);
-    //         if (typeof response !== 'string' && response?.message === 'Success') {
-    //             res.redirect(`${process.env.FRONTEND_URL}/host/home/?accessToken=${response.accessToken}&refreshToken=${response.refreshToken}`)
-    //         } else {
-
-    //             res.json({ message: response });
-    //         }
-
-    //     } catch (error) {
-    //         res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
-    //     }
-    // }
-
     async validateRefreshToken(req: Request, res: Response): Promise<void> {
         try {
 

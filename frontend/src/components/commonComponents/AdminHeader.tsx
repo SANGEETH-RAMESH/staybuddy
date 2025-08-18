@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Menu, X, Bell, BellRing } from 'lucide-react';
-import admin_icon from '../../assets/settings.png';
 import { jwtDecode } from 'jwt-decode';
 import { User } from '../../interface/User'
 import { Notification } from '../../interface/Notification';
-import logo from '../../assets/logo.png'
 import { formatDistanceToNow } from 'date-fns';
 import { socket } from '../../utils/socket';
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const logo = `${imageUrl}/v1755417528/logo_zge7x3.png`
+const admin_icon = `${imageUrl}/v1755417525/settings_gxtopp.png`
 
 
 interface AdminHeaderProps {
@@ -23,7 +24,6 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
   const notificationRef = useRef<HTMLDivElement>(null);
   const [adminIds, setAdminId] = useState('')
 
-  // Close notification dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
@@ -102,9 +102,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, isSidebarOpen })
 
           return updated;
         });
-        // // setNotification([notifications])
-        // setIsRead(notificationss.isRead)
-        // setReadCount((prev) => prev + 1);
+        
       };
 
       socket.on('receive_notification', handleNotification);

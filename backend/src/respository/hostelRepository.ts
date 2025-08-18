@@ -5,18 +5,9 @@ import baseRepository from "./baseRespository";
 import { IUpdateHostelInput } from "../dtos/HostelData";
 import Review from "../model/reviewModel";
 import { Messages } from "../messages/messages";
+import { FilterQuery, SortOrder } from "mongoose";
 
-function getDistanceInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-}
+
 
 
 
@@ -25,7 +16,7 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
         super(Hostel)
     }
 
-    async getHostels(query: Record<string, any>, projection?: IUpdateHostelInput, sortOption: any = {}): Promise<IUpdateHostelInput[]> {
+    async getHostels(query: FilterQuery<IUpdateHostelInput>, projection?: Partial<IUpdateHostelInput>, sortOption: Record<string, SortOrder> = {}): Promise<IUpdateHostelInput[]> {
 
         return await Hostel.find(query, projection).sort(sortOption).lean<IUpdateHostelInput[]>();
 
@@ -53,18 +44,18 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
 
     async getSingleHostel(id: Types.ObjectId): Promise<IUpdateHostelInput | null | string> {
         try {
-            const response =  await Hostel.findOne({ _id: id }).populate('host_id').lean<IUpdateHostelInput>()
-            console.log(response,'fsdfd')
+            const response = await Hostel.findOne({ _id: id }).populate('host_id').lean<IUpdateHostelInput>()
+            console.log(response, 'fsdfd')
             return response
         } catch (error) {
             return error as string
         }
     }
 
-    async addHostel(hostelData: IUpdateHostelInput): Promise<string> {
+    async addHostel(data: Partial<IHostel>): Promise<string> {
         try {
-            console.log(hostelData,'Repo')
-            const hostel = new Hostel(hostelData);
+            console.log(data, 'Repo')
+            const hostel = new Hostel(data as IHostel);
             await hostel.save();
             return Messages.HostelAdded;
 
@@ -76,7 +67,7 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
 
     async getHostHostels(id: Types.ObjectId, limit: number, skip: number, search: string, sort?: string): Promise<{ hostels: IUpdateHostelInput[]; totalCount: number } | string> {
         try {
-            const query: any = {
+            const query: FilterQuery<IUpdateHostelInput> = {
                 host_id: id,
             };
             if (search && search.trim().length > 0) {
@@ -197,7 +188,7 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
         }
     }
 
-    
+
 }
 
 export default hostelRepository

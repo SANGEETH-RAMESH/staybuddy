@@ -4,24 +4,7 @@ import { IHostelService } from "../interface/hostel/!HostelService";
 import { IUpdateHostelInput } from "../dtos/HostelData";
 import { Messages } from "../messages/messages";
 import { IOrderRepository } from "../interface/order/!OrderRepository";
-import { IOrderResponse } from "../dtos/OrderResponse";
-
-function getDistanceInKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    // const R = 6371;
-    // const dLat = (lat2 - lat1) * Math.PI / 180;
-    // const dLon = (lon2 - lon1) * Math.PI / 180;
-    // const a =
-    //     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    //     Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    //     Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    // const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    // return R * c;
-    const x = (lon2 - lon1) * Math.cos((lat1 + lat2) / 2 * Math.PI / 180);
-    const y = lat2 - lat1;
-    const kmPerDegree = 111;
-
-    return Math.sqrt(x * x + y * y) * kmPerDegree;
-}
+import { getDistanceInKm } from "../utils/distance";
 
 function toPlainHostel(hostel: any) {
     return typeof hostel.toObject === 'function' ? hostel.toObject() : hostel;
@@ -243,7 +226,7 @@ class hostelService implements IHostelService {
                         : hostData.host_id._id
             );
 
-            
+
             const addingHostelData = {
                 hostelname: hostData.hostelname,
                 location: hostData.location,
@@ -252,14 +235,14 @@ class hostelService implements IHostelService {
                 totalRooms: hostData.beds,
                 policies: hostData.policies,
                 category: hostData.category,
-                advanceamount: hostData.advanceamount,
+                advanceamount: Number(hostData.advanceamount),
                 facilities: hostData.facilities,
                 bedShareRoom: hostData.bedShareRate ? Number(hostData.bedShareRate) : undefined,
                 isFull: false,
                 isActive: true,
-                foodRate: hostData.foodRate,
-                phone: hostData.phone,
-                host_id: host_id,
+                foodRate: Number(hostData.foodRate),
+                phone: Number(hostData.phone),
+                host_id: host_id, 
                 longitude: Number(hostData.longitude),
                 latitude: Number(hostData.latitude),
                 cancellationPolicy: hostData.cancellationPolicy.toLowerCase(),
@@ -328,11 +311,20 @@ class hostelService implements IHostelService {
 
 
             const currentTotalRooms = existingHostel.totalRooms || 0;
-            const currentBeds = existingHostel.beds || 0;
-            const additionalRooms = hostelData.beds || 0;
-            const updatedTotalRooms = currentTotalRooms + additionalRooms;
-            const updatedBeds = currentBeds + additionalRooms;
+            const currentBeds = Number(existingHostel.beds) || 0;
+            const additionalRooms = Number(hostelData.beds) || 0;
 
+            let updatedTotalRooms=0;
+            let updatedBeds: number = 0
+            if (Number(currentBeds) == Number(additionalRooms)) {
+                updatedBeds = currentBeds;
+                updatedTotalRooms = currentTotalRooms;
+            } else {
+                updatedBeds = Number(currentBeds) + Number(additionalRooms);
+                updatedTotalRooms = (currentTotalRooms) + Number(additionalRooms);
+
+            }
+            console.log(updatedBeds, "UpdatedBeds")
             const updateFields: any = {
                 hostelname: hostelData.hostelname,
                 location: hostelData.location,
@@ -341,7 +333,7 @@ class hostelService implements IHostelService {
                 policies: hostelData.policies,
                 category: hostelData.category,
                 advanceamount: hostelData.advanceamount,
-                facilities:hostelData.facilities,
+                facilities: hostelData.facilities,
                 photos: hostelData.photos,
                 longitude: Number(hostelData.longitude),
                 latitude: Number(hostelData.latitude),
@@ -350,10 +342,10 @@ class hostelService implements IHostelService {
                 bookingType: hostelData.bookingType
             };
             console.log(updateFields, 'updateFieds')
-          
+
             if (hostelData.facilities.food) {
-    updateFields.foodRate = hostelData.foodRate;
-}
+                updateFields.foodRate = hostelData.foodRate;
+            }
 
             if (!hostelData.hostelId) {
                 throw new Error("Hostel ID is required for update.");

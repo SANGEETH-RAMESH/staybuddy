@@ -26,11 +26,6 @@ import { RazorpayResponse } from '../../../interface/RazorpayOptions';
 import { useRazorpay, RazorpayOrderOptions } from 'react-razorpay'
 
 
-// declare class Razorpay {
-//     constructor(options: RazorpayOptions);
-//     open(): void;
-//     on(event: string, callback: (response: RazorpayResponse) => void): void;
-// }
 
 const SavedDetailHostel = () => {
     const [showAlert, setShowAlert] = useState(false);
@@ -155,12 +150,9 @@ const SavedDetailHostel = () => {
             handler: async (response: RazorpayResponse) => {
                 console.log(response)
                 await handleSubmit(id);
-                // toast.success('Payment successful!');
             },
             modal: {
-                //   ondismiss: () => {
-                //  paymentFail(booking_id);
-                //   },
+               
             },
         };
         console.log(options, 'Options')

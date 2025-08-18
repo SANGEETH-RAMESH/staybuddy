@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Search, UserPlus, Loader2, Clock, Paperclip, Image, X,  Video } from 'lucide-react';
-import dummy_profile from '../../../assets/dummy profile.png'
 import VideoCall from '../../commonComponents/VideoCall'
 import { Message } from '../../../interface/Message';
 import { User } from '../../../interface/User';
 import { Chats } from '../../../interface/Chats';
 import { getAllUsers, getChat, getHostChat } from '../../../services/hostServices';
 import { socket } from '../../../utils/socket';
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const dummy_profile = `${imageUrl}/v1755417527/dummy_profile_bvq31k.png`
 
 
 const HostChatBody = () => {
@@ -99,7 +100,6 @@ const HostChatBody = () => {
 
     socket.on('incoming_call', ({ callerId, callerName, chatId }) => {
       console.log('Incoming call from:', callerName,callerId,chatId);
-      // console.log(selectedChat,selectedChat?._id,chatId)
      
         setIsCallActive(true);
         setIsCallInitiator(false);
@@ -126,7 +126,6 @@ const HostChatBody = () => {
       try {
         const payloadBase64 = token.split('.')[1];
         const decodedPayload = JSON.parse(atob(payloadBase64));
-        // console.log(decodedPayload, "Decoded Payload");
         const id = decodedPayload._id
         setHostId(id)
       } catch (error) {
@@ -136,27 +135,22 @@ const HostChatBody = () => {
   }, [])
 
   const initiateVideoCall = () => {
-    // console.log(selectedChat,'chhatttt')
     if (!selectedChat || !onlineUser.includes(receiverId)) {
-      // console.log(selectedChat, !onlineUser.includes(receiverId))
       alert('User is not online for video call');
       return;
     }
 
-    // console.log('Initiating video call to:', selectedChat.name);
     setIsCallActive(true);
     setIsCallInitiator(true);
   };
 
   const handleEndCall = () => {
-    // console.log(' Ending call');
     setIsCallActive(false);
     setIsCallInitiator(false);
   };
 
   const handleAddNewChat = async (selectedUser: User) => {
     try {
-      // Create new chat with selected user
       console.log(selectedUser, 'Userr')
       if(!selectedChat?._id) return;
       const res = await getChat(selectedChat?._id);
@@ -180,7 +174,6 @@ const HostChatBody = () => {
           })
           setChats(setChatss)
 
-          // setChats(chats)
         })
        
       }
@@ -206,13 +199,9 @@ const HostChatBody = () => {
             type: chat.type
           };
         });
-        // console.log(chatData, 'cahtttt')
         setReceiverId(chatData[0]?.participant1?._id)
-        // setHostId(chatData[0]?.participant2)
-        // console.log(hostId, 'hist')
         setChats(chatss)
         setIsLoading(false)
-        // console.log(chatss, 'Chatss')
       } catch (error) {
         console.log(error)
       }
@@ -255,7 +244,6 @@ const HostChatBody = () => {
       setChats(prevChats => {
         const updatedChats = prevChats.map(chat => {
           const isMatched = chat._id === newMessage.savedMessage?.chatId;
-          // console.log("Matched:", chat._id, selectedChat?._id);
           if (isMatched) {
             return {
               ...chat,
@@ -287,12 +275,10 @@ const HostChatBody = () => {
   }, [messages]);
 
   const handleSelectChat = (chat: Chats, receiverId: string) => {
-    // console.log(chat, 'dsfdsf')
 
     setSelectedChat(chat);
     setMessages(chat.messages || [])
     setReceiverId(receiverId)
-    // console.log("receiver", receiverId)
     socket.emit('join_room', chat._id);
     socket.emit("old_message", { chatId: chat._id });
     const chatId = chat._id
@@ -319,14 +305,10 @@ const HostChatBody = () => {
 
       let fileData = '';
       let messageType: 'text' | 'image' | 'document' = 'text';
-      // let fileName = '';
-      // let fileSize = 0;
 
       if (selectedFile) {
         fileData = await convertFileToBase64(selectedFile);
         messageType = selectedFile.type.startsWith('image/') ? 'image' : 'document';
-        // fileName = selectedFile.name;
-        // fileSize = selectedFile.size;
       }
 
       if (!newMessage.trim() && !selectedFile) {

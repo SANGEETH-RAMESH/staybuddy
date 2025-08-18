@@ -19,7 +19,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  // Navigation functions for each path
   const navigateToDashboard = () => {
     navigate('/admin/dashboard');
     onClose();
@@ -40,10 +39,6 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ isOpen, onClose }) => {
     onClose();
   };
 
-  // const navigateToPayment = () => {
-  //   navigate('/admin/payment');
-  //   onClose();
-  // };
 
   const navigateToHostel = () => {
     navigate('/admin/hostel');

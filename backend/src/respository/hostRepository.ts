@@ -2,7 +2,7 @@ import mongoose, { Types } from "mongoose";
 import { IHostRepository } from "../interface/host/!HostRepository";
 import { generateAccessToken, generateRefreshToken } from "../Jwt/jwt";
 import Host, { IHost } from "../model/hostModel";
-import Otp from "../model/otpModel";
+import Otp, { IOtp } from "../model/otpModel";
 import HashedPassword from "../utils/hashedPassword";
 import bcrypt from 'bcrypt';
 import { hostPayload } from "../types/commonInterfaces/tokenInterface";
@@ -13,13 +13,14 @@ import baseRepository from "./baseRespository";
 import { IHostResponse } from "../dtos/HostResponse";
 import { Messages } from "../messages/messages";
 import { IUpdateHostelInput } from "../dtos/HostelData";
+import { ProjectionType } from "mongoose";
 
 
 interface hostData {
     name: string,
     mobile: number,
     email: string,
-    password: string
+    password?: string
 }
 
 interface otpData {
@@ -49,12 +50,35 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
         }
     }
 
+    async updateOtp(email: string, otp: number): Promise<void> {
+        await Otp.updateOne({ email }, { $set: { otp } });
+    }
+
+    async createOtp(email: string, otp: number): Promise<IOtp> {
+        return await Otp.create({ email, otp });
+    }
+
+    async findOtpByEmail(email: string): Promise<IOtp | null> {
+        return await Otp.findOne({ email });
+    }
+
+    async insertHost(hostData: Partial<IHost>): Promise<string | null> {
+        try {
+            const newHost = new Host(hostData);
+            await newHost.save();
+            return Messages.Added
+        } catch (error) {
+            console.log(error);
+            return null;
+        }
+    }
+
     async otpGenerating(email: string, otp: number): Promise<void> {
         try {
-            const existingOtp = await Otp.findOne({ email });
-            if (existingOtp) {
-                existingOtp.otp = otp;
-                await existingOtp.save();
+            const exisitingOtp = await Otp.findOne({ email })
+            if (exisitingOtp) {
+                exisitingOtp.otp = otp
+                await exisitingOtp.save()
             } else {
                 const otpsave = new Otp({
                     email: email,
@@ -67,43 +91,8 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
         }
     }
 
-    async tempStoreHost(hostData: hostData): Promise<void> {
-        try {
-            const alreadyHost = await Host.findOne({ email: hostData.email });
-            if (!alreadyHost) {
-                const hashedPassword = await HashedPassword.hashPassword(hostData.password);
-                const tempAddingHost = new Host({
-                    name: hostData?.name,
-                    mobile: hostData?.mobile,
-                    email: hostData.email,
-                    password: hashedPassword,
-                    temp: true
-                })
-                await tempAddingHost.save();
-            }
-        } catch (error) {
-            console.log(error)
-        }
-    }
 
-    async otpChecking(hostData: otpData): Promise<string> {
-        try {
-            const host = await Otp.findOne({ email: hostData.email })
-            if (!host) {
-                return Messages.UserNotFound;
-            }
 
-            if (host?.otp === hostData.otp) {
-                return Messages.HostVerified;
-            } else {
-                return Messages.HostNotVerified;
-            }
-
-        } catch (error) {
-            console.log(error);
-            return error as string
-        }
-    }
 
     async createHost(hostData: { email: string }): Promise<string> {
         try {
@@ -221,8 +210,6 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
 
     async approvalRequest(host_id: Types.ObjectId): Promise<string> {
         try {
-            // const hostt = await Host.find();
-            // const hostFind = await Host.findOne({_id:host_id});
             await Host.updateOne(
                 { _id: host_id },
                 { $set: { approvalRequest: "2" } }
@@ -236,7 +223,7 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
 
 
 
-    async addGoogleHost(hostData: HostData): Promise<{ message: string, host?: IHostResponse } | string> {
+    async addGoogleHost(hostData: Partial<IHost>): Promise<{ message: string, host?: IHostResponse } | string> {
         try {
             const alreadyHost = await Host.findOne({ email: hostData.email }) as IHostResponse;
             if (alreadyHost) {
@@ -268,9 +255,9 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
         }
     }
 
-    async findHostById(id: Types.ObjectId, projection?: any): Promise<IHostResponse | string> {
+    async findHostById(id: Types.ObjectId, projection?: ProjectionType<IHost>): Promise<IHost | string> {
         try {
-            const findHost = await this.findById(id, projection) as IHostResponse | null;
+            const findHost = await this.findById(id, projection) as IHost | null;
             if (!findHost) {
                 return "No host"
             }

@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { loginSuccess } from '../../../redux/adminAuthSlice';
 import { useDispatch } from 'react-redux';
-import logo from '../../../assets/logo.png'
 import { LoginValues } from '../../../interface/Login';
 import { useState } from 'react';
 import { loginUrl } from '../../../services/adminServices';
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const logo = `${imageUrl}/v1755417528/logo_zge7x3.png`
 
 
 const AdminLoginBody = () => {

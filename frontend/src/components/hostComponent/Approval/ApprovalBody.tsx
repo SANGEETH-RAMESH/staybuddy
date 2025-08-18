@@ -289,7 +289,6 @@ const ApprovalBody = () => {
     );
   }
 
-  // If request already sent, show a different UI
   if (requestAlreadySent) {
     return (
       <div className="min-h-screen bg-gray-50 pt-20 px-4">

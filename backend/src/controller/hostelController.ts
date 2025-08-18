@@ -70,20 +70,19 @@ class HostelController {
 
     async addHostel(req: Request, res: Response): Promise<void> {
         try {
-            let photos: string | undefined = undefined;
+            let uploadedUrl: string | undefined;
             if (req.file && req.file.buffer) {
-                photos = await uploadImage(req.file.buffer);
-
+                uploadedUrl = await uploadImage(req.file.buffer);
             }
+
             const facilities = JSON.parse(req.body.facilities);
-            console.log(facilities)
-            console.log(typeof facilities, 'Tyoeeeeee')
+
             const data = {
                 ...req.body,
-                photos,
+                photos: uploadedUrl,
                 facilities
-            }
-            console.log(data, 'Data')
+            };
+
             let validationErrors: Record<string, string> = {};
             await hostelFormValidation.validate(data, { abortEarly: false })
                 .catch((error: ValidationError) => {
@@ -92,21 +91,32 @@ class HostelController {
                             validationErrors[err.path] = err.message;
                         }
                     })
-                })
-            console.log(Object.keys(validationErrors).length, 'Lneght')
+                });
+
             if (Object.keys(validationErrors).length > 0) {
                 res.status(StatusCode.BAD_REQUEST).json({
                     success: false,
                     message: Messages.ValidationFailed,
                     errors: validationErrors
-                })
+                });
                 return;
             }
+
+            let photos: string | undefined = undefined;
+            if (uploadedUrl) {
+                const parts = uploadedUrl.split("/");
+                const version = parts[parts.indexOf("upload") + 1];
+                const filename = parts.slice(parts.indexOf(version) + 1).join("/");
+
+                photos = `${version}/${filename}`;
+            }
+            console.log(photos, 'fdfdfdffffff')
             const response = await this._hostelService.addHostel({
                 ...req.body,
                 photos,
                 facilities
             });
+
             res.status(StatusCode.OK).json({ message: response });
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
@@ -115,14 +125,12 @@ class HostelController {
 
     async getHostHostels(req: Request, res: Response): Promise<void> {
         try {
-            console.log("hey")
             const host = req.customHost
             const hostId = host?._id;
             if (!hostId) {
                 res.status(StatusCode.NOT_FOUND).json({ success: true, message: Messages.NoHost })
                 return
             }
-            console.log(req.query, 'dfljsdflsdfdsfdsf')
             const searchStr = typeof req.query.search === 'string' ? req.query.search : '';
             const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
             const skip = req.query.skip ? parseInt(req.query.skip as string, 10) : 0;
@@ -152,9 +160,9 @@ class HostelController {
                 try {
                     photos = Array.isArray(req.body.photos)
                         ? req.body.photos
-                        : JSON.parse(req.body.photos); 
+                        : JSON.parse(req.body.photos);
                 } catch {
-                    photos = [req.body.photos]; 
+                    photos = [req.body.photos];
                 }
             } else if (req?.file?.buffer) {
                 const uploadedUrl = await uploadImage(req.file.buffer);
@@ -187,13 +195,22 @@ class HostelController {
                 })
                 return;
             }
-
+            const processedPhotos = photos.map(photoUrl => {
+                if (photoUrl.startsWith("http")) {
+                    const parts = photoUrl.split("/");
+                    const version = parts[parts.indexOf("upload") + 1];
+                    const filename = parts.slice(parts.indexOf(version) + 1).join("/");
+                    return `${version}/${filename}`;
+                }
+                return photoUrl;
+            });
 
             const { existingPhotos, ...restOfBody } = req.body;
+            console.log(photos, 'Phhhhhhhhhh')
             console.log(restOfBody, "Controler")
             const response = await this._hostelService.updateHostel({
                 ...restOfBody,
-                photos,
+                photos: processedPhotos,
                 hostelId: req.params.id,
                 facilities
             });

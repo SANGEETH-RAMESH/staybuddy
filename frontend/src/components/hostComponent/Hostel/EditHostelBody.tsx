@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Category } from '../../../interface/Category';
 import { editHostel, getAllCategory, getSingleHostel } from '../../../services/hostServices';
 import LocationPicker from '../../commonComponents/LocationPicker';
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
 
 const HostelEditForm = () => {
   const { id } = useParams<{ id: string }>();
@@ -571,7 +572,9 @@ const HostelEditForm = () => {
                 {existingPhotos.map((photo, index) => (
                   <div key={index} className="relative">
                     <img
-                      src={photo}
+                      src={photo?.[0]?.startsWith("http")
+                        ? photo[0]
+                        : `${imageUrl}/${photo}`}
                       alt={`Hostel ${index + 1}`}
                       className="w-full h-24 object-cover rounded-lg border shadow-sm"
                     />

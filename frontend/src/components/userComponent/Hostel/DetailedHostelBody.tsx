@@ -28,6 +28,7 @@ import { Hostel } from '../../../interface/Hostel';
 import { Order } from '../../../interface/Order';
 import { User } from '../../../interface/User';
 import { Facilities } from '../../../interface/Facilities';
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
 
 interface BookingData {
     fromDate: string;
@@ -54,7 +55,7 @@ const ImageGallery = ({ photos }: { photos: string[] | string }) => {
                 <div className="hidden lg:grid grid-cols-2 gap-4 p-4">
                     <div className="relative h-[400px] xl:h-[480px] rounded-lg overflow-hidden">
                         <img
-                            src={photos[0] || defaultImage}
+                            src={photos[0]? `${imageUrl}/${photos[0]}`: defaultImage}
                             alt="Main hostel view"
                             className="w-full h-full object-cover"
                         />
@@ -62,14 +63,14 @@ const ImageGallery = ({ photos }: { photos: string[] | string }) => {
                     <div className="grid grid-rows-2 gap-4">
                         <div className="relative rounded-lg overflow-hidden">
                             <img
-                                src={photos[(currentImageIndex + 1) % totalImages] || defaultImage}
+                                src={photos[0]? `${imageUrl}/${photos[0]}`: defaultImage}
                                 alt="Second hostel view"
                                 className="w-full h-[190px] xl:h-[235px] object-cover"
                             />
                         </div>
                         <div className="relative rounded-lg overflow-hidden">
                             <img
-                                src={photos[(currentImageIndex + 2) % totalImages] || defaultImage}
+                                src={photos[0]? `${imageUrl}/${photos[0]}`: defaultImage}
                                 alt="Third hostel view"
                                 className="w-full h-[190px] xl:h-[235px] object-cover"
                             />

@@ -1,11 +1,10 @@
 import { IUserRespository } from "../interface/user/!UserRepository";
-import Otp from "../model/otpModel";
+import Otp, { IOtp } from "../model/otpModel";
 import User, { IUser } from '../model/userModel';
 import HashedPassword from "../utils/hashedPassword";
 import bcrypt from 'bcrypt'
-import { Types } from "mongoose";
+import { ProjectionType, Types } from "mongoose";
 import baseRepository from "./baseRespository";
-import { IUserResponse } from "../dtos/UserResponse";
 import { Messages } from "../messages/messages";
 import { INotificationResponse } from "../dtos/NotficationResponse";
 import Notification from "../model/notificationModel";
@@ -16,19 +15,7 @@ type ResetPasswordData = {
     confirmPassword: string;
 };
 
-interface TempUserData {
-    name: string;
-    mobile: string;
-    email: string;
-    password: string;
-}
 
-interface UserData {
-    name?: string;
-    email?: string;
-    password?: string;
-    mobile?: number
-}
 
 type ChangePasswordData = {
     userId: string;
@@ -36,11 +23,6 @@ type ChangePasswordData = {
     newPassword: string;
 };
 
-type EditUserDetailData = {
-    userId: string;
-    name: string;
-    mobile: string;
-};
 
 class userRespository extends baseRepository<IUser> implements IUserRespository {
     constructor() {
@@ -48,18 +30,10 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
     }
 
 
-    async findUserByEmail(email: string): Promise<IUserResponse | null> {
+    async findUserByEmail(email: string): Promise<IUser | null> {
         try {
-            const projection = {
-                email: 1,
-                _id: 1,
-                name: 1,
-                mobile: 1,
-                wallet_id: 1,
-                isAdmin: 1,
-                isBlock: 1
-            }
-            const userData = await this.findByEmail({ email }, projection)
+
+            const userData = await this.findByEmail({ email })
             if (!userData) return null;
             return userData;
         } catch (error) {
@@ -68,18 +42,10 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async findUserById(id: Types.ObjectId,projection?:any): Promise<IUserResponse | null> {
+    async findUserById(id: string | Types.ObjectId, projection?: ProjectionType<IUser>): Promise<IUser | null> {
         try {
-            const userData = await this.findById(id,projection)
+            const userData = await this.findById(id, projection)
             if (!userData) return null;
-            // const userResponse: IUserResponse = {
-            //     name: userData.name,
-            //     email: userData.email,
-            //     mobile: userData.mobile,
-            //     isBlock: userData.isBlock,
-            //     wallet_id: userData.wallet_id ? userData.wallet_id : null,
-            //     userType: userData.userType
-            // };
             return userData;
         } catch (error) {
             console.log(error)
@@ -87,20 +53,13 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async otpVerifying(userData: { email: string; otp: number }): Promise<string> {
+    async findOtpByEmail(email: string): Promise<IOtp | null> {
         try {
-            const user = await Otp.findOne({ email: userData.email });
-            if (!user) {
-                return Messages.UserNotFound;
-            }
-            if (user?.otp === userData.otp) {
-                return Messages.UserVerified;
-            } else {
-                return Messages.OtpNotVerified;
-            }
+            const user = await Otp.findOne({ email });
+            return user
         } catch (error) {
             console.log(error);
-            return error as string;
+            throw error
         }
     }
 
@@ -122,27 +81,11 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async tempStoreUser(userData: IUserResponse): Promise<string | null> {
+    async insertUser(userData: Partial<IUser>): Promise<string | null> {
         try {
-            const alreadyUser = await User.findOne({ email: userData.email });
-            if (!userData.password) {
-                return Messages.InvalidPassword;
-            }
-
-            if (!alreadyUser) {
-                const hashedPassword = await HashedPassword.hashPassword(userData.password);
-                const tempAddingUser = new User({
-                    name: userData.name,
-                    mobile: userData.mobile,
-                    email: userData.email,
-                    password: hashedPassword,
-                    temp: true,
-                    userType: 'local'
-                });
-                await tempAddingUser.save();
-                return Messages.Added;
-            }
-            return Messages.UserAlreadyExist;
+            const newUser = new User(userData);
+            await newUser.save();
+            return Messages.Added
         } catch (error) {
             console.log(error);
             return null;
@@ -177,63 +120,28 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
     }
 
 
-    async resetPassword(userData: ResetPasswordData): Promise<string | { message: string }> {
+    async resetPassword(email: string, hashedPassword: string): Promise<boolean> {
         try {
-            const existingUser = await User.findOne({ email: userData.email });
-            if (!existingUser || !existingUser.password) {
-                return { message: Messages.UserNotFoundOrPassword };
-            }
-            console.log(userData,'hfdff')
-            if (typeof userData.newPassword !== 'string') {
-                return { message: Messages.InvalidPasswordFormat };
-            }
-            const isMatch = await bcrypt.compare(userData.newPassword, existingUser.password);
-            if (isMatch) {
-                return Messages.SamePassword;
-            } else {
-                const hashedPassword = await bcrypt.hash(userData.newPassword, 10);
-                existingUser.password = hashedPassword;
-                existingUser.tempExpires = undefined;
-                await existingUser.save();
-                return Messages.PasswordChanged;
-            }
+            const updated = await User.updateOne(
+                { email },
+                { $set: { password: hashedPassword, temp: undefined } }
+            );
+            return updated.modifiedCount > 0;
         } catch (error) {
             console.log(error);
-            return error as string;
+            return false;
         }
     }
 
-    async changePassword(userData: ChangePasswordData): Promise<string> {
+    async updatePassword(userId: string, hashedPassword: string): Promise<boolean> {
         try {
-            const findUser = await User.findOne({ _id: userData.userId });
-            if (!findUser) {
-                return Messages.UserNotFound;
-            }
-            const isMatch = await bcrypt.compare(userData.currentPassword, findUser.password);
-            if (isMatch) {
-                const isPasswordSame = await bcrypt.compare(userData.newPassword, findUser.password);
-                if (isPasswordSame) {
-                    return Messages.NewPasswordCannotbeSame;
-                }
-
-                const hashedPassword = await bcrypt.hash(userData.newPassword, 10);
-                const updatePassword = await User.updateOne(
-                    { _id: userData.userId },
-                    { $set: { password: hashedPassword } }
-                );
-
-                if (updatePassword.matchedCount === 0) {
-                    return Messages.NoUser;
-                } else if (updatePassword.modifiedCount === 0) {
-                    return Messages.PasswordNotUpdated;
-                } else {
-                    return Messages.PasswordChangedSuccess;
-                }
-            } else {
-                return Messages.CurrentPasswordDoesNotMatch;
-            }
+            const result = await User.updateOne(
+                { _id: userId },
+                { $set: { password: hashedPassword } }
+            );
+            return result.modifiedCount > 0;
         } catch (error) {
-            return error as string;
+            return false;
         }
     }
 
@@ -261,7 +169,6 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
 
     async sendNotification(notification: INotificationResponse): Promise<INotificationResponse | string | null> {
         try {
-            console.log('hey',notification)
             const newNotification = new Notification({
                 receiver: notification.receiver,
                 message: notification.message,
@@ -303,24 +210,17 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async getUser(page: number, limit: number): Promise<{ users: IUserResponse[]; totalCount: number } | string | null> {
+    async getUser(page: number, limit: number): Promise<{ users: IUser[]; totalCount: number } | string | null> {
         try {
             const skipCount = (page - 1) * limit;
 
-            const projection = {
-                name: 1,
-                mobile: 1,
-                isBlock: 1,
-                email: 1,
-            }
-
-            const users = await User.find({ isAdmin: false }, projection)
+            const users = await User.find({ isAdmin: false })
                 .skip(skipCount)
                 .limit(limit);
 
             const totalCount = await User.countDocuments({ isAdmin: false });
-
             return { users, totalCount };
+
         } catch (error) {
             console.log(error)
             return error as string
@@ -369,7 +269,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async searchUser(name: string): Promise<IUserResponse[] | string> {
+    async searchUser(name: string): Promise<IUser[] | string> {
         try {
             const users = await User.find({
                 name: { $regex: `^${name}`, $options: 'i' },
@@ -391,7 +291,7 @@ class userRespository extends baseRepository<IUser> implements IUserRespository 
         }
     }
 
-    async getAllUsers(): Promise<IUserResponse[] | string | null> {
+    async getAllUsers(): Promise<IUser[] | string | null> {
         try {
             const allUsers = await User.find({ isAdmin: false });
             return allUsers

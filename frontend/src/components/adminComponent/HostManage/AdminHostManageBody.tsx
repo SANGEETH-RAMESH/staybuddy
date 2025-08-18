@@ -240,7 +240,6 @@ const AdminHostManageBody = () => {
 
   if (error) return <div className="p-8 text-white">{error}</div>;
 
-  // Empty State Component
   const EmptyState = () => (
     <div className="flex flex-col items-center justify-center py-16 px-4">
       <div className="bg-gray-800 rounded-full p-8 mb-6">
@@ -267,7 +266,6 @@ const AdminHostManageBody = () => {
     </div>
   );
 
-  // Pagination Component
   const Pagination = () => {
     if (paginationInfo.totalPages <= 1) return null;
 

@@ -5,7 +5,6 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
 import session from 'express-session';
-import passport from './passport/passportConfig';
 import { initializeSocket } from './socket/socket';
 import { stream  } from './utils/logger'; 
 
@@ -38,8 +37,6 @@ app.use(session({
     saveUninitialized: false,
     cookie: { secure: false },
 }));
-app.use(passport.initialize());
-app.use(passport.session());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 

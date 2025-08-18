@@ -1,4 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { IPhoto } from '../dtos/HostelData';
+import { IFacilities } from '../dtos/FacilitiyResponse';
 
 export interface IHostel extends Document {
     hostelname: string;
@@ -11,10 +13,10 @@ export interface IHostel extends Document {
     category: string;
     advanceamount: number;
     photos: string[];
-    facilities: string[];
+    facilities: IFacilities;
     bedShareRoom: number;
     foodRate?: number;
-    phone: string;
+    phone: number;
     host_id: mongoose.Types.ObjectId;
     isActive:boolean,
     inactiveReason:string,
@@ -62,10 +64,7 @@ const hostelModel: Schema = new Schema(
             type: Number,
             required: true,
         },
-        photos: {
-            type: [String],
-            required: true,
-        },
+        photos: [String],
         facilities: {
             type: Object,
             required: true,
@@ -78,7 +77,7 @@ const hostelModel: Schema = new Schema(
             type: Number
         },
         phone: {
-            type: String,
+            type: Number,
             required: true,
         },
         host_id: {

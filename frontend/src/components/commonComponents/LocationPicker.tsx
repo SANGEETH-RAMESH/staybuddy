@@ -79,7 +79,6 @@ const LocationMarker = ({
 
 
 const HostelMarkers = ({ hostels }: { hostels: Hostel[] }) => {
-    // Custom icon for hostels
     const hostelIcon = L.divIcon({
       html: `
       <div style="
@@ -107,7 +106,6 @@ const HostelMarkers = ({ hostels }: { hostels: Hostel[] }) => {
     return (
       <>
         {hostels.map((hostel) => {
-          // Skip if no coordinates
           if (!hostel.latitude || !hostel.longitude) return null;
 
           return (

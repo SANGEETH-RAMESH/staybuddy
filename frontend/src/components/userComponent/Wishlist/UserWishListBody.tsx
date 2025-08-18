@@ -81,7 +81,6 @@ export default function WishlistPage() {
 
   const navigate = useNavigate();
 
-  // Show loading state
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">

@@ -7,13 +7,6 @@ import { loginSuccess } from '../../../redux/userAuthSlice';
 import { LoginValues } from '../../../interface/Login';
 import { googleLogin, loginUrl } from '../../../services/userServices';
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google"
-// const apiUrl = import.meta.env.VITE_BACKEND_URL;
-
-
-// interface LoginValues {
-//     email: string;
-//     password: string;
-// }
 
 const UserLoginBody = () => {
     const navigate = useNavigate();

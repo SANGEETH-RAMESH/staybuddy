@@ -2,6 +2,11 @@ import { Types } from "mongoose";
 import { IHostResponse } from "./HostResponse";
 import { IFacilities } from "./FacilitiyResponse";
 
+export interface IPhoto {
+  version: string;
+  fileName: string;
+}
+
 export interface IUpdateHostelInput {
   _id?:string;
   hostelname: string;
@@ -18,7 +23,7 @@ export interface IUpdateHostelInput {
   facilities: IFacilities; 
   longitude:number;
   latitude:number;
-  photos?: string | string[]; 
+  photos?: string[]; 
   hostelId?:string;
   phone?:string | string[];
   cancellationPolicy:string;

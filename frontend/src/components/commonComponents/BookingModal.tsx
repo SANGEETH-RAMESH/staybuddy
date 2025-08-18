@@ -284,7 +284,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
       newErrors.guests = `Maximum ${maxGuests} guests allowed`;
     }
 
-    // Check availability for selected dates
     if (fromDate && toDate) {
       const start = new Date(fromDate);
       const end = new Date(toDate);
@@ -343,7 +342,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
     });
   };
 
-  // Close calendar when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (showCalendar && !(event.target as Element).closest('.calendar-container')) {
@@ -356,7 +354,6 @@ const BookingModal: React.FC<BookingModalProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showCalendar]);
 
-  // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
       setFromDate('');

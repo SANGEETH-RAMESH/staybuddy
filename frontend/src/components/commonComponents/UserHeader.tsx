@@ -9,7 +9,8 @@ import 'react-tooltip/dist/react-tooltip.css';
 import { socket } from '../../utils/socket';
 import { Tooltip } from 'react-tooltip'
 import { getUserDetails } from '../../services/userServices';
-import logo from '../../assets/logo.png'
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const logo = 'v1755417528/logo_zge7x3.png'
 
 
 export const UserHeader: React.FC = () => {
@@ -86,7 +87,6 @@ export const UserHeader: React.FC = () => {
       try {
         console.log('heee')
         socket.emit('mark_all_notification', ({ receiverId: userId }))
-        // setNotification([])
         setReadCount(0)
 
       } catch (error) {
@@ -147,7 +147,7 @@ export const UserHeader: React.FC = () => {
               onClick={() => navigate('/')}
               className="flex items-center gap-x-2 text-xl font-bold bg-gradient-to-r from-[#31AFEF] to-[#2196F3] bg-clip-text text-transparent"
             >
-              <img src={logo} alt="Logo" className="h-16 w-16" />
+              <img src={`${imageUrl}/${logo}`} alt="Logo" className="h-16 w-16" />
               <p>StayBuddy</p>
             </button>
 
@@ -156,8 +156,6 @@ export const UserHeader: React.FC = () => {
                 <button
                   onClick={() => setIsNotificationOpen(!isNotificationOpen)}
                   className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200 group"
-                  // data-tooltip-id='headers-tooltip'
-                  // data-tooltip-content="Notificationfffs"
                 >
                   <Bell
                     onClick={handleOpenNotifications}

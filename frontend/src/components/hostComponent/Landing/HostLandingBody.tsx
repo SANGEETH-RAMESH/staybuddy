@@ -1,9 +1,10 @@
 import  { useEffect } from 'react';
-import host_landing from '../../../assets/seller1.webp';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import { socket } from '../../../utils/socket';
 import { addProperty } from '../../../services/hostServices';
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const host_landing = `${imageUrl}/v1755417525/seller1_gymer5.webp`
 
 
 interface CustomJwtPayload {

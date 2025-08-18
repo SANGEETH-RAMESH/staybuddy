@@ -33,7 +33,6 @@ const HostForgotPasswordOtpBody = () => {
   const handleSubmit = async () => {
     const numericOtp = Number(otp);
     setEmail(email)
-    // if (otp.length === 4) {
       setLoading(true);
       try {
         const response = await verifyForgotPasswordOtp({email,otp:numericOtp})

@@ -179,7 +179,6 @@ class UserController {
 
     async resetPassword(req: Request, res: Response): Promise<void> {
         try {
-            console.log(req.body, 'dlfdfldfdf')
             const { newPassword, confirmPassword } = req.body;
             let validationErrors: Record<string, string> = {};
             await resetPasswordValidation.validate({ newPassword, confirmPassword }, { abortEarly: false })

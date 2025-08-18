@@ -258,10 +258,8 @@ const VideoCall: React.FC<VideoCallProps> = ({
         const maxRetries = 3;
         
         try {
-            // Stop any existing stream first
             stopExistingStream();
 
-            // Wait a bit to ensure devices are released
             await new Promise(resolve => setTimeout(resolve, 500));
 
             const constraints = {
@@ -298,12 +296,10 @@ const VideoCall: React.FC<VideoCallProps> = ({
             if (error instanceof Error) {
                 if (error.name === 'NotReadableError' && retryCount < maxRetries) {
                     console.log(`Retrying getUserMedia... Attempt ${retryCount + 1}/${maxRetries}`);
-                    // Wait longer before retry
                     await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
                     return getUserMedia(retryCount + 1);
                 }
                 
-                // Handle different error types
                 switch (error.name) {
                     case 'NotAllowedError':
                         setMediaError('Camera/Microphone access denied. Please allow permissions and try again.');
@@ -327,7 +323,6 @@ const VideoCall: React.FC<VideoCallProps> = ({
                 }
             }
             
-            // Try with fallback constraints
             if (retryCount === 0) {
                 try {
                     console.log('Trying with fallback constraints...');
@@ -383,7 +378,6 @@ const VideoCall: React.FC<VideoCallProps> = ({
                 console.log('WebRTC setup completed');
             } catch (mediaError) {
                 console.error('WebRTC setup failed:', mediaError);
-                // Don't fail the call completely, just set appropriate status
                 if (mediaError instanceof Error && mediaError.name === 'NotReadableError') {
                     setCallStatus('Device in use - call initiated without media');
                 } else {
@@ -516,7 +510,6 @@ const VideoCall: React.FC<VideoCallProps> = ({
         setIsMinimized(false);
         setMediaError(null);
         
-        // Reset cleanup flag after a delay
         setTimeout(() => {
             isCleaningUp.current = false;
         }, 1000);

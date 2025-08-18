@@ -9,6 +9,7 @@ import LocationPicker from '../../commonComponents/LocationPicker'
 const HostelForm = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [showMap, setShowMap] = useState<boolean>(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [formData, setFormData] = useState<{
     hostelname: string;
     location: string;
@@ -153,12 +154,12 @@ const HostelForm = () => {
     }));
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
+  const handleFileChange = (files: FileList | null) => {
     if (files) {
+      const fileArray = Array.from(files);
       setFormData((prevData) => ({
         ...prevData,
-        photos: Array.from(files),
+        photos: [...prevData.photos, ...fileArray],
       }));
       setErrors(prev => ({
         ...prev,
@@ -188,7 +189,28 @@ const HostelForm = () => {
     });
   };
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = e.dataTransfer.files;
+    handleFileChange(files);
+  };
+
+
+  
 
   const handleSubmit = async () => {
     try {
@@ -219,8 +241,8 @@ const HostelForm = () => {
 
         dataToSend.append('facilities', JSON.stringify(selectedFacilities));
       }
-      console.log(formData,'fdlfdlfsjdfsdfsdf')
-      console.log(typeof formData.facilities,'faci')
+      console.log(formData, 'fdlfdlfsjdfsdfsdf')
+      console.log(typeof formData.facilities, 'faci')
 
       if (formData.photos && formData.photos.length > 0) {
         formData.photos.forEach((photo) => {
@@ -242,16 +264,16 @@ const HostelForm = () => {
       const axiosError = error as any;
       if (axiosError.response) {
         console.log(axiosError.response, "Responseeeee")
-        const { message, errors:BackendErrors } = axiosError.response.data;
+        const { message, errors: BackendErrors } = axiosError.response.data;
         console.log(message)
-       console.log(BackendErrors)
+        console.log(BackendErrors)
 
-       if(BackendErrors){
-        setErrors((prev)=>({
-          ...prev,
-          ...BackendErrors
-        }))
-       }
+        if (BackendErrors) {
+          setErrors((prev) => ({
+            ...prev,
+            ...BackendErrors
+          }))
+        }
       }
     }
   };
@@ -517,12 +539,23 @@ const HostelForm = () => {
               <Image className="w-4 h-4 text-[#31AFEF]" />
               <label htmlFor="photos" className="text-sm font-medium">Add Photos</label>
             </div>
-            <div className={`border-2 border-dashed ${errors.photos ? 'border-red-500' : 'border-gray-300'} rounded-lg p-6 text-center`}>
+
+            <div
+              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${isDragOver
+                  ? 'border-[#31AFEF] bg-[#31AFEF]/5'
+                  : errors.photos
+                    ? 'border-red-500'
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
               <input
                 id="photos"
                 type="file"
                 multiple
-                onChange={handleFileChange}
+                onChange={(e) => handleFileChange(e.target.files)}
                 className="hidden"
                 accept="image/*"
               />
@@ -531,7 +564,9 @@ const HostelForm = () => {
                   <div className="mx-auto w-12 h-12 rounded-full bg-[#31AFEF]/10 flex items-center justify-center">
                     <Image className="w-6 h-6 text-[#31AFEF]" />
                   </div>
-                  <div className="text-sm text-gray-600">Click to upload or drag and drop</div>
+                  <div className="text-sm text-gray-600">
+                    {isDragOver ? 'Drop files here' : 'Click to upload or drag and drop'}
+                  </div>
                   <div className="text-xs text-gray-400">PNG, JPG up to 10MB each</div>
                   {formData.photos.length > 0 && (
                     <div className="text-sm text-green-600 font-medium">
@@ -541,6 +576,9 @@ const HostelForm = () => {
                 </div>
               </label>
             </div>
+
+            
+
             {errors.photos && <p className="text-red-500 text-xs mt-1">{errors.photos}</p>}
           </div>
         </div>

@@ -3,13 +3,14 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../../redux/hostAuthSlice';
 import { MessageCircle, Building2, User, LogOut, Menu, X, Bell, BellRing } from 'lucide-react';
-import logo from '../../assets/logo.png'
 import { formatDistanceToNow } from 'date-fns';
 import { Tooltip } from 'react-tooltip';
 import 'react-tooltip/dist/react-tooltip.css';
 import { socket } from '../../utils/socket';
 import { Notification } from '../../interface/Notification';
 import { getHost } from '../../services/hostServices';
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const logo = 'v1755417528/logo_zge7x3.png'
 
 
 const HostHeader = () => {
@@ -180,7 +181,7 @@ const HostHeader = () => {
               onClick={handleHomeClick}
               className="flex items-center gap-x-2 old text-emerald-600 hover:text-emerald-800 transition-colors"
             >
-              <img src={logo} alt="Logo" className="h-16 w-16" />
+              <img src={`${imageUrl}/${logo}`} alt="Logo" className="h-16 w-16" />
               <p>StayBuddy</p>
             </button>
 

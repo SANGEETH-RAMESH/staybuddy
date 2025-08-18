@@ -5,11 +5,11 @@ export interface IHostResponse {
     name: string;
     email: string;
     mobile: number;
-    isBlock: boolean;
-    approvalRequest: string;
+    isBlock?: boolean;
+    approvalRequest?: string;
     photo?: string | null;
     documentType?: string | null;
     wallet_id?: Types.ObjectId | null;
-    password:string;
+    password?:string;
     temp?:boolean;
 }

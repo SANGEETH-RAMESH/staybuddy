@@ -68,11 +68,7 @@ const HostChangePasswordBody = () => {
         setSuccess(true);
         toast.success("Password Changed");
         navigate("/host/profile")
-        // setFormData({
-        //   currentPassword: '',
-        //   newPassword: '',
-        //   confirmPassword: '',
-        // });
+        
       } else if(response.data.message === 'New Password Cannot be Same as Current Password'){
         setErrors(prev => ({
           ...prev,

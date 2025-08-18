@@ -57,13 +57,6 @@ class chatRepository implements IChatRepository {
         }
     }
 
-    // async getHostChat(hostId:Types.ObjectId,userId:Types.ObjectId):Promise<IChat[] | string | null>{
-    //     try {
-    //         const chat = await Chat.find([  ])
-    //     } catch (error) {
-
-    //     }
-    // }
 
     async saveMessage(messageData: {
         senderId: string;

@@ -1,4 +1,4 @@
-import { Model, Types } from "mongoose";
+import { Model, ProjectionType, Types } from "mongoose";
 import { IBaseRepository } from "../interface/user/IBaseRepository";
 
 class baseRepository<T> implements IBaseRepository<T> {
@@ -10,7 +10,7 @@ class baseRepository<T> implements IBaseRepository<T> {
     }
 
 
-    async findByEmail(filter: object, projection?: any): Promise<T | null> {
+    async findByEmail(filter: object, projection?: ProjectionType<T>): Promise<T | null> {
         try {
             return await this.model.findOne(filter, projection).lean<T>().exec();
         } catch (error) {
@@ -20,7 +20,7 @@ class baseRepository<T> implements IBaseRepository<T> {
     }
 
 
-    async findById(id: Types.ObjectId,projection?:any): Promise<T | null> {
+    async findById(id: string | Types.ObjectId,projection?:ProjectionType<T>): Promise<T | null> {
         try {
             const data = await this.model.findById(id,projection).exec();
             return data;

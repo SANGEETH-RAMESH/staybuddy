@@ -87,7 +87,6 @@ const HostLoginBody = () => {
     };
 
     const handleGoogleLogin = async (credentialResponse: any) => {
-            // console.log("hety",credentialResponse.credential)
             try {
                 const response = await googleLogin(credentialResponse.credential);
                 console.log(response.data, 'Response')

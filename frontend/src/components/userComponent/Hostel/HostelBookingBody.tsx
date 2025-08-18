@@ -47,7 +47,7 @@ const BookingForm = () => {
   const [baseRentAmount, setBaseRentAmount] = useState(0);
   const [baseDepositAmount, setBaseDepositAmount] = useState(0);
   const [category, setCategory] = useState('');
-  const [availableFacilities, setAvailableFacilities] = useState<string[]>([]);
+  const [availableFacilities, setAvailableFacilities] = useState<Record<string, boolean>>({});
   const [customerName, setCustomerName] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
@@ -67,7 +67,6 @@ const BookingForm = () => {
   const [bookingMonths, setBookingMonths] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [bookingType, setBookingType] = useState('');
-  // const [facilityError, setFacilityError] = useState<string>('');
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -82,7 +81,6 @@ const BookingForm = () => {
   const totalFoodRate = foodRate * selectedBeds * bookingMonths;
   const totalAmount = totalRentAmount + totalDepositAmount + (selectedFacilities.food ? totalFoodRate : 0);
 
-  // Validation functions
   const validateName = (name: string): string | undefined => {
     if (!name.trim()) return 'Name is required';
     if (name.length < 2) return 'Name must be at least 2 characters';
@@ -209,7 +207,6 @@ const BookingForm = () => {
         setCustomerName(userData.name);
         setCustomerPhone(userData.mobile);
         setMaxBeds(parseInt(hostelData.totalRooms));
-        // setSelectedBeds(1);
         setBaseRentAmount(hostelData.bedShareRoom);
         setBaseDepositAmount(hostelData.advanceamount);
         setCategory(hostelData.category);
@@ -217,13 +214,8 @@ const BookingForm = () => {
         setHost_id(hostelData.host_id._id);
         setFoodRate(hostelData.foodRate);
         setHostelName(hostelData.hostelname)
-
-        const facilitiesArray = Array.isArray(hostelData.facilities)
-          ? hostelData.facilities
-          : typeof hostelData.facilities === 'string'
-            ? hostelData.facilities.split(',')
-            : [];
-        setAvailableFacilities(facilitiesArray);
+        console.log(hostelData, 'hostelData')
+        setAvailableFacilities(hostelData.facilities || {});
         setIsLoading(false)
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -319,7 +311,6 @@ const BookingForm = () => {
         }
         console.log('rece', newNotification)
         socket.emit('send_notification', newNotification)
-        // toast.success('Hostel Booked Successfully');
         toast.success("Hostel Booked Successfully", { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
 
         navigate('/hostel');
@@ -390,7 +381,6 @@ const BookingForm = () => {
         handler: async (response: RazorpayResponse) => {
           console.log(response)
           await handleSubmit(booking_id);
-          // toast.success('Payment successful!');
         },
         modal: {
           ondismiss: () => {
@@ -421,24 +411,7 @@ const BookingForm = () => {
   };
 
   const handleSubmit = async (bookingId: string) => {
-    // const bookingDetails = {
-    //   customerName,
-    //   customerPhone,
-    //   customerEmail,
-    //   selectedBeds,
-    //   totalRentAmount,
-    //   totalDepositAmount,
-    //   tenantPreferred,
-    //   selectedFacilities,
-    //   host_id,
-    //   hostel_id: id,
-    //   foodRate: selectedFacilities.food ? foodRate : null,
-    //   category,
-    //   paymentMethod,
-    //   cancellationPolicy,
-    //   startDate: new Date(startDate),
-    //   endDate: new Date(endDate)
-    // };
+   
 
     try {
       console.log(bookingId)
@@ -465,7 +438,6 @@ const BookingForm = () => {
         console.log("host ", hostNotification)
         socket.emit('send_notification', newNotification)
         socket.emit('send_notification', hostNotification)
-        // toast.success('Hostel Booked Successfully');
         toast.success("Hostel Booked Successfully", { style: { backgroundColor: '#FFFFFF', color: '#31AFEF' } });
         navigate('/hostel');
       } else {
@@ -639,7 +611,7 @@ const BookingForm = () => {
               <div className="space-y-2">
                 {['Washing Machine', 'Food', 'Stove', 'Wifi', 'Refrigerator', 'Laundry'].map((facility) => {
                   const facilityKey = facility.toLowerCase();
-                  const isAvailable = availableFacilities.includes(facilityKey);
+                  const isAvailable = availableFacilities[facilityKey] || false;
                   return (
                     <div key={facility} className="flex items-center">
                       <input

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import exclamation_mark from '../../../assets/danger.png';
-import email from '../../../assets/email.png';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { forgotPasswordValues } from '../../../interface/forgotPassword';
 import { forgotPassword } from '../../../services/userServices';
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const exclamation_mark = `${imageUrl}/v1755417525/danger_oyuz0a.png`
+const email = `${imageUrl}/v1755417526/email_ga7f8y.png`
 
 
 

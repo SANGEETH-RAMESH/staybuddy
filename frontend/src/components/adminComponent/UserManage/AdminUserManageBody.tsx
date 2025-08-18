@@ -73,7 +73,6 @@ const AdminUserManageBody = () => {
     }
   };
 
-  // Handle unblock user
   const handleUnblockUser = async (userId: ObjectId | string) => {
     try {
       const response = await unblockUser(userId);
@@ -92,7 +91,6 @@ const AdminUserManageBody = () => {
     }
   };
 
-  // Handle delete user
   const handleDeleteUser = async (userId: ObjectId | string) => {
     const result = await Swal.fire({
       title: 'Are you sure?',
@@ -109,7 +107,6 @@ const AdminUserManageBody = () => {
         const response = await deleteUser(userId);
 
         if (response.data.success) {
-          // Refresh the current page after deletion
           console.log(itemsPerPage, 'Items')
           await fetchUsers(currentPage, itemsPerPage);
           Swal.fire('Deleted!', 'The user has been deleted.', 'success');
@@ -123,7 +120,6 @@ const AdminUserManageBody = () => {
     }
   };
 
-  // Fetch users function with pagination - Updated default limit to 4
   const fetchUsers = async (page: number = 1, limit: number = 4) => {
     setIsRefreshing(true);
     try {
@@ -171,12 +167,10 @@ const AdminUserManageBody = () => {
     updateFilteredUsers();
   }, [searchTerm, filterStatus, users]);
 
-  // Fetch users on mount
   useEffect(() => {
     fetchUsers(currentPage, itemsPerPage);
   }, []);
 
-  // Handle page change
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= paginationInfo.totalPages) {
       fetchUsers(page, itemsPerPage);
@@ -203,7 +197,6 @@ const AdminUserManageBody = () => {
         console.log("Response", response.data.message);
         const searchResults = response.data.message;
         setUsers(searchResults);
-        // Reset pagination info for search results
         setPaginationInfo({
           currentPage: 1,
           totalPages: 1,
@@ -250,7 +243,6 @@ const AdminUserManageBody = () => {
     return pages;
   };
 
-  // Error state
   if (error) {
     return (
       <div className="flex justify-center items-center min-h-[60vh] mt-[11vh] lg:ml-64 pt-24">

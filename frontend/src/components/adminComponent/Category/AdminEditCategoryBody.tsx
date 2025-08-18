@@ -12,7 +12,6 @@ const AdminEditCategoryPage = () => {
     const { id } = useParams(); 
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-    // Form state
     const [name, setName] = useState('');
     const [isActive, setIsActive] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);

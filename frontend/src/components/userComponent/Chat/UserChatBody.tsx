@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Search, Plus, Paperclip, Image, X, Clock, Video, ArrowLeft } from 'lucide-react';
-import dummy_profile from '../../../assets/dummy profile.png';
 import { useLocation } from 'react-router-dom';
 import VideoCall from '../../commonComponents/VideoCall'
 import { createChat, getAllHosts, getChat } from '../../../services/userServices';
 import { socket } from '../../../utils/socket';
+const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const dummy_profile = `${imageUrl}/v1755417527/dummy_profile_bvq31k.png`
 
 interface Message {
   chatId: string;
@@ -409,7 +410,6 @@ const ChatApplication: React.FC = () => {
 
   const handleAddNewChat = async (selectedUser: User) => {
     try {
-      // if(!selectedChat._id)
       const res = await createChat(selectedUser?._id)
       if (res.data.chat == 'Chat Created') {
         setShowAddChatModal(false)

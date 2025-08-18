@@ -100,33 +100,7 @@ const HostelListings = () => {
   };
 
 
-  // const fetchHostelReviews = async (hostelId: string) => {
-  //   try {
-  //     setIsLoadingReviews(true);
-  //     const response = await getReviews(hostelId);
-  //     const reviews = response.data.message;
-  //     const result = reviews.map((review: Review) => ({
-  //       userId: review.userId,
-  //       hostelId: review.hostelId,
-  //       rating: review.rating,
-  //       review: review.review,
-  //       createdAt: review.createdAt
-  //     }));
-  //     setHostelReviews(result)
-  //     setIsLoadingReviews(false);
-  //   } catch (error) {
-  //     console.error('Error fetching hostel reviews:', error);
-  //     toast.error('Failed to fetch reviews');
-  //     setHostelReviews([]);
-  //     setIsLoadingReviews(false);
-  //   }
-  // };
-
-  // const handleViewReviews = async (hostel: Hostel) => {
-  //   setSelectedHostel(hostel);
-  //   setShowReviews(true);
-  //   await fetchHostelReviews(hostel.id);
-  // };
+  
 
   const handleSearchChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -163,14 +137,7 @@ const HostelListings = () => {
             };
           });
           setHostels(data);
-          // Reset pagination info for search results
-          // setpag({
-          //   currentPage: 1,
-          //   totalPages: 1,
-          //   totalHosts: searchResults.length,
-          //   hasNext: false,
-          //   hasPrev: false
-          // });
+         
           setTotalPages(1)
           setCurrentPage(1);
         } catch (error) {
@@ -271,7 +238,6 @@ const HostelListings = () => {
     return pages;
   };
 
-  // Updated ReviewsModal to use fetched reviews and show loading state
   const ReviewsModal = ({ hostel }: { hostel: Hostel | null }) => {
     if (!hostel) return null;
 

@@ -44,13 +44,6 @@ interface RazorpayResponse {
 
 const WalletTracker = () => {
   const [balance, setBalance] = useState(0);
-  // const [transactions, setTransactions] = useState<{ 
-  //   id: number; 
-  //   type: string;
-  //   description: string; 
-  //   amount: number;
-  //   date: string;
-  // }[] | null>([]);
   const [amount, setAmount] = useState('');
   const [error, setError] = useState('');
   const [email, setEmail] = useState('');
@@ -59,7 +52,7 @@ const WalletTracker = () => {
 
   const navigate = useNavigate();
 
-  // No longer need pagination states
+
 
   useEffect(() => {
     const fetchWalletData = async () => {
@@ -67,7 +60,6 @@ const WalletTracker = () => {
         const response = await getWalletDetails();
         const userData = await getUserDetails();
         const user = userData.data.data;
-        // const walletInfo = response.data.message;
         console.log("user", user)
         setEmail(user.email)
         setName(user.name)
@@ -108,11 +100,7 @@ const WalletTracker = () => {
 
 
   const handlePayment = async () => {
-    // Check for empty input
-    // if (!amount || amount.trim() === '') {
-    //   setError('Please enter an amount to deposit.');
-    //   return;
-    // }
+ 
 
     const numericAmount = parseFloat(amount);
 
@@ -173,7 +161,6 @@ const WalletTracker = () => {
 
 
   const handleDeposit = async () => {
-    // Check for empty input
     const numericAmount = parseFloat(amount);
 
     if (!amount || amount.trim() === '') {
@@ -197,7 +184,6 @@ const WalletTracker = () => {
   };
 
   const handleWithdraw = async () => {
-    // Check for empty input
     const numericAmount = parseFloat(amount);
 
     if (!amount || amount.trim() === '') {

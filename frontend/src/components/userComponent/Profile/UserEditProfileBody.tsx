@@ -25,35 +25,6 @@ const UserEditProfileBody: React.FC = () => {
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    // if (name === 'name') {
-    //   const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;;
-    //   if (!nameRegex.test(value)) {
-    //     setNameError('Name should only contain alphabets without spaces or special characters');
-    //   } else {
-    //     setNameError(null);
-    //   }
-    // }
-
-    // if (name === 'mobile') {
-    //   const digitOnly = /^[0-9]*$/;
-    //   const zeroCount = (value.match(/0/g) || []).length;
-    //   const startsWith = value[0];
-
-    //   if (!digitOnly.test(value)) {
-    //     setMobileError('Mobile number should contain only digits');
-    //   } else if (value.length > 10) {
-    //     setMobileError('Mobile number must be exactly 10 digits');
-    //   } else if (value.length === 10 && +startsWith <= 5) {
-    //     setMobileError('First digit must be greater than 5');
-    //   } else if (zeroCount > 5) {
-    //     setMobileError('Mobile number should not contain more than 5 zeros');
-    //   } else if (value.length !== 10) {
-    //     setMobileError('Mobile number must be 10 digits');
-    //   } else {
-    //     setMobileError(null);
-    //   }
-    // }
-
     setFormData((prev) => ({ ...prev, [name]: value }));
     setSuccess(false);
   };
@@ -102,11 +73,7 @@ const UserEditProfileBody: React.FC = () => {
         }else{
           setMobileError(errors.mobile)
         }
-        // if (errors) {
-        //   setError(errors || 'Failed to update profile');
-
-        //   return;
-        // }
+      
 
         toast.error(message || "Login failed", {
           style: { backgroundColor: '#FFFFFF', color: "#31AFEF" }

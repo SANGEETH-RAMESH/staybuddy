@@ -38,7 +38,6 @@ const ChangePasswordBody = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // Clear errors while typing
     if (name === 'currentPassword' || name === 'newPassword') {
       setErrors((prev) => ({ ...prev, [name]: '' }));
     }
