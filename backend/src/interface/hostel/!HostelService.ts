@@ -1,5 +1,6 @@
 import { Types } from "mongoose";
 import { IUpdateHostelInput } from "../../dtos/HostelData";
+import { HostelDto } from "../../dto/response/hosteldto";
 
 
 
@@ -11,7 +12,7 @@ export interface IHostelService {
     maxPrice?: number;
     sort?: string;
   }): Promise<{ hostels: IUpdateHostelInput[]; totalCount: number } | string>,
-  getSingleHostel(id: Types.ObjectId):  Promise<(IUpdateHostelInput & { isFull: boolean }) | string>,
+  getSingleHostel(id: Types.ObjectId):  Promise<(HostelDto & { isFull: boolean }) | string>,
   addHostel(hostData: IUpdateHostelInput): Promise<string>,
   getHostHostels(id: Types.ObjectId, limit: number, skip: number, search: string,sort?:string): Promise<{ hostels: IUpdateHostelInput[]; totalCount: number } | string>,
   deleteHostel(hostelId: string): Promise<string>,

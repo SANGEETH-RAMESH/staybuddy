@@ -42,10 +42,9 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
         }));
     }
 
-    async getSingleHostel(id: Types.ObjectId): Promise<IUpdateHostelInput | null | string> {
+    async getSingleHostel(id: Types.ObjectId): Promise<IHostel | null | string> {
         try {
-            const response = await Hostel.findOne({ _id: id }).populate('host_id').lean<IUpdateHostelInput>()
-            console.log(response, 'fsdfd')
+            const response = await Hostel.findOne({ _id: id }).populate('host_id');
             return response
         } catch (error) {
             return error as string

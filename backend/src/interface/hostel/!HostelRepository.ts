@@ -6,7 +6,7 @@ import { IHostel } from "../../model/hostelModel";
 
 export interface IHostelRepository {
     getHostels(query: FilterQuery<IUpdateHostelInput>, projection?: Partial<IUpdateHostelInput>, sortOption?: Record<string, SortOrder> ): Promise<IUpdateHostelInput[]>,
-    getSingleHostel(id: Types.ObjectId): Promise<IUpdateHostelInput | null | string>,
+    getSingleHostel(id: Types.ObjectId): Promise<IHostel | null | string>,
     addHostel(hostelData: Partial<IHostel>): Promise<string>,
     getHostHostels(id: Types.ObjectId, limit: number, skip: number, search: string,sort?:string): Promise<{ hostels: IUpdateHostelInput[]; totalCount: number } | string>,
     deleteHostel(hostelId: string): Promise<string>,

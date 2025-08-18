@@ -78,7 +78,8 @@ class chatController {
                 res.status(StatusCode.BAD_REQUEST).json({ message: Messages.MissingUserIdOrHostId });
                 return;
             }
-            const response = await this._chatService.createHostChat(hostId, userId)
+            const response = await this._chatService.createHostChat(hostId, userId);
+            console.log("Controller",response)
             res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });

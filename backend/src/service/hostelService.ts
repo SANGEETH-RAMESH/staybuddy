@@ -5,6 +5,7 @@ import { IUpdateHostelInput } from "../dtos/HostelData";
 import { Messages } from "../messages/messages";
 import { IOrderRepository } from "../interface/order/!OrderRepository";
 import { getDistanceInKm } from "../utils/distance";
+import { HostelDto } from "../dto/response/hosteldto";
 
 function toPlainHostel(hostel: any) {
     return typeof hostel.toObject === 'function' ? hostel.toObject() : hostel;
@@ -180,7 +181,7 @@ class hostelService implements IHostelService {
         }
     }
 
-    async getSingleHostel(id: Types.ObjectId): Promise<(IUpdateHostelInput & { isFull: boolean }) | string> {
+    async getSingleHostel(id: Types.ObjectId): Promise<(HostelDto & { isFull: boolean }) | string> {
         try {
             const hostel = await this._hostelRepository.getSingleHostel(id);
             if (!hostel) {
@@ -203,14 +204,26 @@ class hostelService implements IHostelService {
             }
 
             if (!orders) {
-                return { ...hostel, isFull: false };
+                const hostelDto = HostelDto.from({
+                    _id: hostel._id,
+                    hostelname: hostel.hostelname,
+                    location: hostel.location,
+                    facilities: hostel.facilities,
+                    totalRooms: hostel.totalRooms,
+                    photos: hostel.photos,
+                    phone: hostel.phone,
+                    category: hostel.category,
+                    isFull: false
+                });
+                return hostelDto;
             }
 
 
             const bookedBeds = (orders.selectedBeds || 0);
             const isFull = bookedBeds >= hostel.totalRooms;
 
-            return { ...hostel, isFull };
+            const hostelObj = hostel.toObject();
+            return HostelDto.from({ ...hostelObj, isFull });
         } catch (error) {
             return error as string
         }
@@ -242,7 +255,7 @@ class hostelService implements IHostelService {
                 isActive: true,
                 foodRate: Number(hostData.foodRate),
                 phone: Number(hostData.phone),
-                host_id: host_id, 
+                host_id: host_id,
                 longitude: Number(hostData.longitude),
                 latitude: Number(hostData.latitude),
                 cancellationPolicy: hostData.cancellationPolicy.toLowerCase(),
@@ -314,7 +327,7 @@ class hostelService implements IHostelService {
             const currentBeds = Number(existingHostel.beds) || 0;
             const additionalRooms = Number(hostelData.beds) || 0;
 
-            let updatedTotalRooms=0;
+            let updatedTotalRooms = 0;
             let updatedBeds: number = 0
             if (Number(currentBeds) == Number(additionalRooms)) {
                 updatedBeds = currentBeds;

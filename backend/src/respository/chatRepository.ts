@@ -161,6 +161,7 @@ class chatRepository implements IChatRepository {
 
     async createHostChat(hostId: string, userId: string): Promise<string> {
         try {
+            console.log(hostId,userId)
             const existingChat = await Chat.findOne({
                 $or: [
                     { participant1: userId, participant2: hostId },
