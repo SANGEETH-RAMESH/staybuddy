@@ -142,6 +142,7 @@ const HostelDetailPage = () => {
                 );
                 console.log(hostelBookings, 'Hostel Bookings')
                 const facilitiesData = response.data.message.facilities || {};
+                console.log(response.data.message, 'Full Message from API');
                 const facilitiesArray = Object.keys(facilitiesData).filter(
                     (key) => facilitiesData[key as keyof Facilities]
                 );
