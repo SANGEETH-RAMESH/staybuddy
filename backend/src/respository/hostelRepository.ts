@@ -82,6 +82,7 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
                 .sort(sort)
                 .skip(skip)
                 .limit(limit)
+                .populate('host_id')
                 .lean<IUpdateHostelInput[]>()
             const totalCount = await Hostel.countDocuments(query);
             return {
@@ -119,7 +120,9 @@ class hostelRepository extends baseRepository<IHostel> implements IHostelReposit
 
     async getOneHostel(id: Types.ObjectId): Promise<IUpdateHostelInput | string> {
         try {
-            const hostelFind = await Hostel.findOne({ _id: id }).lean<IUpdateHostelInput>();
+            const hostelFind = await Hostel.findOne({ _id: id })
+            .populate('host_id')
+            .lean<IUpdateHostelInput>();
             if (hostelFind) {
                 return hostelFind
             } else {

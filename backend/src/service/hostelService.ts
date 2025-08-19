@@ -181,7 +181,7 @@ class hostelService implements IHostelService {
         }
     }
 
-    async getSingleHostel(id: Types.ObjectId): Promise<(HostelDto & { isFull: boolean }) | string> {
+    async getSingleHostel(id: Types.ObjectId): Promise<(IUpdateHostelInput & { isFull: boolean }) | string> {
         try {
             const hostel = await this._hostelRepository.getSingleHostel(id);
             if (!hostel) {
@@ -212,11 +212,10 @@ class hostelService implements IHostelService {
 
             hostelObj.isFull = isFull;
 
-            const hostelDto = HostelDto.from(hostelObj);
 
-            console.log('Returning hostel DTO:', JSON.stringify(hostelDto, null, 2));
+            console.log('Returning hostel DTO:', JSON.stringify(hostelObj, null, 2));
 
-            return hostelDto;
+            return hostelObj;
         } catch (error) {
             return error as string
         }
