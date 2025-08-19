@@ -120,7 +120,7 @@ const ImageGallery = ({ photos }: { photos: string[] }) => {
         <div className="hidden md:grid grid-cols-3 gap-4 p-4">
           <div className="relative h-[480px] col-span-2 rounded-lg overflow-hidden">
             <img
-              src={photos[0]? `${imageUrl}/${photos[0]}`: defaultImage}
+              src={photos[0] ? `${imageUrl}/${photos[0]}` : defaultImage}
               alt="Main hostel view"
               className="w-full h-full object-cover"
             />
@@ -129,7 +129,7 @@ const ImageGallery = ({ photos }: { photos: string[] }) => {
             {[1, 2, 3].map((offset) => (
               <div key={offset} className="relative rounded-lg overflow-hidden">
                 <img
-                  src={photos[0]? `${imageUrl}/${photos[0]}`: defaultImage}
+                  src={photos[0] ? `${imageUrl}/${photos[0]}` : defaultImage}
                   alt={`Hostel view ${offset + 1}`}
                   className="w-full h-[152px] object-cover"
                 />
@@ -140,7 +140,7 @@ const ImageGallery = ({ photos }: { photos: string[] }) => {
 
         <div className="md:hidden relative h-[400px]">
           <img
-            src={photos[0]? `${imageUrl}/${photos[0]}`: defaultImage}
+            src={photos[0] ? `${imageUrl}/${photos[0]}` : defaultImage}
             alt={`Hostel view ${currentImageIndex + 1}`}
             className="w-full h-full object-cover"
           />
@@ -187,6 +187,7 @@ const HostelDetailPage = () => {
       try {
         if (!id) return;
         const response = await getSingleHostel(id);
+        console.log(response.data.message, 'REsponseee')
         setHostel(response.data.message);
         setLoading(false);
       } catch (error) {
@@ -277,11 +278,6 @@ const HostelDetailPage = () => {
     );
   }
 
-  const facilities: string[] = Array.isArray(hostel.facilities)
-    ? hostel.facilities
-    : typeof hostel.facilities === 'string'
-      ? (hostel.facilities as string).split(',').map((f: string) => f.trim())
-      : [];
 
   return (
     <div className="bg-gray-50 min-h-screen pt-20 pb-8 px-4 md:px-8">
@@ -294,8 +290,8 @@ const HostelDetailPage = () => {
                   {hostel.hostelname}
                 </h1>
                 <div className={`px-3 py-1 rounded-full text-sm font-medium ${hostel.isActive
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-red-100 text-red-800'
                   }`}>
                   {hostel.isActive ? 'Active' : 'Inactive'}
                 </div>
@@ -332,8 +328,8 @@ const HostelDetailPage = () => {
                 onClick={handleToggleClick}
                 disabled={toggleLoading}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 ${hostel.isActive
-                    ? 'bg-red-600 hover:bg-red-700 text-white'
-                    : 'bg-green-600 hover:bg-green-700 text-white'
+                  ? 'bg-red-600 hover:bg-red-700 text-white'
+                  : 'bg-green-600 hover:bg-green-700 text-white'
                   }`}
               >
                 <Power size={16} />
@@ -358,14 +354,24 @@ const HostelDetailPage = () => {
                 Facilities
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {facilities.map((facility, index) => (
-                  <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
-                    {facility.toLowerCase().includes('wifi') && <Wifi className="mr-2 text-blue-500" />}
-                    {facility.toLowerCase().includes('food') && <UtensilsCrossed className="mr-2 text-green-500" />}
-                    {facility.toLowerCase().includes('laundry') && <Shirt className="mr-2 text-purple-500" />}
-                    <span className="capitalize text-sm">{facility}</span>
+                {hostel.facilities?.wifi && (
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                    <Wifi className="mr-2 text-blue-500" />
+                    <span className="capitalize text-sm">Wifi</span>
                   </div>
-                ))}
+                )}
+                {hostel.facilities?.food && (
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                    <UtensilsCrossed className="mr-2 text-green-500" />
+                    <span className="capitalize text-sm">Food</span>
+                  </div>
+                )}
+                {hostel.facilities?.laundry && (
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                    <Shirt className="mr-2 text-purple-500" />
+                    <span className="capitalize text-sm">Laundry</span>
+                  </div>
+                )}
               </div>
             </div>
 

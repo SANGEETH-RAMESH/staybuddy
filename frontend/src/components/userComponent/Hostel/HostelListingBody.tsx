@@ -301,23 +301,9 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
     }
   };
 
-  const isFacilities = (facilities: any): facilities is Facilities => {
-    return (
-      facilities &&
-      typeof facilities === "object" &&
-      "wifi" in facilities &&
-      "food" in facilities &&
-      "laundry" in facilities
-    );
-  };
 
-  const facilitiesList = Array.isArray(hostel.facilities)
-    ? hostel.facilities
-    : typeof hostel.facilities === "string"
-      ? hostel.facilities.split(",").map(f => f.trim().toLowerCase())
-      : [];
 
-  const hasFacility = (name: string) => facilitiesList.includes(name.toLowerCase());
+
 
   return (
     <div
@@ -442,37 +428,19 @@ const HostelCard: React.FC<HostelCardProps> = ({ hostel }) => {
           <FacilityBadge
             icon={<Wifi size={12} />}
             label="WiFi"
-            available={
-              hostel.facilities
-                ? isFacilities(hostel.facilities)
-                  ? hostel.facilities.wifi
-                  : hasFacility("wifi")
-                : false
-            }
+            available={hostel.facilities?.wifi ?? false}
             color="green"
           />
           <FacilityBadge
             icon={<UtensilsCrossed size={14} />}
             label="Food"
-            available={
-              hostel.facilities
-                ? isFacilities(hostel.facilities)
-                  ? hostel.facilities.food
-                  : hasFacility("food")
-                : false
-            }
+            available={hostel.facilities?.food ?? false}
             color="blue"
           />
           <FacilityBadge
             icon={<Shirt size={14} />}
             label="Laundry"
-            available={
-              hostel.facilities
-                ? isFacilities(hostel.facilities)
-                  ? hostel.facilities.laundry
-                  : hasFacility("laundry")
-                : false
-            }
+            available={hostel.facilities?.laundry ?? false}
             color="purple"
           />
         </div>
