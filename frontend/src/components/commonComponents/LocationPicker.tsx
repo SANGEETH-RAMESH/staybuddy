@@ -36,6 +36,7 @@ const LocationMarker = ({
   useEffect(() => {
     if (initialPosition && initialPosition.lat !== 0 && initialPosition.lng !== 0) {
       setPosition(initialPosition);
+      console.log(isGeocoding)
     }
   }, [initialPosition]);
 
