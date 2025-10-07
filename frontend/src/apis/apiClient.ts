@@ -84,21 +84,17 @@ const createApiClient = (role: Role) => {
     (response) => response,
     async (error) => {
       const originalRequest = error.config;
-      console.log(error.response.status,'Status',originalRequest._retry)
-      if(error.response.status == 404 || error.response.status== 401){
-        store.dispatch(config.slice.logout({ isLoggedIn: false }));
-          localStorage.removeItem(config.accessTokenKey);
-          localStorage.removeItem(config.refreshTokenKey);
-          // window.location.href = config.loginRedirect;
-      }
+      console.log(error.response.status, 'Status', originalRequest._retry)
+
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
         try {
           const newRefreshToken = localStorage.getItem(config.refreshTokenKey);
+          console.log(newRefreshToken,'Reeeeefresh')
           if (!newRefreshToken) throw new Error('Refresh token missing');
           const { data } = await axios.post(
             `${apiUrl}${config.refreshEndpoint}`,
-            { refreshToken:newRefreshToken }
+            { refreshToken: newRefreshToken }
           );
           const { accessToken, refreshToken } = data.message;
           console.log(data.message)
@@ -121,7 +117,12 @@ const createApiClient = (role: Role) => {
         }
       }
 
-
+      // if (error.response.status == 404 || error.response.status == 401) {
+      //   store.dispatch(config.slice.logout({ isLoggedIn: false }));
+      //   localStorage.removeItem(config.accessTokenKey);
+      //   localStorage.removeItem(config.refreshTokenKey);
+      //   // window.location.href = config.loginRedirect;
+      // }
       if (error.response?.status == 403 && error.response.message == `Access denied:Not a ${role.toUpperCase()}`) {
         console.warn(`Access denied:Not a ${role.toUpperCase()}`);
         //  window.location.href = config.loginRedirect;
