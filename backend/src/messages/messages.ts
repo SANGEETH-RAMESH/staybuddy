@@ -120,5 +120,12 @@ export enum Messages {
     AddedToWishList = "Added to wishlist",
     FetchHostelFail = "Failed to fetch Hostels",
     OtpNotVerify = "HostNotVerified",
-    NoOrder = "No order"
+    NoOrder = "No order",
+    NoTokenFound = "No token found",
+    AccessDeniedAdmin = "Access denied:Not a ADMIN",
+    AccessDeniedHost = "Access denied:Not a HOST",
+    AccessDeniedUser = "Access denied:Not a USER",
+    TokenExpired = "Token expired",
+    IntervalServerError = "Internal server error",
+    AccessDeniedInvalidRole = "Access denied: Invalid role"
 }

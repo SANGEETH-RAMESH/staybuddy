@@ -16,25 +16,6 @@ class adminController {
 
     async adminLogin(req: Request, res: Response): Promise<void> {
         try {
-
-            let validationErrors: Record<string, string> = {};
-            await signInValidation.validate(req.body, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err: ValidationError) => {
-                        if (err.path) {
-                            validationErrors[err.path] = err.message;
-                        }
-                    });
-                });
-
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: Messages.ValidationFailed,
-                    errors: validationErrors,
-                });
-                return;
-            }
             const response = await this._adminService.adminLogin(req.body);
             if (response.message == Messages.AdminNotFound) {
                 res.status(StatusCode.NOT_FOUND).json({ success: true, data: response });
@@ -94,7 +75,6 @@ class adminController {
 
     async getHost(req: Request, res: Response): Promise<void> {
         try {
-            console.log("GettingHost")
             const skip = parseInt(req.query.skip as string)
             const limit = parseInt(req.query.limit as string)
             const response = await this._adminService.getHost(skip, limit);
@@ -234,7 +214,6 @@ class adminController {
 
     async searchHost(req: Request, res: Response): Promise<void> {
         try {
-            console.log('Searching Host')
             const name = req.query.name as string;
             const response = await this._adminService.searchHost(name);
             res.status(StatusCode.OK).json({ message: response })

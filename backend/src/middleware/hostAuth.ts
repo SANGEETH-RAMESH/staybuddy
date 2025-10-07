@@ -3,36 +3,31 @@ import jwt, { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 import { JWT_SECRET } from "../config/middlewareConfig";
 import { hostPayload } from "../types/commonInterfaces/tokenInterface";
 import Host from "../model/hostModel";
+import { StatusCode } from "../status/statusCode";
+import { Messages } from "../messages/messages";
 
 const hostAuthMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    console.log('sangeeth')
     const token = req.header('Authorization')?.split(' ')[1];
 
     if (!token) {
-
-        res.status(401).json({ message: "No token found" });
+        res.status(StatusCode.UNAUTHORIZED).json({ message: Messages.NoTokenFound });
         return;
     }
 
-
-
     try {
         const decoded = jwt.verify(token, JWT_SECRET) as hostPayload;
-        console.log("Decode",decoded)
         if (decoded.role !== 'host') {
-            console.log("hmmmdsf")
-            res.status(403).json({ messag: 'Access denied:Not a HOST' });
+            res.status(StatusCode.FORBIDDEN).json({ message: Messages.AccessDeniedHost });
             return
         }
 
         const host = await Host.findById(decoded._id);
         if (!host) {
-            res.status(404).json({ message: "Host not found" });
+            res.status(StatusCode.NOT_FOUND).json({ message: Messages.HostNotFound });
             return;
         }
         if (host.isBlock) {
-            console.log("Blocking")
-            res.status(403).json({ message: "Host is blocked" });
+            res.status(StatusCode.FORBIDDEN).json({ message: Messages.HostIsBlocked });
             return
         }
         req.customHost = decoded;
@@ -40,13 +35,13 @@ const hostAuthMiddleware = async (req: Request, res: Response, next: NextFunctio
     } catch (error) {
         if (error instanceof JsonWebTokenError) {
             console.error("JWT Error:", error.message);
-            res.status(401).json({ message: "Invalid token", error: error.message });
+            res.status(StatusCode.UNAUTHORIZED).json({ message: Messages.InvalidToken, error: error.message });
         } else if (error instanceof TokenExpiredError) {
             console.error("Token Expired:", error.message);
-            res.status(401).json({ message: "Token expired", error: error.message });
+            res.status(StatusCode.UNAUTHORIZED).json({ message: Messages.TokenExpired, error: error.message });
         } else {
             console.error("Unknown Error:", error);
-            res.status(500).json({ message: "Internal server error" });
+            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: Messages.IntervalServerError });
         }
     }
 };

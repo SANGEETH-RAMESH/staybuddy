@@ -6,6 +6,8 @@ import HostelController from "../controller/hostelController";
 import userAuthMiddleware from "../middleware/userAuth";
 import upload from '../cloudinary/multer'
 import hostAuthMiddleware from "../middleware/hostAuth";
+import { validate } from "../middleware/validateAuth";
+import { hostelFormValidation } from "../validations/hostelValidation";
 
 const hostel_route = Router();
 
@@ -29,7 +31,7 @@ user_route.get('/all',userAuthMiddleware,hostelController.getAllHostel.bind(host
 
 
 host_route.get('/hostels',hostAuthMiddleware,hostelController.getHostHostels.bind(hostelController))
-host_route.post('/',upload.single('photos'),hostelController.addHostel.bind(hostelController))
+host_route.post('/',upload.single('photos'),validate(hostelFormValidation),hostelController.addHostel.bind(hostelController))
 host_route.delete('/:id',hostAuthMiddleware,hostelController.deleteHostel.bind(hostelController))
 host_route.put('/:id',upload.single('photos'),hostAuthMiddleware,hostelController.updateHostel.bind(hostelController))
 host_route.get('/detail',hostelController.getOneHostel.bind(hostelController));

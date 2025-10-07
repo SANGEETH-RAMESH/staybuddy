@@ -2,7 +2,7 @@
 import { IAdminService } from "../interface/admin/IAdminService";
 import { IAdminRepository } from "../interface/admin/IAdminRepository";
 import bcrypt from 'bcrypt';
-import mongoose, { ObjectId, Types } from 'mongoose'
+import mongoose, {  Types } from 'mongoose'
 import { sendApprovalOrRejectionMail } from "../utils/mail";
 import { generateAccessToken, generateRefreshToken, verifyToken } from "../Jwt/jwt";
 import { adminPayload } from "../types/commonInterfaces/tokenInterface";
@@ -16,13 +16,17 @@ import { IOrderRepository } from "../interface/order/!OrderRepository";
 import { IUpdateHostelInput } from "../dtos/HostelData";
 import { IOrderResponse } from "../dtos/OrderResponse";
 import { reviewData } from "../dtos/ReviewData";
+import { UserDto } from "../dto/response/userdto";
+import { HostDto } from "../dto/response/hostdto";
+import { AdminDto } from "../dto/response/admindto";
+import { IHost } from "../model/hostModel";
 
 
 class adminService implements IAdminService {
     constructor(private _adminRepository: IAdminRepository, private _userRepository: IUserRespository,
-    private _hostRepository: IHostRepository, private _hostelRepository:IHostelRepository,
-    private _orderRepository:IOrderRepository
-        
+        private _hostRepository: IHostRepository, private _hostelRepository: IHostelRepository,
+        private _orderRepository: IOrderRepository
+
     ) {
 
     }
@@ -32,28 +36,29 @@ class adminService implements IAdminService {
         accessToken?: string;
         refreshToken?: string;
         role?: string;
+        admin?:AdminDto
     }> {
         try {
-            const checkingHost = await this._adminRepository.adminVerifyLogin(adminData.email);
-            if (typeof checkingHost === 'string') {
-                return { message: checkingHost };
+            const checkingAdmin = await this._adminRepository.adminVerifyLogin(adminData.email);
+            if (typeof checkingAdmin === 'string') {
+                return { message: checkingAdmin };
             }
 
-            if (!checkingHost || !checkingHost.password) {
+            if (!checkingAdmin || !checkingAdmin.password) {
                 return { message: Messages.NoAdmin }
             }
 
-            if (checkingHost.isBlock) {
+            if (checkingAdmin.isBlock) {
                 return { message: Messages.AdminIsBlocked };
             }
 
-            const isMatch = await bcrypt.compare(adminData.password, checkingHost.password);
+            const isMatch = await bcrypt.compare(adminData.password, checkingAdmin.password);
             if (!isMatch) {
-                return { message: Messages.InvalidPassword }; 
+                return { message: Messages.InvalidPassword };
             }
 
-            const adminPayload = { 
-                _id: checkingHost._id as Types.ObjectId,
+            const adminPayload = {
+                _id: checkingAdmin._id as Types.ObjectId,
                 role: 'admin' as const
             };
 
@@ -64,7 +69,8 @@ class adminService implements IAdminService {
                 message: Messages.Success,
                 accessToken,
                 refreshToken,
-                role: 'admin'
+                role: 'admin',
+                admin:AdminDto.from(checkingAdmin)
             };
         } catch (error) {
             console.log(error)
@@ -72,10 +78,16 @@ class adminService implements IAdminService {
         }
     }
 
-    async getUser(page: number, limit: number): Promise<{ users: IUserResponse[]; totalCount: number } | string | null> {
+    async getUser(page: number, limit: number): Promise<{ users: UserDto[]; totalCount: number } | string | null> {
         try {
-            const getUser = await this._userRepository.getUser(page, limit);
-            return getUser
+            const result = await this._userRepository.getUser(page, limit);
+            if (!result || typeof result === "string") {
+                return result;
+            }
+            return {
+                users: UserDto.fromList(result.users),
+                totalCount: result.totalCount
+            }
         } catch (error) {
             console.log(error)
             return null
@@ -115,7 +127,7 @@ class adminService implements IAdminService {
         }
     }
 
-    async getHost(skip: number, limit: number): Promise<{ hosts: IHostResponse[] | null; totalCount: number, hostIdCounts: Record<string, number> } | null> {
+    async getHost(skip: number, limit: number): Promise<{ hosts: HostDto[] | null; totalCount: number, hostIdCounts: Record<string, number> } | null> {
         try {
             const getHostels = await this._hostelRepository.getAllHostel();
             const getHost = await this._hostRepository.getHost(skip, limit);
@@ -136,7 +148,7 @@ class adminService implements IAdminService {
             });
 
             return {
-                hosts: getHost?.hosts ?? null,
+                hosts: getHost?.hosts ? HostDto.fromList(getHost.hosts) : null,
                 totalCount: getHost?.totalCount ?? 0,
                 hostIdCounts
             };
@@ -146,10 +158,19 @@ class adminService implements IAdminService {
         }
     }
 
-    async hostBlock(hostId: Types.ObjectId): Promise<string> {
+    async hostBlock(hostId: Types.ObjectId): Promise<{ message: string; host: HostDto | null} | string > {
         try {
             const response = await this._hostRepository.hostBlock(hostId);
-            return response
+
+            if(typeof response == 'string' && response !== 'Blocked'){
+                return {message:response,host:null}
+            }
+
+            const hostDetails = await this._hostRepository.getHostDetails(hostId.toString());
+            if(!hostDetails || typeof hostDetails == 'string'){
+                return {message:"Host blocked but details not found", host:null}
+            }
+            return {message:response ,host:HostDto.from(hostDetails)}
         } catch (error) {
             console.log(error);
             return error as string
@@ -184,7 +205,7 @@ class adminService implements IAdminService {
                 const projection = {
                     email: 1,
                 }
-                const Host = await this._hostRepository.findHostById(hostId,projection);
+                const Host = await this._hostRepository.findHostById(hostId, projection);
                 if (typeof Host !== "string" && Host?.email) {
                     sendApprovalOrRejectionMail(Host.email, true);
                 }
@@ -220,7 +241,7 @@ class adminService implements IAdminService {
         }
     }
 
-    async getHostDetails(userId: string): Promise<string | IHostResponse | null> {
+    async getHostDetails(userId: string): Promise<string | IHost | null> {
         try {
             const response = await this._hostRepository.getHostDetails(userId)
             return response;
@@ -248,7 +269,7 @@ class adminService implements IAdminService {
         }
     }
 
-    
+
 
     async searchUser(name: string): Promise<IUserResponse[] | string> {
         try {

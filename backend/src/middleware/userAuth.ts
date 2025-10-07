@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/middlewareConfig";
-// import { userPayload } from "../types/commonInterfaces/tokenInterface";
 import User from "../model/userModel";
+import { StatusCode } from "../status/statusCode";
+import { Messages } from "../messages/messages";
 
 export interface AuthenticatedUser {
     _id: string;
@@ -22,32 +23,32 @@ declare module "express-serve-static-core" {
 const userAuthMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.header('Authorization')?.split(' ')[1];
     if (!token) {
-        res.status(401).json({ message: "No token found" });
+        res.status(StatusCode.UNAUTHORIZED).json({ message: Messages.NoTokenFound });
         return;
     }
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET) as AuthenticatedUser;
         if (decoded.role !== 'user') {
-            res.status(403).json({ message: 'Access denied:Not a USER,,,' });
+            res.status(StatusCode.FORBIDDEN).json({ message: Messages.AccessDeniedUser });
             return
         }
 
         const user = await User.findById(decoded._id);
 
         if (!user) {
-            res.status(404).json({ message: "User not found" });
+            res.status(StatusCode.NOT_FOUND).json({ message: Messages.UserNotFound });
             return;
         }
 
         if (user.isBlock) {
-            res.status(403).json({ message: "User is blocked" });
+            res.status(StatusCode.FORBIDDEN).json({ message: Messages.UserIsBlocked });
             return
         }
         req.user = decoded;
         next();
     } catch (error) {
-        res.status(401).json({ message: "Unauthorized", error });
+        res.status(StatusCode.UNAUTHORIZED).json({ message: Messages.Unauthorized, error });
     }
 };
 

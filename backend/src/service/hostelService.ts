@@ -188,7 +188,8 @@ class hostelService implements IHostelService {
                 return Messages.NoHostel;
             }
 
-            if (typeof hostel === "string") {
+            if (typeof hostel === "string") { 
+                
                 return hostel;
             }
 

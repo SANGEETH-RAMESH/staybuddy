@@ -10,15 +10,13 @@ import { IWalletRepository } from "../interface/wallet/!WalletRepository";
 import { IHostRepository } from "../interface/host/!HostRepository";
 import jwt from 'jsonwebtoken';
 import { Messages } from "../messages/messages";
-import { IHostResponse } from "../dtos/HostResponse";
 import { INotificationResponse } from "../dtos/NotficationResponse";
 import { otpgenerator } from '../utils/otp';
 import { UserDto } from "../dto/response/userdto";
 import HashedPassword from "../utils/hashedPassword";
 import { IUser } from "../model/userModel";
-
-
-
+import { HostelDto } from "../dto/response/hosteldto";
+import { NotificationDto } from "../dto/response/notificationdto";
 
 
 
@@ -171,17 +169,6 @@ class UserService implements IUserService {
 
     async resetPassword(userData: { email: string; newPassword: string }): Promise<string | { message: string }> {
         try {
-            // const resetData = {
-            //     email: userData.email,
-            //     newPassword: userData.newPassword,
-            //     confirmPassword: userData.newPassword,
-            // };
-            // const existingUser = await this._userRepository.findUserByEmail(resetData.email)
-            // if (existingUser) {
-            //     const changedPassword = await this._userRepository.resetPassword(resetData);
-            //     return changedPassword;
-            // }
-            // return Messages.NoUser
             const existingUser = await this._userRepository.findUserByEmail(userData.email);
             if (!existingUser || !existingUser.password) {
                 return Messages.UserNotFoundOrPassword;
@@ -211,49 +198,6 @@ class UserService implements IUserService {
             return error as string
         }
     }
-
-    async getUserDetails(userId: Types.ObjectId): Promise<UserDto | null> {
-        try {
-            const user = await this._userRepository.findUserById(userId);
-            if (!user) return null;
-            return UserDto.from(user)
-        } catch (error) {
-            console.error(error);
-            return null;
-        }
-    }
-
-    async changePassword(userData: { userId: string; currentPassword: string; newPassword: string }): Promise<string> {
-        try {
-            const user = await this._userRepository.findUserById(userData.userId);
-            if (!user) return Messages.UserNotFound;
-
-            const isCurrentMatch = await bcrypt.compare(userData.currentPassword, user.password);
-            if (!isCurrentMatch) return Messages.CurrentPasswordDoesNotMatch;
-
-            const isSamePassword = await bcrypt.compare(userData.newPassword, user.password);
-            if (isSamePassword) return Messages.NewPasswordCannotbeSame;
-
-            const hashed = await bcrypt.hash(userData.newPassword, 10);
-            const updated = await this._userRepository.updatePassword(userData.userId, hashed);
-
-            return updated ? Messages.PasswordChangedSuccess : Messages.PasswordNotUpdated;
-        } catch (error) {
-            console.error(error);
-            return error as string
-        }
-    }
-
-    async editUserDetail(userData: { userId: Types.ObjectId, name: string, mobile: string }): Promise<string> {
-        try {
-            const response = await this._userRepository.editUserDetail(userData);
-            return response;
-        } catch (error) {
-            console.error(error);
-            return error as string;
-        }
-    }
-
 
     async validateRefreshToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | string> {
         try {
@@ -285,29 +229,34 @@ class UserService implements IUserService {
 
 
 
-    async allHost(): Promise<IHostResponse[] | string | null> {
+    async allHost(): Promise<HostelDto[] | string | null> {
         try {
             const response = await this._hostRepository.allHost();
-            return response;
+            if (!response || typeof response == 'string') return response;
+
+            return HostelDto.fromList(
+                response.map(hostel => ({ ...hostel, isFull: hostel.beds <= 0 }))
+            ); 
         } catch (error) {
             return error as string
         }
     }
 
-    async sendNotification(notification: INotificationResponse): Promise<INotificationResponse | string | null> {
+    async sendNotification(notification: INotificationResponse): Promise<NotificationDto | string | null> {
         try {
-            console.log(notification, 'Notiii')
             const response = await this._userRepository.sendNotification(notification);
-            return response
+            if (!response || typeof response === 'string') return response;
+            return NotificationDto.from(response);
         } catch (error) {
             return error as string
         }
     }
 
-    async getOldNotification(userId: string): Promise<INotificationResponse[] | string | null> {
+    async getOldNotification(userId: string): Promise<NotificationDto[] | string | null> {
         try {
             const response = await this._userRepository.getOldNotification(userId);
-            return response
+            if (!response || typeof response === "string") return response;
+            return NotificationDto.fromList(response);
         } catch (error) {
             return error as string
         }

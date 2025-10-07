@@ -51,7 +51,6 @@ const LocationMarker = ({
         );
         const data = await res.json();
         const address = data.display_name || 'Unknown location';
-        console.log(isGeocoding)
         onSelect(lat, lng, address);
       } catch (err) {
         console.log(err)

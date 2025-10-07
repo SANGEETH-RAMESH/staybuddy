@@ -89,7 +89,7 @@ const createApiClient = (role: Role) => {
         store.dispatch(config.slice.logout({ isLoggedIn: false }));
           localStorage.removeItem(config.accessTokenKey);
           localStorage.removeItem(config.refreshTokenKey);
-          window.location.href = config.loginRedirect;
+          // window.location.href = config.loginRedirect;
       }
       if (error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
@@ -117,14 +117,14 @@ const createApiClient = (role: Role) => {
           store.dispatch(config.slice.logout({ isLoggedIn: false }));
           localStorage.removeItem(config.accessTokenKey);
           localStorage.removeItem(config.refreshTokenKey);
-          window.location.href = config.loginRedirect;
+          // window.location.href = config.loginRedirect;
         }
       }
 
 
       if (error.response?.status == 403 && error.response.message == `Access denied:Not a ${role.toUpperCase()}`) {
         console.warn(`Access denied:Not a ${role.toUpperCase()}`);
-         window.location.href = config.loginRedirect;
+        //  window.location.href = config.loginRedirect;
       }
       console.log(error, 'Error Und')
       if (error.response?.status === 403) {
@@ -132,7 +132,7 @@ const createApiClient = (role: Role) => {
         store.dispatch(config.slice.logout({ isLoggedIn: false }));
         localStorage.removeItem(config.accessTokenKey);
         localStorage.removeItem(config.refreshTokenKey);
-        window.location.href = config.loginRedirect;
+        // window.location.href = config.loginRedirect;
       }
 
       return Promise.reject(error);

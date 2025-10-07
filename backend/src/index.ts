@@ -50,6 +50,7 @@ import hostel_route from './router/hostelRoute';
 import wallet_route from './router/walletRoute';
 import category_route from './router/categoryRoute';
 import wishlist_route from './router/wishlistRoute';
+import profile_route from './router/profileRoute';
 import chatService from './service/chatService';
 import chatRepository from './respository/chatRepository';
 
@@ -62,6 +63,7 @@ app.use('/api/hostel',hostel_route);
 app.use('/api/wallet',wallet_route);
 app.use('/api/wishlist',wishlist_route);
 app.use('/api/category',category_route);
+app.use('/api/profile',profile_route);
 
 
 const ChatRepository = new chatRepository

@@ -13,7 +13,7 @@ import { reviewData } from "../../dtos/ReviewData";
 export interface IAdminRepository {
     findAdminByEmail(email: string): Promise<IUserResponse | null>,
     findAdminById(id: Types.ObjectId): Promise<IUserResponse | null | string>,
-    adminVerifyLogin(email: string,): Promise<IUserResponse | string>,
+    adminVerifyLogin(email: string,): Promise<IUser | string>,
     getReviews(hostelId: string): Promise<reviewData[] | string | null>,
     getAdmin(): Promise<IUser | string | null>
 }

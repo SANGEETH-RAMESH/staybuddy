@@ -19,25 +19,6 @@ class hostController {
 
     async signUp(req: Request, res: Response): Promise<void> {
         try {
-            let validationErrors: Record<string, string> = {};
-            console.log(req.body,'Hoststtt')
-            await signupValidation.validate(req.body, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err: ValidationError) => {
-                        if (err.path) {
-                            validationErrors[err.path] = err.message;
-                        }
-                    })
-                })
-
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: Messages.ValidationFailed,
-                    errors: validationErrors
-                })
-                return
-            }
             const response = await this._hostService.signUp(req.body);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
@@ -56,28 +37,6 @@ class hostController {
 
     async verifyOtp(req: Request, res: Response): Promise<void> {
         try {
-
-            let validationErrors: Record<string, string> = {};
-
-            await otpValidation.validate(req.body, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err: ValidationError) => {
-                        if (err.path) {
-                            validationErrors[err.path] = err.message;
-                        }
-                    })
-                })
-
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: Messages.ValidationFailed,
-                    errors: validationErrors
-                })
-                return
-            }
-
-
             const response = await this._hostService.verifyOtp(req.body);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
@@ -87,27 +46,6 @@ class hostController {
 
     async forgotPassword(req: Request, res: Response): Promise<void> {
         try {
-
-            let validationErrors: Record<string, string> = {};
-
-            await forgotPasswordValidation.validate(req.body, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err: ValidationError) => {
-                        if (err.path) {
-                            validationErrors[err.path] = err.message;
-                        }
-                    })
-                })
-
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: Messages.ValidationFailed,
-                    errors: validationErrors
-                })
-                return
-            }
-
             const existingHost = await this._hostService.forgotPassword(req.body);
             if (existingHost && existingHost.temp == false) {
                 res.status(StatusCode.OK).json({ success: true, message: Messages.HostFound })
@@ -121,23 +59,6 @@ class hostController {
 
     async verifyForgotPasswordOtp(req: Request, res: Response): Promise<void> {
         try {
-            let validationErrors: Record<string, string> = {};
-            await otpValidation.validate(req.body, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err: ValidationError) => {
-                        if (err.path) {
-                            validationErrors[err.path] = err.message;
-                        }
-                    })
-                })
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: Messages.ValidationFailed,
-                    errors: validationErrors
-                })
-                return
-            }
             const response = await this._hostService.verifyOtp(req.body);
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
@@ -148,32 +69,6 @@ class hostController {
 
     async resetPassword(req: Request, res: Response): Promise<void> {
         try {
-            let validationErrors: Record<string, string> = {};
-
-            await resetPasswordValidation
-                .validate(
-                    {
-                        newPassword: req.body.password,
-                        confirmPassword: req.body.confirmPassword
-                    },
-                    { abortEarly: false }
-                )
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err: ValidationError) => {
-                        if (err.path) {
-                            validationErrors[err.path] = err.message;
-                        }
-                    });
-                });
-
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: Messages.ValidationFailed,
-                    errors: validationErrors
-                });
-                return;
-            }
             const response = await this._hostService.resetPassword(req.body);
             res.status(StatusCode.OK).json({ success: true, message: response.message })
         } catch (error) {
@@ -183,24 +78,6 @@ class hostController {
 
     async verifyLogin(req: Request, res: Response): Promise<void> {
         try {
-            let validationErrors: Record<string, string> = {};
-            await signInValidation.validate(req.body, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err: ValidationError) => {
-                        if (err.path) {
-                            validationErrors[err.path] = err.message;
-                        }
-                    });
-                });
-
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: Messages.ValidationFailed,
-                    errors: validationErrors,
-                });
-                return;
-            }
             const response = await this._hostService.verifyLogin(req.body);
             res.status(StatusCode.OK).json({ success: true, message: response.message, accessToken: response.accessToken, refreshToken: response.refreshToken, role: response.role })
         } catch (error) {
@@ -213,9 +90,7 @@ class hostController {
 
     async getHost(req: Request, res: Response): Promise<void> {
         try {
-            console.log("Ooi")
             const host = req.customHost;
-
             if (!host?._id) {
                 res.status(StatusCode.BAD_REQUEST).json({ success: false, message: Messages.IdMissing });
                 return
@@ -318,40 +193,6 @@ class hostController {
         }
     }
 
-    // async walletDeposit(req: Request, res: Response): Promise<void> {
-    //     try {
-    //         const { amount } = req.body;
-    //         const id = req.customHost?._id?.toString();
-
-    //         if (!id) {
-    //             res.status(StatusCode.BAD_REQUEST).json({ message: "No Host" });
-    //             return;
-    //         }
-    //         const data = { id, amount: String(amount) };
-    //         const response = await this.hostService.walletDeposit(data)
-    //         res.status(StatusCode.OK).json({ success: true, message: response })
-    //     } catch (error) {
-    //         res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
-    //     }
-    // }
-
-    // async walletWithDraw(req: Request, res: Response): Promise<void> {
-    //     try {
-    //         const { amount } = req.body;
-    //         const id = req.customHost?._id?.toString();
-
-    //         if (!id) {
-    //             res.status(StatusCode.BAD_REQUEST).json({ message: "No Host" });
-    //             return;
-    //         }
-    //         const data = { id, amount: String(amount) };
-    //         const response = await this.hostService.walletWithDraw(data);
-    //         res.status(StatusCode.OK).json({ message: response })
-    //     } catch (error) {
-    //         res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: error })
-    //     }
-    // }
-
     async getAllUsers(req: Request, res: Response): Promise<void> {
         try {
             const response = await this._hostService.getAllUsers();
@@ -373,9 +214,7 @@ class hostController {
     async createGoogleAuth(req: Request, res: Response): Promise<void> {
         try {
             const { credential } = req.body;
-            console.log(req.body,'BOdy')
             const response = await this._hostService.createGoogleAuth(credential);
-            console.log(response,'REsponse')
             res.status(StatusCode.OK).json(response)
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });

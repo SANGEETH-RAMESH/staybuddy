@@ -61,7 +61,6 @@ class HostelController {
             const userId = req.params.id;
             const id = new ObjectId(userId)
             const response = await this._hostelService.getSingleHostel(id);
-            console.log(response, "Responseeee")
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
@@ -77,31 +76,7 @@ class HostelController {
 
             const facilities = JSON.parse(req.body.facilities);
 
-            const data = {
-                ...req.body,
-                photos: uploadedUrl,
-                facilities
-            };
-
-            let validationErrors: Record<string, string> = {};
-            await hostelFormValidation.validate(data, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err: ValidationError) => {
-                        if (err.path) {
-                            validationErrors[err.path] = err.message;
-                        }
-                    })
-                });
-
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: Messages.ValidationFailed,
-                    errors: validationErrors
-                });
-                return;
-            }
-
+            
             let photos: string | undefined = undefined;
             if (uploadedUrl) {
                 const parts = uploadedUrl.split("/");
@@ -110,7 +85,6 @@ class HostelController {
 
                 photos = `${version}/${filename}`;
             }
-            console.log(photos, 'fdfdfdffffff')
             const response = await this._hostelService.addHostel({
                 ...req.body,
                 photos,

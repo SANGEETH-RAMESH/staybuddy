@@ -32,3 +32,10 @@ export interface IUserRespository {
     userDelete(userId: Types.ObjectId): Promise<string>,
     getAllUsers(): Promise<IUser[] | string | null>
 }
+
+export interface IProfileRepository{
+    editUserDetail(userData: { userId: Types.ObjectId, name: string, mobile: string }): Promise<string>,
+    findUserByEmail(email: string): Promise<IUser | null>,
+    findUserById(id: string | Types.ObjectId,projection?:any): Promise<IUser | null>,
+    updatePassword(userId: string, hashedPassword: string): Promise<boolean>,
+}

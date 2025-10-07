@@ -1,43 +1,21 @@
 import { Request, Response } from "express";
-import { IUserService } from "../interface/user/!UserService";
 import mongoose from "mongoose";
-import { forgotPasswordValidation, otpValidation, resetPasswordValidation, signInValidation, signupValidation } from "../validations/commonValidations";
-import { ValidationError } from "yup";
 import { StatusCode } from "../status/statusCode";
-import { profileUpdateValidation } from "../validations/profileUpdateValidation ";
 import { Messages } from "../messages/messages";
+import { IAuthService, IHostService, INotificationService, IProfileService } from "../interface/user/!UserService";
 const ObjectId = mongoose.Types.ObjectId;
 
 
 
 
 class UserController {
-    constructor(private _userService: IUserService) { }
+    constructor( private _authService: IAuthService,
+        private _notificationService: INotificationService,
+        private _hostService: IHostService) { }
 
     async userSignUp(req: Request, res: Response): Promise<void> {
         try {
-            let validationErrors: Record<string, string> = {};
-            console.log("dfldjfdf")
-            console.log(req.body)
-            await signupValidation.validate(req.body, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err: ValidationError) => {
-                        if (err.path) {
-                            validationErrors[err.path] = err.message;
-                        }
-                    })
-                })
-
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: Messages.ValidationFailed,
-                    errors: validationErrors
-                })
-                return
-            }
-
-            const response = await this._userService.userSignUp(req.body);
+            const response = await this._authService.userSignUp(req.body);
             res.status(StatusCode.OK).json({ success: true, message: response });
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
@@ -46,29 +24,7 @@ class UserController {
 
     async verifyOtp(req: Request, res: Response): Promise<void> {
         try {
-
-
-            let validationErrors: Record<string, string> = {};
-
-            await otpValidation.validate(req.body, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err: ValidationError) => {
-                        if (err.path) {
-                            validationErrors[err.path] = err.message;
-                        }
-                    })
-                })
-
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: Messages.ValidationFailed,
-                    errors: validationErrors
-                })
-                return
-            }
-
-            const response = await this._userService.verifyOtp(req.body);
+            const response = await this._authService.verifyOtp(req.body);
             if (response == Messages.InvalidOtp) {
                 res.status(StatusCode.UNAUTHORIZED).json({ success: false, message: response });
             } else if (response == Messages.OtpExpired) {
@@ -83,25 +39,7 @@ class UserController {
 
     async verifyLogin(req: Request, res: Response): Promise<void> {
         try {
-            let validationErrors: Record<string, string> = {};
-            await signInValidation.validate(req.body, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err: ValidationError) => {
-                        if (err.path) {
-                            validationErrors[err.path] = err.message;
-                        }
-                    });
-                });
-
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: Messages.ValidationFailed,
-                    errors: validationErrors,
-                });
-                return;
-            }
-            const response = await this._userService.verifyLogin(req.body);
+            const response = await this._authService.verifyLogin(req.body);
             if (typeof response === 'object' && response !== null) {
                 if (response.message === "Success") {
                     res.status(StatusCode.OK).json({
@@ -128,7 +66,7 @@ class UserController {
 
     async resendOtp(req: Request, res: Response): Promise<void> {
         try {
-            const response = await this._userService.resendOtp(req.body);
+            const response = await this._authService.resendOtp(req.body);
             res.status(StatusCode.UNAUTHORIZED).json({ success: true, message: response });
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
@@ -137,27 +75,7 @@ class UserController {
 
     async forgotPassword(req: Request, res: Response): Promise<void> {
         try {
-            let validationErrors: Record<string, string> = {};
-            await forgotPasswordValidation.validate(req.body, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err: ValidationError) => {
-                        if (err.path) {
-                            validationErrors[err.path] = err.message;
-                        }
-                    });
-                });
-            console.log(Object.keys(validationErrors.length))
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: Messages.ValidationFailed,
-                    errors: validationErrors,
-                });
-                return;
-            }
-            console.log("hi")
-
-            const existingUser = await this._userService.forgotPassword(req.body);
+            const existingUser = await this._authService.forgotPassword(req.body);
             if (existingUser && existingUser.temp === false) {
                 res.status(StatusCode.OK).json({ success: true, message: Messages.UserFound });
             } else {
@@ -170,7 +88,7 @@ class UserController {
 
     async verifyForgotPasswordOtp(req: Request, res: Response): Promise<void> {
         try {
-            const response = await this._userService.verifyOtp(req.body);
+            const response = await this._authService.verifyOtp(req.body);
             res.status(StatusCode.OK).json({ success: true, message: response });
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
@@ -180,103 +98,8 @@ class UserController {
     async resetPassword(req: Request, res: Response): Promise<void> {
         try {
             const { newPassword, confirmPassword } = req.body;
-            let validationErrors: Record<string, string> = {};
-            await resetPasswordValidation.validate({ newPassword, confirmPassword }, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err: ValidationError) => {
-                        if (err.path) {
-                            validationErrors[err.path] = err.message;
-                        }
-                    })
-                })
-            console.log(Object.keys(validationErrors).length,'Lneght')
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: Messages.ValidationFailed,
-                    errors: validationErrors
-                })
-                return;
-            }
-            console.log("hee")
-            const response = await this._userService.resetPassword(req.body);
+            const response = await this._authService.resetPassword(req.body);
             console.log(response, "Respons")
-            res.status(StatusCode.OK).json({ success: true, message: response });
-        } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
-        }
-    }
-
-    async getUserDetails(req: Request, res: Response): Promise<void> {
-        try {
-            const user = req.user;
-            if (!user || !user._id) {
-                res.status(StatusCode.BAD_REQUEST).json({ success: false, message: Messages.UserIdMissing });
-                return;
-            }
-            const id = typeof user._id === "string" ? new ObjectId(user._id) : user._id;
-            const response = await this._userService.getUserDetails(id);
-            if (!response) {
-                res.status(StatusCode.NOT_FOUND).json({ success: false, message: Messages.UserNotFound });
-                return;
-            }
-            res.status(StatusCode.OK).json({ success: true, data: response });
-        } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
-        }
-    }
-
-    async changePassword(req: Request, res: Response): Promise<void> {
-        try {
-            const user = req.user;
-            if (!user || !user._id) {
-                res.status(401).json({ success: false, message: Messages.Unauthorized });
-                return;
-            }
-            const data = { ...req.body, userId: user._id };
-            const response = await this._userService.changePassword(data);
-            if (!response) {
-                res.status(StatusCode.BAD_REQUEST).json({ success: false, message: Messages.PasswordChangeFailed });
-                return;
-            }
-
-            res.status(StatusCode.OK).json({ success: true, message: response });
-        } catch (error) {
-            res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
-        }
-    }
-
-    async editUserDetail(req: Request, res: Response): Promise<void> {
-        try {
-            let validationErrors: Record<string, string> = {};
-            await profileUpdateValidation.validate(req.body, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err: ValidationError) => {
-                        if (err.path) {
-                            validationErrors[err.path] = err.message;
-                        }
-                    })
-                })
-
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: Messages.ValidationFailed,
-                    errors: validationErrors
-                })
-                return
-            }
-            const user = req.user;
-            if (!user || !user._id) {
-                res.status(401).json({ success: false, message: Messages.Unauthorized });
-                return;
-            }
-            const data = { ...req.body, userId: user._id };
-            const response = await this._userService.editUserDetail(data);
-            if (!response) {
-                res.status(StatusCode.BAD_REQUEST).json({ success: false, message: Messages.FailedUpdateUserDetails });
-                return;
-            }
             res.status(StatusCode.OK).json({ success: true, message: response });
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
@@ -286,7 +109,7 @@ class UserController {
     async validaterefreshToken(req: Request, res: Response): Promise<void> {
         try {
             const { refreshToken } = req.body
-            const response = await this._userService.validateRefreshToken(refreshToken)
+            const response = await this._authService.validateRefreshToken(refreshToken)
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
@@ -295,7 +118,7 @@ class UserController {
 
     async getHost(req: Request, res: Response): Promise<void> {
         try {
-            const response = await this._userService.allHost();
+            const response = await this._hostService.allHost();
             res.status(StatusCode.OK).json({ message: response })
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });
@@ -306,7 +129,7 @@ class UserController {
         try {
             const userId = req.user?._id
             if (userId) {
-                const response = await this._userService.markAllRead(userId)
+                const response = await this._notificationService.markAllRead(userId)
                 res.status(StatusCode.OK).json({ message: response })
             }
         } catch (error) {
@@ -317,7 +140,7 @@ class UserController {
     async createGoogleAuth(req: Request, res: Response): Promise<void> {
         try {
             const { credential } = req.body;
-            const response = await this._userService.createGoogleAuth(credential);
+            const response = await this._authService.createGoogleAuth(credential);
             res.status(StatusCode.OK).json(response)
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });

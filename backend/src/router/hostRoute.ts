@@ -7,6 +7,8 @@ import hostAuthMiddleware from "../middleware/hostAuth";
 import WalletRepository from "../respository/walletRepository";
 import AdminRespository from "../respository/adminRepository";
 import UserRepository from "../respository/userRepository";
+import { validate } from "../middleware/validateAuth";
+import { forgotPasswordValidation, otpValidation, resetPasswordValidation, signInValidation, signupValidation } from "../validations/commonValidations";
 const host_route = Router();
 
 const hostRepository = new HostRepository();
@@ -18,16 +20,16 @@ const hostController = new HostController(hostService);
 
 
 
-host_route.post('/auth/signup',hostController.signUp.bind(hostController))
+host_route.post('/auth/signup',validate(signupValidation),hostController.signUp.bind(hostController))
 host_route.post('/auth/verify-otp',hostController.verifyOtp.bind(hostController))
-host_route.post('/auth/resend-otp',hostController.resendOtp.bind(hostController))
-host_route.post('/auth/login',hostController.verifyLogin.bind(hostController))
+host_route.post('/auth/resend-otp',validate(otpValidation),hostController.resendOtp.bind(hostController))
+host_route.post('/auth/login',validate(signInValidation),hostController.verifyLogin.bind(hostController))
 host_route.post('/auth/google',hostController.createGoogleAuth.bind(hostController))
 
 
-host_route.post('/password/forgot',hostController.forgotPassword.bind(hostController))
-host_route.post('/password/verify-otp',hostController.verifyForgotPasswordOtp.bind(hostController))
-host_route.post('/password/reset',hostController.resetPassword.bind(hostController))
+host_route.post('/password/forgot',validate(forgotPasswordValidation),hostController.forgotPassword.bind(hostController))
+host_route.post('/password/verify-otp',validate(otpValidation),hostController.verifyForgotPasswordOtp.bind(hostController))
+host_route.post('/password/reset',validate(resetPasswordValidation),hostController.resetPassword.bind(hostController))
 host_route.patch('/password/change',hostAuthMiddleware,hostController.changePassword.bind(hostController))
 
 

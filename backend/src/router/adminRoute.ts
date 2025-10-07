@@ -7,6 +7,8 @@ import UserRepository from '../respository/userRepository';
 import HostRepository from '../respository/hostRepository';
 import HostelRepository from '../respository/hostelRepository';
 import OrderRepository from '../respository/orderRepository';
+import { validate } from '../middleware/validateAuth';
+import { signInValidation } from '../validations/commonValidations';
 const admin_route = Router();
 
 
@@ -18,7 +20,7 @@ const orderRepository = new OrderRepository();
 const adminService = new AdminService(adminRespository,userRepository,hostRepository,hostelRepository,orderRepository); 
 const adminController = new AdminController(adminService)
 
-admin_route.post('/login',adminController.adminLogin.bind(adminController))
+admin_route.post('/login',validate(signInValidation),adminController.adminLogin.bind(adminController))
 admin_route.post('/token/refresh',adminController.validaterefreshToken.bind(adminController))
 
 

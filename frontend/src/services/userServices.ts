@@ -28,20 +28,20 @@ interface BookingDetails {
 
 
 
-export const getUserDetails = () => userApiClient.get(`${apiUrl}/user/users`);
+export const getUserDetails = () => userApiClient.get(`${apiUrl}/profile/users`);
 
-export const editProfile = (formData: { name: string; mobile: string }) => userApiClient.patch(`${apiUrl}/user/profile`, formData);
+export const editProfile = (formData: { name: string; mobile: string }) => userApiClient.patch(`${apiUrl}/profile`, formData);
 
 export const changePassword = (formData: {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
-}) => userApiClient.patch(`${apiUrl}/user/profile/change-password`, formData);
+}) => userApiClient.patch(`${apiUrl}/profile/change-password`, formData);
 
-export const addPassword = (formData:{
-  password:string;
-  confirmPassword:string
-}) => userApiClient.patch(`${apiUrl}/user/profile/add-password`,formData)
+// export const addPassword = (formData:{
+//   password:string;
+//   confirmPassword:string
+// }) => userApiClient.patch(`${apiUrl}/user/profile/add-password`,formData)
 
 
 

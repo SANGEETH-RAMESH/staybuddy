@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/middlewareConfig";
 import User from "../model/userModel";
+import { StatusCode } from "../status/statusCode";
+import { Messages } from "../messages/messages";
 
 export interface AuthenticatedAdmin {
   _id: string;
@@ -21,28 +23,27 @@ declare module "express-serve-static-core" {
 const adminAuthMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   const token = req.header('Authorization')?.split(' ')[1];
   if (!token) {
-    res.status(401).json({ message: "No token found" });
+    res.status(StatusCode.UNAUTHORIZED).json({ message: Messages.NoTokenFound });
     return;
   }
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as AuthenticatedAdmin;
-    console.log(decoded,'dfljsdfljdsfljsd')
     if (decoded.role !== 'admin') {
-      res.status(403).json({ messag: 'Access denied:Not a ADMIN' });
+      res.status(StatusCode.FORBIDDEN).json({ message: Messages.AccessDeniedAdmin });
       return
     }
 
     const admin = await User.findById(decoded._id);
     if (!admin) {
-      res.status(404).json({ message: "Admin not found" });
+      res.status(StatusCode.NOT_FOUND).json({ message: Messages.AdminNotFound });
       return;
     }
 
     req.user = decoded;
     next();
   } catch (error) {
-    res.status(401).json({ message: "Unauthorized", error });
+    res.status(StatusCode.UNAUTHORIZED).json({ message: Messages.Unauthorized, error });
   }
 };
 

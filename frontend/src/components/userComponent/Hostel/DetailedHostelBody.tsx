@@ -136,13 +136,10 @@ const HostelDetailPage = () => {
                 setUserData(userData?.data?.data)
                 const orderResponse = await getOrderBookingByHostelId(new mongoose.Types.ObjectId(response.data.message._id));
                 const allBookings = orderResponse?.data?.message || [];
-                console.log(response.data.message, 'hey')
                 const hostelBookings = allBookings.filter((booking: Order) =>
                     booking.hostel_id.toString() === id
                 );
-                console.log(hostelBookings, 'Hostel Bookings')
                 const facilitiesData = response.data.message.facilities || {};
-                console.log(response.data.message, 'Full Message from API');
                 const facilitiesArray = Object.keys(facilitiesData).filter(
                     (key) => facilitiesData[key as keyof Facilities]
                 );
@@ -176,25 +173,20 @@ const HostelDetailPage = () => {
             toast.error('Room availability data missing');
             return;
         }
-        console.log('Booking initiated for hostel:', hostel?.totalRooms);
         if (hostel.totalRooms < 0) {
             toast.error('No rooms available at the moment');
             return;
         } else if (hostel?.isActive == false) {
             toast.error('Hostel is Inactive')
         } else if (hostel) {
-            console.log(hostel.totalRooms)
             setShowBookingModal(true);
         }
     };
 
     const handleChatWithOwner = async (ownerId: string) => {
         if (hostel?.host_id?._id) {
-            console.log(ownerId, 'Owner id')
-            console.log(hostel?.host_id._id, "Hosttt")
             const response = await createChat(ownerId)
             if (response.data.success) {
-                console.log('Initiating chat with hostel owner:', hostel.host_id._id);
                 navigate(`/chat/${hostel.host_id._id}`, {
                     state: {
                         hostName: hostel.host_id.name,

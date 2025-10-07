@@ -1,27 +1,14 @@
 import { IUserRespository } from "../interface/user/!UserRepository";
 import Otp, { IOtp } from "../model/otpModel";
 import User, { IUser } from '../model/userModel';
-import HashedPassword from "../utils/hashedPassword";
-import bcrypt from 'bcrypt'
 import { ProjectionType, Types } from "mongoose";
 import baseRepository from "./baseRespository";
 import { Messages } from "../messages/messages";
 import { INotificationResponse } from "../dtos/NotficationResponse";
 import Notification from "../model/notificationModel";
 
-type ResetPasswordData = {
-    email: string;
-    newPassword: string;
-    confirmPassword: string;
-};
 
 
-
-type ChangePasswordData = {
-    userId: string;
-    currentPassword: string;
-    newPassword: string;
-};
 
 
 class userRespository extends baseRepository<IUser> implements IUserRespository {

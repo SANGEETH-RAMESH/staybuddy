@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET } from "../config/middlewareConfig";
-// import { userPayload } from "../types/commonInterfaces/tokenInterface";
 import User from "../model/userModel";
 import Host from "../model/hostModel";
 import { Types } from "mongoose";
+import { StatusCode } from "../status/statusCode";
+import { Messages } from "../messages/messages";
 
 export interface AuthenticatedUser {
     _id: string;
@@ -24,7 +25,7 @@ declare module "express-serve-static-core" {
 const userOrHostAuth = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.header('Authorization')?.split(' ')[1];
     if (!token) {
-        res.status(401).json({ message: "No token found" });
+        res.status(StatusCode.UNAUTHORIZED).json({ message: Messages.NoTokenFound });
         return;
     }
 
@@ -34,22 +35,22 @@ const userOrHostAuth = async (req: Request, res: Response, next: NextFunction) =
         if (decoded.role === 'user') {
             const user = await User.findById(decoded._id);
             if (!user) {
-                res.status(404).json({ message: "User not found" });
+                res.status(StatusCode.NOT_FOUND).json({ message: Messages.UserNotFound });
                 return
             }
             if (user.isBlock) {
-                res.status(403).json({ message: "User is blocked" });
+                res.status(StatusCode.FORBIDDEN).json({ message: Messages.UserIsBlocked });
                 return
             }
             req.user = decoded;
         } else if (decoded.role === 'host') {
             const host = await Host.findById(decoded._id);
             if (!host) {
-                res.status(404).json({ message: "Host not found" });
+                res.status(StatusCode.NOT_FOUND).json({ message: Messages.HostNotFound });
                 return
             }
             if (host.isBlock) {
-                res.status(403).json({ message: "Host is blocked" });
+                res.status(StatusCode.FORBIDDEN).json({ message: Messages.HostIsBlocked });
                 return
             }
             req.customHost = {
@@ -58,12 +59,12 @@ const userOrHostAuth = async (req: Request, res: Response, next: NextFunction) =
                 role: 'host'
             };;
         } else {
-            res.status(403).json({ message: "Access denied: Invalid role" });
+            res.status(StatusCode.FORBIDDEN).json({ message: Messages.AccessDeniedInvalidRole });
             return
         }
         next();
     } catch (error) {
-        res.status(401).json({ message: "Unauthorized", error });
+        res.status(StatusCode.UNAUTHORIZED).json({ message: Messages.Unauthorized, error });
         return
     }
 };

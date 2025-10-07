@@ -363,16 +363,16 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
         }
     }
 
-    async allHost(): Promise<IHostResponse[] | string | null> {
+    async allHost(): Promise<IHostel[] | string | null> {
         try {
-            const getHost = await Host.find().lean<IHostResponse[]>();
+            const getHost = await Host.find().lean<IHostel[]>();
             return getHost;
         } catch (error) {
             return error as string
         }
     }
 
-    async getHost(skip: number, limit: number): Promise<{ hosts: IHostResponse[]; totalCount: number } | null> {
+    async getHost(skip: number, limit: number): Promise<{ hosts: IHost[]; totalCount: number } | null> {
         try {
             const projection = {
                 _id: 1,
@@ -385,7 +385,7 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
                 photo: 1,
                 documentType: 1
             }
-            const hosts = await Host.find({}, projection).skip(skip).limit(limit).lean<IHostResponse[]>();
+            const hosts = await Host.find({}, projection).skip(skip).limit(limit).lean<IHost[]>();
             const totalCount = await Host.countDocuments()
 
             return { hosts, totalCount };
@@ -432,7 +432,7 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
         }
     }
 
-    async getHostDetails(userId: string): Promise<string | IHostResponse | null> {
+    async getHostDetails(userId: string): Promise<string | IHost | null> {
         try {
             const projection = {
                 _id: 1,
@@ -445,7 +445,7 @@ class hostRepository extends baseRepository<IHost> implements IHostRepository {
                 photo: 1,
                 documentType: 1
             }
-            const getUserData = await Host.findOne({ _id: userId }, projection).lean<IHostResponse>();
+            const getUserData = await Host.findOne({ _id: userId }, projection).lean<IHost>();
             return getUserData;
         } catch (error) {
             return error as string

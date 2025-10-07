@@ -40,7 +40,7 @@ class adminRespository extends baseRepository<IUser> implements IAdminRepository
         }
     }
 
-    async adminVerifyLogin(email: string): Promise<IUserResponse | string> {
+    async adminVerifyLogin(email: string): Promise<IUser | string> {
         try {
             const projection = {
                 _id: 1,

@@ -88,6 +88,7 @@ const UserLoginBody = () => {
             } else if (response.data?.message?.message == undefined) {
                 toast.error("Invalid credentials", { style: { backgroundColor: '#FFFFFF', color: "#31AFEF" } });
             } else if (accessToken && refreshToken) {
+            console.log('Login Successful')
                 dispatch(loginSuccess({
                     accessToken: accessToken,
                     refreshToken: refreshToken,
@@ -118,6 +119,9 @@ const UserLoginBody = () => {
                         email: 'Invalid email'
                     }));
                     return;
+                }else if(message.message == 'User is blocked'){
+                    toast.error("User is Blocked")
+                    return
                 }
                 if (errors) {
                     setErrors(errors);

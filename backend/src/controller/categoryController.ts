@@ -23,29 +23,29 @@ class CategoryController {
             const imageFile = req.file;
             let validationErrors: Record<string, string> = {};
 
-            await categoryValidation
-                .validate({ name, image: imageFile }, { abortEarly: false })
-                .catch((error: ValidationError) => {
-                    error.inner.forEach((err) => {
-                        if (err.path) {
-                            if (err.path.startsWith('image.')) {
-                                validationErrors['image'] = err.message;
-                            } else {
-                                validationErrors[err.path] = err.message;
-                            }
-                        }
-                    });
-                });
+            // await categoryValidation
+            //     .validate({ name, image: imageFile }, { abortEarly: false })
+            //     .catch((error: ValidationError) => {
+            //         error.inner.forEach((err) => {
+            //             if (err.path) {
+            //                 if (err.path.startsWith('image.')) {
+            //                     validationErrors['image'] = err.message;
+            //                 } else {
+            //                     validationErrors[err.path] = err.message;
+            //                 }
+            //             }
+            //         });
+            //     });
 
 
-            if (Object.keys(validationErrors).length > 0) {
-                res.status(StatusCode.BAD_REQUEST).json({
-                    success: false,
-                    message: Messages.ValidationFailed,
-                    errors: validationErrors,
-                });
-                return
-            }
+            // if (Object.keys(validationErrors).length > 0) {
+            //     res.status(StatusCode.BAD_REQUEST).json({
+            //         success: false,
+            //         message: Messages.ValidationFailed,
+            //         errors: validationErrors,
+            //     });
+            //     return
+            // }
 
             let photo: string | undefined = undefined;
             if (imageFile?.buffer) {
