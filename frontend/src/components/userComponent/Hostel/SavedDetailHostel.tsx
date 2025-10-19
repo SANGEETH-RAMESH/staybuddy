@@ -24,6 +24,7 @@ import { Order } from '../../../interface/Order';
 import { Review } from '../../../interface/Review';
 import { RazorpayResponse } from '../../../interface/RazorpayOptions';
 import { useRazorpay, RazorpayOrderOptions } from 'react-razorpay'
+const imageUrl = "https://res.cloudinary.com/dxidgmofu/image/upload"
 
 
 
@@ -429,7 +430,7 @@ const SavedDetailHostel = () => {
                     {/* Image Gallery */}
                     <div className="relative h-80 bg-gray-200">
                         <img
-                            src={booking?.photos[0]}
+                             src={booking.photos ? `${imageUrl}/${booking.photos}` : "/api/placeholder/400/250"}
                             alt={booking?.name}
                             className="w-full h-full object-cover"
                         />

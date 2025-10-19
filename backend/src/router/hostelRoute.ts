@@ -25,8 +25,8 @@ hostel_route.use('/host',host_route)
 hostel_route.use('/admin',admin_route)
 
 
-user_route.get('/',userAuthMiddleware,hostelController.getHostels.bind(hostelController))
-user_route.get('/:id',userAuthMiddleware,hostelController.getSingleHostel.bind(hostelController))
+user_route.get('/',hostelController.getHostels.bind(hostelController))
+user_route.get('/:id',hostelController.getSingleHostel.bind(hostelController))
 user_route.get('/all',userAuthMiddleware,hostelController.getAllHostel.bind(hostelController))
 
 

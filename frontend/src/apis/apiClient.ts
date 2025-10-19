@@ -71,6 +71,7 @@ const createApiClient = (role: Role) => {
   instance.interceptors.request.use(
     (req) => {
       const accessToken = localStorage.getItem(config.accessTokenKey);
+      console.log(accessToken)
       if (accessToken) {
         req.headers.Authorization = `Bearer ${accessToken}`;
       }

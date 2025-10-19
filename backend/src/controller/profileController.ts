@@ -14,7 +14,7 @@ class ProfileController{
         try {
             const user = req.user;
             if (!user || !user._id) {
-                res.status(StatusCode.BAD_REQUEST).json({ success: false, message: Messages.UserIdMissing });
+                // res.status(StatusCode.BAD_REQUEST).json({ success: false, message: Messages.UserIdMissing });
                 return;
             }
             const id = typeof user._id === "string" ? new ObjectId(user._id) : user._id;

@@ -19,7 +19,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getSavedBookings } from '../../../services/userServices';
 import { Order } from '../../../interface/Order';
 import { PaginationData } from '../../../interface/PaginationProps';
-
+const imageUrl = "https://res.cloudinary.com/dxidgmofu/image/upload"
 
 
 
@@ -235,7 +235,7 @@ const HostBookings = () => {
               >
                 <div className="relative">
                   <img
-                    src={booking?.photos[0] || "/placeholder-hostel.jpg"}
+                   src={booking.photos ? `${imageUrl}/${booking.photos}` : "/api/placeholder/400/250"}
                     alt={booking?.name}
                     className="w-full h-48 object-cover"
                   />

@@ -7,9 +7,9 @@ import { jwtDecode } from 'jwt-decode';
 import { socket } from '../../../utils/socket';
 import {Hostel} from '../../../interface/Hostel'
 import { getAllHostel } from '../../../services/userServices';
-const imageUrl = import.meta.env.VITE_CLOUDINARY_BASE_URL;
+const imageUrl = "https://res.cloudinary.com/dxidgmofu/image/upload"
 const landing_1 = `${imageUrl}/v1755417528/landing_1_yc4lhp.jpg`
-
+console.log(landing_1,"Landing")
 
 interface CustomJwtPayload {
   _id: string;
@@ -25,18 +25,7 @@ const UserLandingBody = () => {
   const [loading, setLoading] = useState(true);
   const [hostel, setHostel] = useState<Hostel[]>([]);
 
-  const accessToken = queryParams?.get('accessToken');
-  const refreshToken = queryParams?.get('refreshToken');
-  console.log()
-  if (accessToken && refreshToken) {
-    dispatch(
-      loginSuccess({
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-        isLoggedIn: true,
-      })
-    );
-  }
+
 
   useEffect(() => {
     const accessToken = localStorage.getItem('userAccessToken');
@@ -157,7 +146,7 @@ const UserLandingBody = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {hostel.map((room) => (
                   <div key={room._id} className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow">
-                    <img src={room.photos[0]} alt={room.hostelname} className="w-full h-48 object-cover" />
+                    <img  src={room.photos ? `${imageUrl}/${room.photos}` : "/api/placeholder/400/250"} alt={room.hostelname} className="w-full h-48 object-cover" />
                     <div className="p-6">
                       <div className="flex justify-between items-start mb-2">
                         <h4 className="text-xl font-bold">{room.hostelname}</h4>

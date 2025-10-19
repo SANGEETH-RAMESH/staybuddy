@@ -273,7 +273,7 @@ export const UserHeader: React.FC = () => {
                 <div className="w-8 h-8 rounded-full border-2 border-[#31AFEF] p-0.5">
                   <User className="w-full h-full text-gray-600" />
                 </div>
-                <span className="text-sm font-medium text-gray-700">{name || '..Loading'}</span>
+                <span className="text-sm font-medium text-gray-700">{name || 'Demo'}</span>
 
                 <span className="absolute -bottom-8 left-1/2 -translate-x-1/2
                    bg-gray-800 text-white text-xs px-2 py-1 rounded

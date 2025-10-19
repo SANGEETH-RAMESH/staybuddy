@@ -58,9 +58,11 @@ class HostelController {
 
     async getSingleHostel(req: Request, res: Response): Promise<void> {
         try {
+            console.log("heeeeee")
             const userId = req.params.id;
             const id = new ObjectId(userId)
             const response = await this._hostelService.getSingleHostel(id);
+            console.log("Resss",response)
             res.status(StatusCode.OK).json({ success: true, message: response })
         } catch (error) {
             res.status(StatusCode.INTERNAL_SERVER_ERROR).json({ message: (error as Error).message });

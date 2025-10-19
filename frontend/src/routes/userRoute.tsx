@@ -33,15 +33,15 @@ const UserRoute = () => {
         <Route path='/signup' element={<UserProtectiveCheck element={<UserSignUp/> }/>} />
         <Route path='/forgotpassword' element={<UserProtectiveCheck element={<UserForgotPassword/>}/>} />
         <Route path='/forgotpasswordotp' element={<UserProtectiveCheck element={<OtpUserForgotPasswordPage/>}/>} />
-        <Route path='/' element={<UserLoginProtector element={<UserLandingPage/>}/>} />
+        <Route path='/' element={<UserLandingPage/>} />
         <Route path='/otp' element={<UserProtectiveCheck element={<OtpSignUpPage/>} />}/>
         <Route path='/resetpassword' element={<UserProtectiveCheck element={<UserResetPasswordPage/>}/>} />
         <Route path='/profile'  element={<UserLoginProtector element={<UserProfilePage/>}/>} />
         <Route path='/changepassword' element={<UserLoginProtector element={<UserChangePasswordPage/>} />} />
         <Route path='/editprofile' element={<UserLoginProtector element={<UserEditProfilePage/>} />} />
         <Route path='/wallet' element={<UserLoginProtector element={<UserWalletPage/>} />} />
-        <Route path='/hostel' element={<UserLoginProtector element={<UserHostelListingsPage/>} />} />
-        <Route path='/singlehostel/:id' element={<UserLoginProtector element={<UserDetailedHostelPage/>} />} />
+        <Route path='/hostel' element={<UserHostelListingsPage/>} />
+        <Route path='/singlehostel/:id'  element={<UserDetailedHostelPage/>} />
         <Route path='/booking/:id' element={<UserLoginProtector element={<UserHostelBookingPage/>} />} />
         <Route path='/savedbookings/:id' element={<UserLoginProtector element={<UserSavedBooking/>} />} />
         <Route path='/detailbookings/:id' element={<UserLoginProtector element={<UserSavedDetailPage/>} />} />
