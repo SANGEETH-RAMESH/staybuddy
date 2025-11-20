@@ -118,7 +118,6 @@ const HostelDetailPage = () => {
     const { id } = useParams();
     const [hostel, setHostel] = useState<Hostel | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [orderDetails, setOrderDetails] = useState([]);
     const [userData, setUserData] = useState<User | null>(null)
@@ -131,6 +130,7 @@ const HostelDetailPage = () => {
                 if (!id) return;
 
                 const response = await getSingleHostel(id);
+                console.log(response, 'Daaayyyyyy')
                 setHostel(response.data.message);
                 const userData = await getUserDetails();
                 setUserData(userData?.data?.data)
@@ -147,9 +147,13 @@ const HostelDetailPage = () => {
                 setOrderDetails(hostelBookings);
                 setLoading(false);
             } catch (err) {
-                setError('Failed to fetch hostel details');
+                // setError('Failed to fetch hostel details');
                 setLoading(false);
-                console.error('Error fetching hostel details:', err);
+                if (err instanceof Error) {
+                    console.error('Error fetching hostel details:', err.message);
+                } else {
+                    console.error('Unknown error:', err);
+                }
             }
         };
 
@@ -232,10 +236,10 @@ const HostelDetailPage = () => {
         );
     }
 
-    if (error || !hostel) {
+    if (!hostel) {
         return (
             <div className="min-h-screen flex items-center justify-center p-4">
-                <div className="text-lg sm:text-xl text-red-600 text-center">{error || 'Hostel not found'}</div>
+                <div className="text-lg sm:text-xl text-red-600 text-center">{'Hostel not found'}</div>
             </div>
         );
     }

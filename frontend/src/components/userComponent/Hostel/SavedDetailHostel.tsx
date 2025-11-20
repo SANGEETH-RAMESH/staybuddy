@@ -153,7 +153,7 @@ const SavedDetailHostel = () => {
                 await handleSubmit(id);
             },
             modal: {
-               
+
             },
         };
         console.log(options, 'Options')
@@ -429,11 +429,13 @@ const SavedDetailHostel = () => {
                 <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-8">
                     {/* Image Gallery */}
                     <div className="relative h-80 bg-gray-200">
-                        <img
-                             src={booking.photos ? `${imageUrl}/${booking.photos}` : "/api/placeholder/400/250"}
-                            alt={booking?.name}
-                            className="w-full h-full object-cover"
-                        />
+                        {booking && (
+                            <img
+                                src={booking.photos ? `${imageUrl}/${booking.photos}` : "/api/placeholder/400/250"}
+                                alt={booking.name}
+                                className="w-full h-full object-cover"
+                            />
+                        )}
                         <div className="absolute bottom-4 left-4 flex gap-2">
 
                         </div>

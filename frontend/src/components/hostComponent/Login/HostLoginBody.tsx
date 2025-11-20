@@ -205,7 +205,6 @@ const HostLoginBody = () => {
                                 </div>
                             </div>
 
-                            {/* Google Sign In */}
                             <div className="flex justify-center">
                                 <GoogleOAuthProvider clientId={import.meta.env.VITE_HOST_GOOGLE_CLIENT_ID as string}>
                                     <div className="w-full max-w-sm">

@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { loginSuccess } from '../../../redux/userAuthSlice';
+import {  useNavigate } from 'react-router-dom';
 import { ArrowRight, Shield, Zap, Users, MapPin } from 'lucide-react';
 import { jwtDecode } from 'jwt-decode';
 import { socket } from '../../../utils/socket';
@@ -18,9 +16,6 @@ interface CustomJwtPayload {
 
 
 const UserLandingBody = () => {
-  const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [hostel, setHostel] = useState<Hostel[]>([]);
