@@ -13,7 +13,7 @@ const profileRepository = new ProfileRepository();
 const profileService = new ProfileService(profileRepository);
 const profileController = new ProfileController(profileService);
 
-profile_route.get('/users', profileController.getUserDetails.bind(profileController));
+profile_route.get('/users',userAuthMiddleware,profileController.getUserDetails.bind(profileController));
 profile_route.patch('/change-password', userAuthMiddleware, profileController.changePassword.bind(profileController));
 profile_route.patch('/', validate(profileUpdateValidation),userAuthMiddleware, profileController.editUserDetail.bind(profileController));
 

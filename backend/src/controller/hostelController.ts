@@ -58,7 +58,6 @@ class HostelController {
 
     async getSingleHostel(req: Request, res: Response): Promise<void> {
         try {
-            console.log("heeeeee")
             const userId = req.params.id;
             const id = new ObjectId(userId)
             const response = await this._hostelService.getSingleHostel(id);

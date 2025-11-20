@@ -23,6 +23,7 @@ declare module "express-serve-static-core" {
 const userAuthMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     const token = req.header('Authorization')?.split(' ')[1];
     if (!token) {
+        console.log("hjeee")
         res.status(StatusCode.UNAUTHORIZED).json({ message: Messages.NoTokenFound });
         return;
     }

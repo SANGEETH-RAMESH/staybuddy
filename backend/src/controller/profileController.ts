@@ -13,8 +13,10 @@ class ProfileController{
     async getUserDetails(req: Request, res: Response): Promise<void> {
         try {
             const user = req.user;
+            console.log(user,"User")
             if (!user || !user._id) {
-                // res.status(StatusCode.BAD_REQUEST).json({ success: false, message: Messages.UserIdMissing });
+                console.log("illada")
+                res.status(StatusCode.BAD_REQUEST).json({ success: false, message: Messages.UserIdMissing });
                 return;
             }
             const id = typeof user._id === "string" ? new ObjectId(user._id) : user._id;

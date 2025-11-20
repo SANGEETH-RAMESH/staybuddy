@@ -51,9 +51,9 @@ export const getAllHosts = () => userApiClient.get(`${apiUrl}/user/hosts`, {
   headers: { Authorization: `Bearer` },
 });
 
-export const getAllHostel = () => userApiClient.get(`${apiUrl}/hostel/user`);
+export const getAllHostel = () => axios.get(`${apiUrl}/hostel/user`);
 
-export const getSingleHostel = (id: mongoose.Types.ObjectId | string) => userApiClient.get(`${apiUrl}/hostel/user/${id}`);
+export const getSingleHostel = (id: mongoose.Types.ObjectId | string) => axios.get(`${apiUrl}/hostel/user/${id}`);
 
 
 export const getHostels = (params?: URLSearchParams) => userApiClient.get(`${apiUrl}/hostel/user?${params?.toString()}`);
