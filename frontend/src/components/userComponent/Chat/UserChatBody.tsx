@@ -438,11 +438,11 @@ const ChatApplication: React.FC = () => {
   };
 
   const filteredChats = chats.filter((chat) =>
-    chat.name?.toLowerCase().includes(searchTerm.toLowerCase())
+    chat.name?.toLowerCase()?.includes(searchTerm.toLowerCase())
   );
 
   const filteredUsers = availableUsers.filter((user) =>
-    user.name?.toLowerCase().includes(searchUsers.toLowerCase()) &&
+    user.name?.toLowerCase()?.includes(searchUsers.toLowerCase()) &&
     user._id !== userId &&
     !chats.some(chat => chat.receiverId === user._id)
   );
